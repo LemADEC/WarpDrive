@@ -1,0 +1,10 @@
+{
+  "warp_4s": {"category": "master","sounds": [{"name": "warp_4s","stream": false}]},
+  "warp_10s": {"category": "master","sounds": [{"name": "warp_10s","stream": true}]},
+  "warp_30s": {"category": "master","sounds": [{"name": "warp_30s","stream": true}]},
+  "hilaser": {"category": "master","sounds": [{"name": "hilaser","stream": false}]},
+  "midlaser": {"category": "master","sounds": [{"name": "midlaser","stream": false}]},
+  "lowlaser": {"category": "master","sounds": [{"name": "lowlaser","stream": false}]},
+  "cloak": {"category": "master","sounds": [{"name": "cloak","stream": false}]},
+  "decloak": {"category": "master","sounds": [{"name": "decloak","stream": false}]},
+}

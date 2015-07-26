@@ -1,3 +1,0 @@
-This CoFH API for MC 1.6.4 as provided by its author, found in the Misc-Additions mod.
-Those are only needed for compilation.
-Do not include those binaries in the mod package!

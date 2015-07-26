@@ -1,9 +1,17 @@
-WarpDrive
+WarpDrive 2
 =========
 
-A warp drive mod for minecraft
+An update to the warp drive mod. Currently in progress, once builds are availible they will be findable under downloads.
 
 See mcmod.info for credits
+
+
+
+
+
+
+Version 1 information
+=====================
 
 Minecraft forum:
    http://www.minecraftforum.net/topic/1938578-164-warpdrive-mod-ships-space-lasers
