@@ -272,7 +272,19 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 		if (object instanceof Boolean) {
 			 return ((Boolean) object);
 		}
-		String string = object.toString();
+		
+		String string = null;
+		if (object instanceof Object[]) {
+		    if (((Object[]) object).length > 0){
+			string = ((Object[]) object)[0].toString();
+		    }
+		    else {
+			return false;
+		    }
+		}
+		else {
+		    string = object.toString();
+		}
 		return string.equals("true") || string.equals("1.0") || string.equals("1") || string.equals("y") || string.equals("yes");
 	}
 	
