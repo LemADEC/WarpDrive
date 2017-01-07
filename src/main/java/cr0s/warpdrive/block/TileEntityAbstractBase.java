@@ -269,6 +269,7 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 		if (object == null) {
 			 return false;
 		}
+		assert(object instanceof Object[] == false);
 		if (object instanceof Boolean) {
 			 return ((Boolean) object);
 		}

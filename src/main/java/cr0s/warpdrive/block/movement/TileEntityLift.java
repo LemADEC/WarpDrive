@@ -254,7 +254,7 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 			
 		} else if (methodName.equals("active")) {
 			if (arguments.length == 1) {
-				computerEnabled = toBool(arguments);
+				computerEnabled = toBool(arguments[0]);
 			}
 			return new Object[] { !computerEnabled && isEnabled };
 		}
