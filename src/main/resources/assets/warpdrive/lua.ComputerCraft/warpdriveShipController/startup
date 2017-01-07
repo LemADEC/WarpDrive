@@ -4,6 +4,11 @@ if not term.isColor() then
 end
 print("loading...")
 
+if fs.exists("bgTask") then
+  print("Starting background service...")
+  bg bgTask
+end
+
 monitor_textScale = 0.5
 
 Style = {
