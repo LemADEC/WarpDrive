@@ -22,6 +22,9 @@ public class TileEntityAirGenerator extends TileEntityAbstractEnergy {
 		super();
 		
 		peripheralName = "warpdriveAirGenerator";
+		addMethods(new String[] {
+				"enable"
+		});
 	}
 	
 	@Override
