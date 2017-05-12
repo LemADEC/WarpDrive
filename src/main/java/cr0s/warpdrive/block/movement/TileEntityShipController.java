@@ -119,7 +119,7 @@ public class TileEntityShipController extends TileEntityAbstractInterfaced {
 	
 	private void setMode(final int mode) {
 		EnumShipCoreMode[] modes = EnumShipCoreMode.values();
-		if (mode >= 0 && mode <= modes.length) {
+		if (modes[mode] != null) {
 			this.mode = modes[mode];
 			markDirty();
 			if (WarpDriveConfig.LOGGING_JUMP && hasWorldObj()) {
