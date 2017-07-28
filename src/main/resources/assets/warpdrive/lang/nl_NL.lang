@@ -10,7 +10,7 @@ death.attack.warpdrive.laser.player=%1$s werd gelaseriseerd door %2$s
 death.attack.warpdrive.shock=%1$s was geëlektrocuteerd
 death.attack.warpdrive.shock.player=%1$s was geëlektrocuteerd door %2$s
 death.attack.warpdrive.teleportation=%1$s heeft een hermaterialisatie niet overleefd
-death.attack.warpdrive.teleportation.player=%1$s was gedoor door teleportatie van %2$s
+death.attack.warpdrive.teleportation.player=%1$s was gedoos door teleportatie van %2$s
 death.attack.warpdrive.warm=%1$s is doodgegaan door oververhitting
 death.attack.warpdrive.warm.player=%1$s is gekookt door %2$s
 
