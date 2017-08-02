@@ -46,10 +46,9 @@ item.warpdrive.armor.chestplate.name=曲率胸甲
 item.warpdrive.armor.leggings.name=曲率护腿
 item.warpdrive.armor.boots.name=曲率战靴
 
-item.warpdrive.atomic.electromagnetic_cell.name=Electromagnetic cell
-item.warpdrive.atomic.electromagnetic_cell.tooltip.empty=Use a particle collider to fill me!
-item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=Contains %1$s Å³ of %2$s
-
+item.warpdrive.atomic.electromagnetic_cell.name=电磁电池
+item.warpdrive.atomic.electromagnetic_cell.tooltip.empty=使用粒子对撞机充能!
+item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=存储%1$s Å³总量%2$s
 
 item.warpdrive.energy.IC2reactorLaserFocus.name=IC2反应堆激光焦点
 
