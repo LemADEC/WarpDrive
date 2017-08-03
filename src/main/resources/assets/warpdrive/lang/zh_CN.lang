@@ -128,6 +128,13 @@ item.warpdrive.tool.crystalToken4.name=水晶符号#4
 item.warpdrive.tool.crystalToken5.name=水晶符号#5
 
 
+item.warpdrive.tool.tuning_driver.video_channel.name=Video Channel Tuning Driver
+item.warpdrive.tool.tuning_driver.beam_frequency.name=Beam Frequency Tuning Driver
+item.warpdrive.tool.tuning_driver.control_channel.name=Control Channel Tuning Driver
+
+item.warpdrive.tool.tuning_driver.tooltip.usage=§bRight click a block§7 to tune its crystals\n§bSneak§7 to retrieve its value\n§bRight click air§7 to change mode
+
+
 item.warpdrive.tool.TuningFork.name=音叉
 item.warpdrive.tool.TuningFork.white.name=白色音叉
 item.warpdrive.tool.TuningFork.orange.name=橙色音叉
@@ -146,31 +153,64 @@ item.warpdrive.tool.TuningFork.green.name=绿色音叉
 item.warpdrive.tool.TuningFork.red.name=红色音叉
 item.warpdrive.tool.TuningFork.black.name=黑色音叉
 
-item.warpdrive.tool.TuningFork.tooltip.videoChannel=视频通道设置为%1$d
-item.warpdrive.tool.TuningFork.tooltip.beamFrequency=光线频率设置为%1$d
-item.warpdrive.tool.TuningFork.tooltip.usage=§b右键单击一个方块§7 来调整它的水晶\n§b潜行§7来选择替换的水晶
-item.warpdrive.tool.TuningFork.use.setVideoChannel=%1$s正在调整到视频通道%2$d
-item.warpdrive.tool.TuningFork.use.setBeamFrequency=%1$s正在于光线通道 %2$d进行匹配
+item.warpdrive.tool.tuning_fork.tooltip.usage=§bRight click a block§7 to tune its crystals\n§bSneak§7 to tune alternate crystals
 
 
-tile.warpdrive.passive.Air.name=空气方块
-tile.warpdrive.passive.Energized.name=能量方块
-tile.warpdrive.passive.Gas.name=气密方块
+tile.warpdrive.decoration.decorative.energized.name=Energized Block
+tile.warpdrive.decoration.decorative.network.name=Network Block
+tile.warpdrive.decoration.decorative.plain.name=Plain Block
+tile.warpdrive.decoration.gas.name=Gas Block
+
 tile.warpdrive.passive.IridiumBlock.name=铱块
-tile.warpdrive.passive.HighlyAdvancedMachine.name=高度先进的机器方块
-tile.warpdrive.passive.Network.name=网络方块
-tile.warpdrive.passive.Plain.name=平坦方块
+tile.warpdrive.passive.HighlyAdvancedMachine.name=高新机械块
 tile.warpdrive.passive.TransportBeacon.name=运输信标
 
-tile.warpdrive.machines.AirGenerator.name=空气发生器
 tile.warpdrive.machines.ChunkLoader.name=区块加载器
 tile.warpdrive.machines.Laser.name=激光
 tile.warpdrive.machines.LaserMedium.name=激光介质(粒子助推器)
 
+tile.warpdrive.atomic.accelerator_controller.name=Accelerator Controller
+tile.warpdrive.atomic.accelerator_controller.tooltip=Controls one or more particle accelerators.\nShall be placed next to an electromagnet.
+tile.warpdrive.atomic.accelerator_control_point.name=Accelerator control point
+tile.warpdrive.atomic.accelerator_control_point.tooltip=Control accelerator nodes like collider, input and output.\nShall be placed exactly 1 block away from a void shell.\nStore results in any directly connected storage.
+tile.warpdrive.atomic.chiller1.name=Basic Chiller
+tile.warpdrive.atomic.chiller1.tooltip=Progressively cooldown electromagnets from a connected particle accelerator.\nShall be placed next to an electromagnet.
+tile.warpdrive.atomic.chiller2.name=Advanced Chiller
+tile.warpdrive.atomic.chiller2.tooltip=Progressively cooldown electromagnets from a connected particle accelerator.\nShall be placed next to an electromagnet.
+tile.warpdrive.atomic.chiller3.name=Superior Chiller
+tile.warpdrive.atomic.chiller3.tooltip=Progressively cooldown electromagnets from a connected particle accelerator.\nShall be placed next to an electromagnet.
+tile.warpdrive.atomic.electromagnet1.plain.name=Basic Plain Electromagnet
+tile.warpdrive.atomic.electromagnet1.plain.tooltip=Accelerate, focus and orient particles in the attached Void Shell.
+tile.warpdrive.atomic.electromagnet1.glass.name=Basic Glass Electromagnet
+tile.warpdrive.atomic.electromagnet1.glass.tooltip=Same a Plain Electromagnet, except you can see through it.
+tile.warpdrive.atomic.electromagnet2.plain.name=Advanced Plain Electromagnet
+tile.warpdrive.atomic.electromagnet2.plain.tooltip=Accelerate, focus and orient particles in the attached Void Shell.
+tile.warpdrive.atomic.electromagnet2.glass.name=Advanced Glass Electromagnet
+tile.warpdrive.atomic.electromagnet2.glass.tooltip=Same a Plain Electromagnet, except you can see through it.
+tile.warpdrive.atomic.electromagnet3.plain.name=Superior Plain Electromagnet
+tile.warpdrive.atomic.electromagnet3.plain.tooltip=Accelerate, focus and orient particles in the attached Void Shell.
+tile.warpdrive.atomic.electromagnet3.glass.name=Superior Glass Electromagnet
+tile.warpdrive.atomic.electromagnet3.glass.tooltip=Same a Plain Electromagnet, except you can see through it.
+tile.warpdrive.atomic.particles_collider.name=Particles Collider
+tile.warpdrive.atomic.particles_collider.tooltip=Deviates particles to collide against each others or a fixed target.\nRequires 12 blocks and an Accelerator control point to collect results.
+tile.warpdrive.atomic.particles_injector.name=Particles Injector
+tile.warpdrive.atomic.particles_injector.tooltip=Inject items or particles from a connected storage into a Basic Accelerator.
+tile.warpdrive.atomic.void_shell_plain.name=Plain Void Shell
+tile.warpdrive.atomic.void_shell_plain.tooltip=Provides 2 empty channels for particles to travel inside an accelerator setup.\nConnects only horizontally to other Void Shells.
+tile.warpdrive.atomic.void_shell_glass.name=Glass Void Shell
+tile.warpdrive.atomic.void_shell_glass.tooltip=Same as a Plain Void Shell, except you can see particles moving through it.
+
+tile.warpdrive.breathing.air.name=Air Block
+tile.warpdrive.breathing.air_generator.name=Air Generator
+tile.warpdrive.breathing.air_generator1.name=Basic Air Generator
+tile.warpdrive.breathing.air_generator2.name=Advanced Air Generator
+tile.warpdrive.breathing.air_generator3.name=Superior Air Generator
+tile.warpdrive.breathing.air_shield.name=Energy Air Shield
+
 tile.warpdrive.building.ShipScanner.name=船体扫描仪
 
 tile.warpdrive.collection.LaserTreeFarm.name=激光林场
-tile.warpdrive.collection.MiningLaser.name=采矿激光
+tile.warpdrive.collection.MiningLaser.name=采掘激光
 
 tile.warpdrive.detection.Camera.name=摄像机
 tile.warpdrive.detection.CloakingCoil.name=隐形线圈
@@ -218,10 +258,12 @@ tile.warpdrive.forcefield.relay2.tooltip=支持一个力场升级在其网络内
 tile.warpdrive.forcefield.relay3.name=卓越力场继电器
 tile.warpdrive.forcefield.relay3.tooltip=支持一个力场升级在其网络内共享
 
-tile.warpdrive.movement.Lift.name=电梯
-tile.warpdrive.movement.ShipController.name=飞船控制器
-tile.warpdrive.movement.ShipCore.name=飞船核心
-tile.warpdrive.movement.Transporter.name=传送器
+tile.warpdrive.movement.Lift.name=Lift
+tile.warpdrive.movement.ShipController.name=Ship Controller
+tile.warpdrive.movement.ShipController.tooltip=Defines your ship front relative to the core. Attach a computer to open the user interface.\nShall be placed horizontally directly next to the Ship core.
+tile.warpdrive.movement.ShipCore.name=Ship Core
+tile.warpdrive.movement.ShipCore.tooltip=Defines your ship center relative to the controller. Connecting an energy source will charge the core.\nShall be placed horizontally directly next to the Ship controller.
+tile.warpdrive.movement.Transporter.name=Transporter
 
 tile.warpdrive.weapon.LaserCamera.name=激光+相机
 tile.warpdrive.weapon.WeaponController.name=武器控制器
@@ -295,6 +337,7 @@ tile.warpdrive.hull2.plain.brown.name=棕色染色高级船体
 tile.warpdrive.hull2.plain.green.name=绿色染色高级船体
 tile.warpdrive.hull2.plain.red.name=红色染色高级船体
 tile.warpdrive.hull2.plain.black.name=黑色染色高级船体
+
 
 tile.warpdrive.hull2.glass.white.name=白色染色高级船体玻璃
 tile.warpdrive.hull2.glass.orange.name=橙色染色高级船体玻璃
@@ -380,7 +423,6 @@ tile.warpdrive.hull3.stairs.brown.name=棕色染色卓越船体楼梯
 tile.warpdrive.hull3.stairs.green.name=绿色染色卓越船体楼梯
 tile.warpdrive.hull3.stairs.red.name=红色染色卓越船体楼梯
 tile.warpdrive.hull3.stairs.black.name=黑色染色卓越船体楼梯
-
 
 warpdrive.guide.prefix=§6%1$s:§r 
 warpdrive.error.badTileEntity=§c这个方块需要通过挖掘和放置来更新它.
