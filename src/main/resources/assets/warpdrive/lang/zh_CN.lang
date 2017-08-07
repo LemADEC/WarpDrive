@@ -9,7 +9,7 @@ death.attack.warpdrive.laser=激光击穿了%1$s
 death.attack.warpdrive.laser.player=%2$s操纵激光焚化了%1$s
 death.attack.warpdrive.shock=%1$s触电身亡
 death.attack.warpdrive.shock.player=%1$s被%2$s电死
-death.attack.warpdrive.teleportation=%1$s在重组中丧命
+death.attack.warpdrive.teleportation=%1$s重组失败
 death.attack.warpdrive.teleportation.player=%2$s利用传送整死了%1$s
 death.attack.warpdrive.warm=%1$s死于高温
 death.attack.warpdrive.warm.player=%1$s被%2$s煮熟了
@@ -529,7 +529,7 @@ tile.warpdrive.hull3.stairs.black.name=黑色卓越船体楼梯
 
 
 warpdrive.guide.prefix=§6%1$s:§r 
-warpdrive.error.badTileEntity=§c这个方块需要通过挖掘和放置来更新它.
+warpdrive.error.badTileEntity=§c需要重放置以更新此方块.
 warpdrive.monitor.viewingCamera=观景相机位于 %2$d, %3$d, %4$d 在视频频道%1$d
 warpdrive.ship.attachedPlayers=所属的玩家: %1$s
 warpdrive.ship.playerAttached=你现在位于飞船 %1$s.\n所属玩家是%2$s
@@ -638,12 +638,12 @@ warpdrive.videoChannel.statusLine.undefined=§7未定义的视频通道.\n§b使
 
 warpdrive.cloakingCore.invalidAssembly=§c无效的装配!
 warpdrive.cloakingCore.disabled=伪装被禁用
-warpdrive.cloakingCore.lowPower=§c伪装已经消失，我们需要更多的动力，船长.
+warpdrive.cloakingCore.lowPower=§c伪装失效，我们需要更多的能量.
 warpdrive.cloakingCore.cloaking=一个层级 %1$d 伪装目前覆盖 %2$d方块!
 warpdrive.IC2reactorLaserMonitor.noReactor=未发现反应堆!
 warpdrive.IC2reactorLaserMonitor.multipleReactors=%1$d反应堆已连接.
-warpdrive.transporter.status=从%1$.0f %2$.0f %3$.0f 到 %4$.0f %5$.0f %6$.0f
+warpdrive.transporter.status=从%1$.0f %2$.0f %3$.0f到 %4$.0f %5$.0f %6$.0f
 
-warpdrive.tooltip.itemTag.breathingIC2=§b太空中呼吸§r 消耗背包中的IC压缩空气
+warpdrive.tooltip.itemTag.breathingIC2=§b太空中呼吸§r消耗背包中的IC压缩空气
 warpdrive.tooltip.itemTag.flyInSpace=§b太空喷气背包§r.
 warpdrive.tooltip.itemTag.noFallDamage=§b减少摔落伤害§r.
