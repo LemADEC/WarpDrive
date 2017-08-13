@@ -29,7 +29,7 @@ item.warpdrive.crafting.AirCanisterEmpty.name=空气罐(空)
 item.warpdrive.crafting.AirCanisterEmpty.tooltip=§b右键一个空气发生器§7来进行填充
 item.warpdrive.crafting.Lens.name=透镜
 item.warpdrive.crafting.Zoom.name=缩放
-item.warpdrive.crafting.GlassTank.name=玻璃桶
+item.warpdrive.crafting.GlassTank.name=玻璃水槽
 item.warpdrive.crafting.FlatScreen.name=平面屏幕
 item.warpdrive.crafting.MemoryCrystal.name=记忆水晶
 item.warpdrive.crafting.Motor.name=发动机
@@ -52,7 +52,7 @@ item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=存储%1$s Å³总量
 
 item.warpdrive.energy.IC2reactorLaserFocus.name=IC2反应堆激光焦点
 
-item.warpdrive.forcefield.shape.none.name=无形状的
+item.warpdrive.forcefield.shape.none.name=无形状
 item.warpdrive.forcefield.shape.none.tooltip=§4无效的项目
 item.warpdrive.forcefield.shape.sphere.name=球体
 item.warpdrive.forcefield.shape.sphere.tooltip=
@@ -68,9 +68,9 @@ item.warpdrive.forcefield.shape.tube.name=管道
 item.warpdrive.forcefield.shape.tube.tooltip=
 item.warpdrive.forcefield.shape.tunnel.name=隧道
 item.warpdrive.forcefield.shape.tunnel.tooltip=
-item.warpdrive.forcefield.shape.tooltip.usage=§b右键单击一个投影仪§7 去升级它\n§b潜行加右键§7来卸载升级
+item.warpdrive.forcefield.shape.tooltip.usage=§b右击投影仪§7安装升级\n§b潜行右键§7卸载升级
 
-item.warpdrive.forcefield.upgrade.none.name=没有升级
+item.warpdrive.forcefield.upgrade.none.name=无升级
 item.warpdrive.forcefield.upgrade.none.tooltip=§4无效的项目
 item.warpdrive.forcefield.upgrade.attraction.name=引力升级
 item.warpdrive.forcefield.upgrade.attraction.tooltip=牵引更多被破坏的方块来进行储存.添加更多的引力升级来影响物品,实体,怪物和玩家. 为一片区域提供反转的引力效果或地球化改造.
@@ -103,14 +103,14 @@ item.warpdrive.forcefield.upgrade.silencer.tooltip=消除连接方块的声音
 item.warpdrive.forcefield.upgrade.speed.name=速度升级
 item.warpdrive.forcefield.upgrade.speed.tooltip=提升力场投影的速度
 item.warpdrive.forcefield.upgrade.stabilization.name=稳定升级
-item.warpdrive.forcefield.upgrade.stabilization.tooltip=填充方块而不是只发射一个立场
+item.warpdrive.forcefield.upgrade.stabilization.tooltip=填充方块而不是只发射一个力场
 item.warpdrive.forcefield.upgrade.thickness.name=厚度升级
 item.warpdrive.forcefield.upgrade.thickness.tooltip=增加力场的厚度.添加更多的厚度升级来提升效果，翻倍的提升.
 item.warpdrive.forcefield.upgrade.translation.name=转化升级
 item.warpdrive.forcefield.upgrade.translation.tooltip=使力场能够转化
-item.warpdrive.forcefield.upgrade.tooltip.usage.projector=§b右键单击一个投影仪§7来升级它
-item.warpdrive.forcefield.upgrade.tooltip.usage.relay=§b右键单击一个继电器§7来升级它
-item.warpdrive.forcefield.upgrade.tooltip.usage.dismount=§b潜行加右键§7来卸载升级
+item.warpdrive.forcefield.upgrade.tooltip.usage.projector=§b右击一个投影仪§7安装升级
+item.warpdrive.forcefield.upgrade.tooltip.usage.relay=§b右击继电器§7安装升级
+item.warpdrive.forcefield.upgrade.tooltip.usage.dismount=§b潜行右击§7卸载升级
 
 item.warpdrive.upgrade.Power.name=动力升级
 item.warpdrive.upgrade.Speed.name=速度升级
@@ -128,11 +128,11 @@ item.warpdrive.tool.crystalToken4.name=水晶符号#4
 item.warpdrive.tool.crystalToken5.name=水晶符号#5
 
 
-item.warpdrive.tool.tuning_driver.video_channel.name=Video Channel Tuning Driver
-item.warpdrive.tool.tuning_driver.beam_frequency.name=Beam Frequency Tuning Driver
-item.warpdrive.tool.tuning_driver.control_channel.name=Control Channel Tuning Driver
+item.warpdrive.tool.tuning_driver.video_channel.name=录像信号调节驱动器
+item.warpdrive.tool.tuning_driver.beam_frequency.name=传送频率调节驱动器
+item.warpdrive.tool.tuning_driver.control_channel.name=电磁波调节驱动器
 
-item.warpdrive.tool.tuning_driver.tooltip.usage=§bRight click a block§7 to tune its crystals\n§bSneak§7 to retrieve its value\n§bRight click air§7 to change mode
+item.warpdrive.tool.tuning_driver.tooltip.usage=§b右击方块§7调节水晶\n§bSneak§7取消价值\n§b右击空气§7改变模式
 
 
 item.warpdrive.tool.TuningFork.name=音叉
@@ -153,7 +153,7 @@ item.warpdrive.tool.TuningFork.green.name=绿色音叉
 item.warpdrive.tool.TuningFork.red.name=红色音叉
 item.warpdrive.tool.TuningFork.black.name=黑色音叉
 
-item.warpdrive.tool.tuning_fork.tooltip.usage=§bRight click a block§7 to tune its crystals\n§bSneak§7 to tune alternate crystals
+item.warpdrive.tool.tuning_fork.tooltip.usage=§b右击方块§7 to tune its crystals\n§bSneak§7 to tune alternate crystals
 
 
 tile.warpdrive.decoration.decorative.energized.name=Energized Block
