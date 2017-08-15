@@ -30,43 +30,43 @@ public class Vector3 implements Cloneable {
 		this(0, 0, 0);
 	}
 	
-	public Vector3(double x, double y, double z) {
+	public Vector3(final double x, final double y, final double z) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public Vector3(Entity par1) {
-		x = par1.posX;
-		y = par1.posY;
-		z = par1.posZ;
+	public Vector3(final Entity entity) {
+		x = entity.posX;
+		y = entity.posY;
+		z = entity.posZ;
 	}
 	
-	public Vector3(TileEntity par1) {
-		x = par1.xCoord;
-		y = par1.yCoord;
-		z = par1.zCoord;
+	public Vector3(final TileEntity tileEntity) {
+		x = tileEntity.xCoord;
+		y = tileEntity.yCoord;
+		z = tileEntity.zCoord;
 	}
 	
-	public Vector3(Vec3 par1) {
-		x = par1.xCoord;
-		y = par1.yCoord;
-		z = par1.zCoord;
+	public Vector3(final Vec3 vec3) {
+		x = vec3.xCoord;
+		y = vec3.yCoord;
+		z = vec3.zCoord;
 	}
 	
-	public Vector3(MovingObjectPosition par1) {
-		x = par1.blockX;
-		y = par1.blockY;
-		z = par1.blockZ;
+	public Vector3(final MovingObjectPosition movingObjectPosition) {
+		x = movingObjectPosition.blockX;
+		y = movingObjectPosition.blockY;
+		z = movingObjectPosition.blockZ;
 	}
 	
-	public Vector3(ChunkCoordinates par1) {
-		x = par1.posX;
-		y = par1.posY;
-		z = par1.posZ;
+	public Vector3(final ChunkCoordinates chunkCoordinates) {
+		x = chunkCoordinates.posX;
+		y = chunkCoordinates.posY;
+		z = chunkCoordinates.posZ;
 	}
 	
-	public Vector3(ForgeDirection direction) {
+	public Vector3(final ForgeDirection direction) {
 		x = direction.offsetX;
 		y = direction.offsetY;
 		z = direction.offsetZ;

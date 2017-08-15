@@ -34,6 +34,7 @@ import net.minecraftforge.oredict.ShapelessOreRecipe;
  * Hold the different recipe sets
  */
 public class Recipes {
+	
 	public static final String[] oreDyes = {
 		"dyeBlack",
 		"dyeRed",
@@ -709,32 +710,22 @@ public class Recipes {
 				'r', Items.redstone,
 				'i', Items.iron_ingot));
 		
-		// Capacitive crystal is 3 redstone block, 3 paper, 3 lapis block or 1 HV capacitor from IE or 1 MFE from IC2
+		// Capacitive crystal is 2 redstone block, 4 paper, 1 regeneration potion, 2 (lithium dust or electrum dust or electrical steel ingot or gold ingot)
+		Object lithiumOrElectrum = "ingotGold";
 		if (OreDictionary.doesOreNameExist("dustLithium") && !OreDictionary.getOres("dustLithium").isEmpty()) {// comes with GregTech, Industrial Craft 2 and Mekanism
 			// (Lithium is processed from nether quartz)
-			GameRegistry.addRecipe(new ShapedOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.CAPACITIVE_CRYSTAL, 2), false, "plp", "lRl", "plp",
-					'R', new ItemStack(Items.potionitem, 1, 8225),  // Regeneration II (ghast tear + glowstone)
-					'l', "dustLithium",
-					'p', Items.paper));
+			// (IC2 Experimental is 1 Lithium dust from 18 nether quartz)
+			lithiumOrElectrum = "dustLithium";
 		} else if (OreDictionary.doesOreNameExist("dustElectrum") && !OreDictionary.getOres("dustElectrum").isEmpty()) {// comes with ImmersiveEngineering, ThermalFoundation, Metallurgy
-			GameRegistry.addRecipe(new ShapedOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.CAPACITIVE_CRYSTAL, 2), false, "prp", "eRe", "prp",
-			        'R', new ItemStack(Items.potionitem, 1, 8225),	// Regeneration II (ghast tear + glowstone)
-			        'r', "blockRedstone",
-					'e', "dustElectrum",
-			        'p', Items.paper));
+			lithiumOrElectrum = "dustElectrum";
 		} else if (OreDictionary.doesOreNameExist("ingotElectricalSteel") && !OreDictionary.getOres("ingotElectricalSteel").isEmpty()) {// comes with EnderIO
-			GameRegistry.addRecipe(new ShapedOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.CAPACITIVE_CRYSTAL, 2), false, "prp", "eRe", "prp",
-			        'R', new ItemStack(Items.potionitem, 1, 8225),	// Regeneration II (ghast tear + glowstone)
-			        'r', "blockRedstone",
-			        'e', "ingotElectricalSteel",
-			        'p', Items.paper));
-		} else {// Vanilla
-			GameRegistry.addRecipe(new ShapedOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.CAPACITIVE_CRYSTAL, 2), false, "prp", "gSg", "prp",
-					'S', new ItemStack(Items.potionitem, 1, 8265),	// Strength I long (blaze powder + redstone)
-					'r', "blockRedstone",
-					'p', Items.paper,
-					'g', "ingotGold"));
+			lithiumOrElectrum = "ingotElectricalSteel";
 		}
+		GameRegistry.addRecipe(new ShapedOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.CAPACITIVE_CRYSTAL, 2), false, "prp", "lRl", "prp",
+				'R', new ItemStack(Items.potionitem, 1, 8225),  // Regeneration II (ghast tear + glowstone)
+				'r', "blockRedstone",
+				'l', lithiumOrElectrum,
+				'p', Items.paper));
 		
 		// Air canister is 4 iron bars, 2 leather/rubber, 2 yellow wool, 1 tank
 		Object rubberOrLeather = Items.leather;
@@ -743,14 +734,14 @@ public class Recipes {
 		} else if (OreDictionary.doesOreNameExist("itemRubber") && !OreDictionary.getOres("itemRubber").isEmpty()) {// comes with IndustrialCraft2
 			rubberOrLeather = "itemRubber";
 		}
-		Object woolYellow = new ItemStack(Blocks.wool, 1, 4);
-		if (OreDictionary.doesOreNameExist("blockWoolYellow") && !OreDictionary.getOres("blockWoolYellow").isEmpty()) {
-			woolYellow = "blockWoolYellow";
+		Object woolPurple = new ItemStack(Blocks.wool, 1, 10);
+		if (OreDictionary.doesOreNameExist("blockWoolPurple") && !OreDictionary.getOres("blockWoolPurple").isEmpty()) {
+			woolPurple = "blockWoolPurple";
 		}
 		GameRegistry.addRecipe(new ShapedOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.AIR_CANISTER, 4), false, "iyi", "rgr", "iyi",
 				'r', rubberOrLeather,
 				'g', ItemComponent.getItemStack(EnumComponentType.GLASS_TANK),
-				'y', woolYellow,
+				'y', woolPurple,
 				'i', ironBars));
 		
 		// Lens is 1 diamond, 2 gold ingots, 2 glass panels
@@ -828,6 +819,48 @@ public class Recipes {
 				'b', ironBars,
 				'i', Items.iron_ingot,
 				'n', "nuggetGold"));
+		
+		// Basic Air Tank is 2 air canisters, 1 pump, 1 gold nugget, 1 basic circuit, 4 rubber
+		Object goldNuggetOrBasicCircuit = "nuggetGold";
+		if (OreDictionary.doesOreNameExist("circuitBasic") && !OreDictionary.getOres("circuitBasic").isEmpty()) {// comes with IndustrialCraft2, Mekanism, VoltzEngine
+			goldNuggetOrBasicCircuit = "circuitBasic";
+		}
+		GameRegistry.addRecipe(new ShapedOreRecipe(WarpDrive.itemAirTanks[1], false, "rnr", "tpt", "rcr",
+		                                           'r', rubberOrLeather,
+		                                           'p', itemStackMotors[0],
+		                                           't', ItemComponent.getItemStack(EnumComponentType.AIR_CANISTER),
+		                                           'c', goldNuggetOrBasicCircuit,
+		                                           'n', "nuggetGold"));
+		
+		// Advanced Air Tank is 2 basic air tank, 1 pump, 1 gold nugget, 1 advanced circuit, 4 rubber
+		Object goldIngotOrAdvancedCircuit = "nuggetGold";
+		if (OreDictionary.doesOreNameExist("circuitAdvanced") && !OreDictionary.getOres("circuitAdvanced").isEmpty()) {// comes with IndustrialCraft2, Mekanism, VoltzEngine
+			goldIngotOrAdvancedCircuit = "circuitAdvanced";
+		}
+		GameRegistry.addRecipe(new ShapedOreRecipe(WarpDrive.itemAirTanks[2], false, "rnr", "tpt", "rcr",
+		                                           'r', rubberOrLeather,
+		                                           'p', itemStackMotors[1],
+		                                           't', WarpDrive.itemAirTanks[1],
+		                                           'c', goldIngotOrAdvancedCircuit,
+		                                           'n', "nuggetGold"));
+		
+		// Superior Air Tank is 2 advanced air tank, 1 pump, 1 gold nugget, 1 elite circuit, 4 rubber
+		Object emeraldOrSuperiorCircuit = "gemEmerald";
+		if (OreDictionary.doesOreNameExist("circuitElite") && !OreDictionary.getOres("circuitElite").isEmpty()) {// comes with Mekanism, VoltzEngine
+			emeraldOrSuperiorCircuit = "circuitElite";
+		}
+		GameRegistry.addRecipe(new ShapedOreRecipe(WarpDrive.itemAirTanks[3], false, "rnr", "tpt", "rcr",
+		                                           'r', rubberOrLeather,
+		                                           'p', itemStackMotors[2],
+		                                           't', WarpDrive.itemAirTanks[2],
+		                                           'c', emeraldOrSuperiorCircuit,
+		                                           'n', "nuggetGold"));
+		
+		// Uncrafting air tanks and canister
+		GameRegistry.addRecipe(new ShapelessOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.GLASS_TANK, 1), WarpDrive.itemAirTanks[0], WarpDrive.itemAirTanks[0], WarpDrive.itemAirTanks[0], WarpDrive.itemAirTanks[0]));
+		GameRegistry.addRecipe(new ShapelessOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.AIR_CANISTER, 2), WarpDrive.itemAirTanks[1]));
+		GameRegistry.addRecipe(new ShapelessOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.AIR_CANISTER, 4), WarpDrive.itemAirTanks[2]));
+		GameRegistry.addRecipe(new ShapelessOreRecipe(ItemComponent.getItemStackNoCache(EnumComponentType.AIR_CANISTER, 8), WarpDrive.itemAirTanks[3]));
 		
 		// Bone charcoal is smelting 1 bone
 		GameRegistry.addSmelting(Items.bone, ItemComponent.getItemStackNoCache(EnumComponentType.BONE_CHARCOAL, 1), 1);
@@ -1083,10 +1116,20 @@ public class Recipes {
 		        'm', itemStackMachineCasings[3]));
 		
 		// Air shield is 4 glowstones, 4 omnipanels and 1 coil crystal 
-		GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(WarpDrive.blockAirShield, 4, 0), false, "gog", "oco", "gog",
+		GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(WarpDrive.blockAirShield, 4, 4), false, "gog", "oco", "gog",
 				'g', Items.glowstone_dust,
 				'o', "blockHull1_omnipanel",
 				'c', ItemComponent.getItemStack(EnumComponentType.COIL_CRYSTAL) ));
+		for (int woolColor = 0; woolColor < 16; woolColor++) {
+			OreDictionary.registerOre("blockAirShield", new ItemStack(WarpDrive.blockAirShield, 1, woolColor));
+			GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(WarpDrive.blockAirShield, 6, BlockColored.func_150031_c(woolColor)), false, "###", "gXg", "###",
+			                                           '#', "blockAirShield",
+			                                           'g', Items.gold_nugget,
+			                                           'X', oreDyes[woolColor] ));
+			GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(WarpDrive.blockAirShield, 1, BlockColored.func_150031_c(woolColor)),
+			                                           "blockAirShield",
+			                                           oreDyes[woolColor] ));
+		}
 		
 		// Laser cannon is 2 motors, 1 diffraction grating, 1 lens, 1 computer interface, 1 HV Machine casing, 1 redstone dust, 2 glass pane
 		GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(WarpDrive.blockLaser), false, "gtr", "ldm", "gtc",
@@ -1102,7 +1145,7 @@ public class Recipes {
 		ItemStack itemStackDiamondPick = new ItemStack(Items.diamond_pickaxe);
 		if (WarpDriveConfig.isGregTech5Loaded) {
 			itemStackDiamondPick = WarpDriveConfig.getModItemStack("IC2", "itemToolMiningLaser", 1); // Mining laser
-		} else if (WarpDriveConfig.isIndustrialCraft2Loaded) {
+		// } else if (WarpDriveConfig.isIndustrialCraft2Loaded) {
 			// itemStackDiamondPick = WarpDriveConfig.getModItemStack("IC2", "blockMachine2", 11); // Advanced Miner
 		}
 		GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(WarpDrive.blockMiningLaser), false, "cmr", "tdt", "glg",
@@ -1615,7 +1658,7 @@ public class Recipes {
 			}
 			
 			// Normal electromagnets
-			GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(WarpDrive.blockElectromagnetPlain[0], 4), "ctc", "cmc", "cCc",
+			GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(WarpDrive.blockElectromagnetPlain[0], 4), "   ", "ccc", "Cmt",
 			        'c', ironIngotOrCopperIngotOrCoil,
 			        't', ItemComponent.getItemStack(EnumComponentType.GLASS_TANK),
 			        'm', itemStackMotorLV,
@@ -1661,6 +1704,11 @@ public class Recipes {
 				GameRegistry.addRecipe(new RecipeParticleShapedOre(WarpDriveConfig.getModItemStack("DefenseTech", "explosives", 22), "sss", "sas", "sss",
 						's', ItemElectromagneticCell.getItemStackNoCache(ParticleRegistry.STRANGE_MATTER, 1000),
 						'a', WarpDriveConfig.getModItemStack("DefenseTech", "explosives", 21)));
+			}
+			
+			// ICBM
+			if (WarpDriveConfig.isICBMLoaded) {
+				// @TODO
 			}
 			
 			// ICBM classic
@@ -1930,6 +1978,18 @@ public class Recipes {
 		} else {
 			WarpDrive.logger.info(String.format("Removing recipe %s with output %s", recipeToRemove, itemStackOutputOfRecipeToRemove));
 			CraftingManager.getInstance().getRecipeList().remove(recipeToRemove);
+		}
+	}
+	
+	public static void patchOredictionary() {
+		// patching for https://github.com/VoltzEngine-Project/Engine/issues/78
+		for (final String nameOre : new String[] { "ingotDiamond" }) {
+			if (OreDictionary.doesOreNameExist(nameOre) && OreDictionary.getOres(nameOre).size() == 0) {
+				WarpDrive.logger.error(String.format("Invalid OreDictionary entry for %s! Adding a placeholder to prevent crashes.", nameOre));
+				final ItemStack itemStack = new ItemStack(Blocks.fire);
+				// itemStack.setStackDisplayName(String.format("Invalid %s", nameOre));
+				OreDictionary.registerOre(nameOre, itemStack);
+			}
 		}
 	}
 }

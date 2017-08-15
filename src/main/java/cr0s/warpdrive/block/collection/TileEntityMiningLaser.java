@@ -4,6 +4,7 @@ import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.config.Dictionary;
 import cr0s.warpdrive.config.WarpDriveConfig;
+import cr0s.warpdrive.data.CelestialObjectManager;
 import cr0s.warpdrive.data.Vector3;
 import cr0s.warpdrive.data.VectorI;
 import cr0s.warpdrive.network.PacketHandler;
@@ -25,6 +26,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidRegistry;
 
 public class TileEntityMiningLaser extends TileEntityAbstractMiner {
+	
 	private final boolean canSilktouch = (WarpDriveConfig.MINING_LASER_SILKTOUCH_DEUTERIUM_L <= 0 || FluidRegistry.isFluidRegistered("deuterium"));
 	
 	private boolean isActive() {
@@ -87,7 +89,7 @@ public class TileEntityMiningLaser extends TileEntityAbstractMiner {
 			return;
 		}
 		
-		boolean isOnPlanet = WarpDrive.starMap.hasAtmosphere(worldObj, xCoord, zCoord);
+		final boolean isOnPlanet = CelestialObjectManager.hasAtmosphere(worldObj, xCoord, zCoord);
 		
 		delayTicks--;
 		if (currentState == STATE_WARMUP) {
@@ -491,27 +493,27 @@ public class TileEntityMiningLaser extends TileEntityAbstractMiner {
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		switch (methodName) {
-			case "start":
-				return start();
-
-			case "stop":
-				stop();
-				return null;
-
-			case "state":
-				return state();
-
-			case "offset":
-				return offset(arguments);
-
-			case "onlyOres":
-				return onlyOres(arguments);
-
-			case "silktouch":
-				return silktouch(arguments);
+		case "start":
+			return start();
+			
+		case "stop":
+			stop();
+			return null;
+			
+		case "state":
+			return state();
+			
+		case "offset":
+			return offset(arguments);
+			
+		case "onlyOres":
+			return onlyOres(arguments);
+			
+		case "silktouch":
+			return silktouch(arguments);
 		}
 		
 		return super.callMethod(computer, context, method, arguments);

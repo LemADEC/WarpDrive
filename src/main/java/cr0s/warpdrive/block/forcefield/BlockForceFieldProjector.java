@@ -64,17 +64,18 @@ public class BlockForceFieldProjector extends BlockAbstractForceField {
 			return icons[0];
 		}
 		
-		if (side == (metadata & 7) || (((TileEntityForceFieldProjector)tileEntity).isDoubleSided && ForgeDirection.OPPOSITES[side] == (metadata & 7))) {
-			return icons[3 + ((TileEntityForceFieldProjector)tileEntity).getShape().ordinal()];
-		} else if (((TileEntityForceFieldProjector)tileEntity).isConnected) {
-			if (((TileEntityForceFieldProjector)tileEntity).isPowered) {
-				return icons[2];
-			} else {
-				return icons[1];
-			}
+		if (side == (metadata & 7) || (((TileEntityForceFieldProjector) tileEntity).isDoubleSided && ForgeDirection.OPPOSITES[side] == (metadata & 7))) {
+			return icons[3 + ((TileEntityForceFieldProjector) tileEntity).getShape().ordinal()];
+		}
+		if ( !((TileEntityForceFieldProjector) tileEntity).isConnected
+		  || !((TileEntityForceFieldProjector) tileEntity).isEnabled ) {
+			return icons[0];
+		}
+		if (!((TileEntityForceFieldProjector) tileEntity).isPowered) {
+			return icons[1];
 		}
 		
-		return icons[0];
+		return icons[2];
 	}
 	
 	@SideOnly(Side.CLIENT)

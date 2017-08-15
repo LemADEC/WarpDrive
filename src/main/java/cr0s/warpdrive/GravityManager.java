@@ -13,6 +13,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 
 public class GravityManager {
+	
 	private static final double OVERWORLD_ENTITY_GRAVITY = 0.080000000000000002D;	// Default value from Vanilla
 	private static final double OVERWORLD_ITEM_GRAVITY = 0.039999999105930328D;	// Default value from Vanilla
 	private static final double OVERWORLD_ITEM_GRAVITY2 = 0.9800000190734863D;	// Default value from Vanilla
@@ -25,6 +26,7 @@ public class GravityManager {
 	private static final double SPACE_VOID_GRAVITY_JETPACK_SNEAK = 0.02D;
 	private static final double SPACE_VOID_GRAVITY_RAW_SNEAK = 0.005D; // 0.001 = no mvt
 	
+	@SuppressWarnings("unused") // Core mod
 	public static double getGravityForEntity(Entity entity) {
 		
 		final double gravity = StarMapRegistry.getGravity(entity);
@@ -73,6 +75,7 @@ public class GravityManager {
 		return gravity * OVERWORLD_ENTITY_GRAVITY;
 	}
 	
+	@SuppressWarnings("unused") // Core mod
 	public static double getItemGravity(EntityItem entity) {
 		final double gravity = StarMapRegistry.getGravity(entity);
 		if (gravity == CelestialObject.GRAVITY_NONE) {
@@ -94,6 +97,7 @@ public class GravityManager {
 		return gravity * OVERWORLD_ITEM_GRAVITY;
 	}
 	
+	@SuppressWarnings("unused") // Core mod
 	public static double getItemGravity2(EntityItem entity) {
 		final double gravity = StarMapRegistry.getGravity(entity);
 		if (gravity == CelestialObject.GRAVITY_NONE) {

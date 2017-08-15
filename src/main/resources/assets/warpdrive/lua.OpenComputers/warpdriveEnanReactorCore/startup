@@ -21,7 +21,7 @@ end
 function reactor_boot()
   if reactor ~= nil then
     w.writeLn("Booting Reactor...")
-    local isActive, strMode, releaseRate = reactor.active()
+    local  _, _, _, strMode, _ = reactor.state()
     if strMode == "OFF" then
       data.reactor_mode = 0
     elseif strMode == "MANUAL" then
@@ -129,9 +129,9 @@ function reactor_page()
     w.setColorNormal()
     w.setCursorPos(1, 9)
     w.write("Activated: ")
-    local isActive = reactor.active()
-    if isActive then w.setColorSuccess() else w.setColorNormal() end
-    w.write(w.format_boolean(isActive, "YES", "no"))
+    local isEnabled = reactor.enable()
+    if isEnabled then w.setColorSuccess() else w.setColorNormal() end
+    w.write(w.format_boolean(isEnabled, "YES", "no"))
   end
   
   if #reactorlasers == 0 then
@@ -231,13 +231,13 @@ end
 function reactor_start()
   if reactor ~= nil then
     reactor_setMode()
-    reactor.active(true)
+    reactor.enable(true)
   end
 end
 
 function reactor_stop()
   if reactor ~= nil then
-    reactor.active(false)
+    reactor.enable(false)
   end
 end
 
@@ -268,7 +268,7 @@ function reactor_pulse(output)
     if reactor_pulseStep == 0 then
       for key, instability in pairs(instabilities) do
         w.setCursorPos(12, 2 + key)
-        stability = math.floor((100.0 - instability) * 10) / 10
+        local stability = math.floor((100.0 - instability) * 10) / 10
         if stability >= data.reactor_targetStability then
           w.setColorSuccess()
         else
@@ -360,9 +360,9 @@ function reactor_register()
   w.device_register("warpdriveEnanReactorLaser",
       function(deviceType, address, wrap) table.insert(reactorlasers, { side = wrap.side(), wrap = wrap }) end,
       function() end)
-  w.event_register("reactorPulse"       , function() reactor_pulse(param)                        return false end )
-  w.event_register("reactorDeactivation", function() w.status_showWarning("Reactor deactivated") return false end )
-  w.event_register("reactorActivation"  , function() w.status_showWarning("Reactor activated")   return false end )
+  w.event_register("reactorPulse"       , function(eventName, param) reactor_pulse(param)                        return false end )
+  w.event_register("reactorDeactivation", function(                ) w.status_showWarning("Reactor deactivated") return false end )
+  w.event_register("reactorActivation"  , function(                ) w.status_showWarning("Reactor activated")   return false end )
   w.data_register("reactor", reactor_read, nil)
 end
 

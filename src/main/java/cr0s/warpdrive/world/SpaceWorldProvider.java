@@ -2,6 +2,8 @@ package cr0s.warpdrive.world;
 
 import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.client.ClientProxy;
+import cr0s.warpdrive.data.CelestialObjectManager;
 import cr0s.warpdrive.data.CelestialObject;
 import cr0s.warpdrive.data.StarMapRegistry;
 import cr0s.warpdrive.render.RenderBlank;
@@ -23,14 +25,27 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public class SpaceWorldProvider extends WorldProvider {
 	
+	private CelestialObject celestialObjectDimension = null;
+	
 	public SpaceWorldProvider() {
 		worldChunkMgr = new WorldChunkManagerHell(WarpDrive.spaceBiome, 0.0F);
 		hasNoSky = false;
 	}
 	
 	@Override
+	public void setDimension(final int dimensionId) {
+		super.setDimension(dimensionId);
+		celestialObjectDimension = CelestialObjectManager.get(WarpDrive.proxy instanceof ClientProxy, dimensionId, 0, 0);
+	}
+	
+	@Override
+	public String getSaveFolder() {
+		return celestialObjectDimension == null ? "WarpDriveSpace" + dimensionId : celestialObjectDimension.id;
+	}
+	
+	@Override
 	public String getDimensionName() {
-		return "Space";
+		return celestialObjectDimension == null ? "Space" + dimensionId : celestialObjectDimension.id;
 	}
 	
 	@Override
@@ -83,22 +98,14 @@ public class SpaceWorldProvider extends WorldProvider {
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
 	@Override
-	public String getSaveFolder() {
-		return (dimensionId == 0 ? null : "WarpDriveSpace" + dimensionId);
+	public boolean canCoordinateBeSpawn(int x, int z) {
+		int y = worldObj.getTopSolidOrLiquidBlock(x, z);
+		return y != 0;
 	}
-	
-	/*
-	@Override
-	public boolean canCoordinateBeSpawn(int par1, int par2) {
-		int var3 = worldObj.getTopSolidOrLiquidBlock(par1, par2);
-		return var3 != 0;
-	}
-	/**/
 	
 	// shared for getFogColor(), getStarBrightness()
-	@SideOnly(Side.CLIENT)
+	// @SideOnly(Side.CLIENT)
 	private static CelestialObject celestialObject = null;
 	
 	@SideOnly(Side.CLIENT)
@@ -111,8 +118,8 @@ public class SpaceWorldProvider extends WorldProvider {
 			setSkyRenderer(RenderSpaceSky.getInstance());
 		}
 		
-		celestialObject = cameraEntity.worldObj == null ? null : StarMapRegistry.getCelestialObject(
-				cameraEntity.worldObj.provider.dimensionId,
+		celestialObject = cameraEntity.worldObj == null ? null : CelestialObjectManager.get(
+				cameraEntity.worldObj,
 				MathHelper.floor_double(cameraEntity.posX), MathHelper.floor_double(cameraEntity.posZ));
 		if (celestialObject == null) {
 			return Vec3.createVectorHelper(0.0D, 0.0D, 0.0D);

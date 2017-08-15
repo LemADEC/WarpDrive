@@ -31,7 +31,7 @@ public class MessageVideoChannel implements IMessage, IMessageHandler<MessageVid
 		this.z = z;
 		this.videoChannel = videoChannel;
 	}
-
+	
 	@Override
 	public void fromBytes(ByteBuf buffer) {
 		x = buffer.readInt();
@@ -39,7 +39,7 @@ public class MessageVideoChannel implements IMessage, IMessageHandler<MessageVid
 		z = buffer.readInt();
 		videoChannel = buffer.readInt();
 	}
-
+	
 	@Override
 	public void toBytes(ByteBuf buffer) {
 		buffer.writeInt(x);

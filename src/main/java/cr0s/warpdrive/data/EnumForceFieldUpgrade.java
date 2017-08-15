@@ -29,7 +29,7 @@ import net.minecraft.world.World;
 public enum EnumForceFieldUpgrade implements IForceFieldUpgrade, IForceFieldUpgradeEffector {
 	//            Upgrade         - Compatibility -  ----- Value -----  -- Scan speed --  -- Place speed --  --------- Energy costs ---------  comment
 	//            name            projector   relay    incr.       cap  minimum  maximum   minimum  maximum  startup   scan    place    entity  
-	NONE         ("none"         ,        0,      0,    0.0F,     0.0F,  0.000F,  0.000F,   0.000F,  0.000F,    0.0F, 0.000F,  0.000F,    0.0F, ""),
+	NONE         ("none"         ,        0,      0,    0.0F,     0.0F,  0.000F,  0.000F,   0.000F,  0.000F,    0.0F, 0.000F,  0.000F,    0.0F, "n/a"),
 	ATTRACTION   ("attraction"   ,        0,      1,    1.0F,     4.0F,  0.000F,  0.000F,   0.000F,  0.000F,   50.0F, 0.150F,  0.000F,    8.0F, "value is acceleration"),
 	BREAKING     ("breaking"     ,        0,      1,    1.0F,    25.0F,  0.400F,  0.500F,   0.020F,  0.150F,  700.0F, 0.080F,  4.000F,    0.0F, "value is hardness level"),
 	CAMOUFLAGE   ("camouflage"   ,        0,      1,    1.0F,     3.0F,  0.600F,  0.850F,   0.700F,  0.950F, 1000.0F, 3.000F,  7.000F,    0.0F, "value is boolean"),
@@ -39,13 +39,13 @@ public enum EnumForceFieldUpgrade implements IForceFieldUpgrade, IForceFieldUpgr
 	INVERSION    ("inversion"    ,        1,      0,    1.0F,     1.0F,  1.250F,  1.250F,   0.000F,  0.000F, 1500.0F, 0.150F,  0.150F,   20.0F, "value is boolean"),
 	ITEM_PORT    ("item_port"    ,        0,      1,    1.0F,    10.0F,  0.000F,  0.000F,   0.950F,  0.900F,   50.0F, 0.120F,  0.500F,    2.0F, "value is boolean"),
 	PUMPING      ("pumping"      ,        0,      1, 1000.0F, 50000.0F,  0.800F,  1.000F,   0.400F,  1.000F,  800.0F, 0.150F,  4.500F,    0.0F, "value is viscosity"),
-	RANGE        ("range"        ,        4,      1,    8.0F,    56.0F,  1.150F,  0.800F,   1.150F,  0.800F,   10.0F, 0.300F,  0.750F,   12.0F, "value is bonus blocks"),
+	RANGE        ("range"        ,        4,      1,    8.0F,   128.0F,  1.150F,  0.450F,   1.150F,  0.450F,   10.0F, 0.300F,  0.750F,   12.0F, "value is bonus blocks"),
 	REPULSION    ("repulsion"    ,        0,      1,    1.0F,     4.0F,  0.000F,  0.000F,   0.000F,  0.000F,   50.0F, 0.150F,  0.000F,    5.0F, "value is acceleration"),
 	ROTATION     ("rotation"     ,        1,      0,    1.0F,     1.0F,  0.000F,  0.000F,   0.000F,  0.000F,  100.0F, 0.000F,  0.000F,    0.0F, "value is boolean"),
 	SHOCK        ("shock"        ,        3,      1,    1.0F,    10.0F,  0.800F,  0.800F,   0.800F,  0.800F,  300.0F, 0.600F,  4.000F,   30.0F, "value is damage points"),
 	SILENCER     ("silencer"     ,        1,      0,    1.0F,     1.0F,  0.000F,  0.000F,   0.000F,  0.000F,    0.0F, 0.120F,  0.620F,    0.0F, "value is boolean"),
 	SPEED        ("speed"        ,        4,      1,    1.0F,    20.0F,  1.250F,  6.000F,   1.200F,  5.000F,  200.0F, 0.135F,  1.250F,   15.0F, "value is not used (just a counter)"),
-	STABILIZATION("stabilization",        0,      1,    1.0F,     6.0F,  0.250F,  0.550F,   0.025F,  0.150F,  400.0F, 0.050F, 73.600F,    0.0F, "value is boolean"),
+	STABILIZATION("stabilization",        0,      1,    1.0F,     9.0F,  0.250F,  0.850F,   0.025F,  0.450F,  400.0F, 0.050F, 73.600F,    0.0F, "value is boolean"),
 	THICKNESS    ("thickness"    ,        5,      1,    0.2F,     1.0F,  0.800F,  1.600F,   0.900F,  1.500F,  100.0F, 0.400F,  2.200F,    5.0F, "value is bonus ratio"),
 	TRANSLATION  ("translation"  ,        1,      0,    1.0F,     1.0F,  0.000F,  0.000F,   0.000F,  0.000F,  100.0F, 0.000F,  0.000F,    0.0F, "value is boolean"),
 	;

@@ -11,6 +11,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class TileEntitySiren extends TileEntityAbstractBase {
+	
 	public enum SirenState {
 		STARTING, STARTED, STOPPING, STOPPED
 	}

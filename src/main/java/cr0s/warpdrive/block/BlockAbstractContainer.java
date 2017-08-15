@@ -131,7 +131,16 @@ public abstract class BlockAbstractContainer extends BlockContainer implements I
 		}
 		// EMP tower = 3k Energy, 60 radius
 		// EMP explosive = 3k Energy, 50 radius
-		onEMP(world, x, y, z, explosiveEMP.getRadius() / 100.0F);
+		if (explosiveEMP.getRadius() == 60.0F) {// compensate tower stacking effect
+			onEMP(world, x, y, z, 0.02F);
+		} else if (explosiveEMP.getRadius() == 50.0F) {
+			onEMP(world, x, y, z, 0.70F);
+		} else {
+			WarpDrive.logger.warn(String.format("EMP received @ DIM%d (%d %d %d) from %s with energy %d and unsupported radius %.1f",
+			                                    world.provider.dimensionId, x, y, z,
+			                                    explosiveEMP, explosiveEMP.getEnergy(), explosiveEMP.getRadius()));
+			onEMP(world, x, y, z, 0.02F);
+		}
 	}
 	
 	@Override
@@ -144,7 +153,16 @@ public abstract class BlockAbstractContainer extends BlockContainer implements I
 		}
 		// EMP tower = 3k Energy, 60 radius
 		// EMP explosive = 3k Energy, 50 radius
-		onEMP(world, x, y, z, explosiveEMP.getRadius() / 100.0F);
+		if (explosiveEMP.getRadius() == 60.0F) {// compensate tower stacking effect
+			onEMP(world, x, y, z, 0.02F);
+		} else if (explosiveEMP.getRadius() == 50.0F) {
+			onEMP(world, x, y, z, 0.70F);
+		} else {
+			WarpDrive.logger.warn(String.format("EMP received @ DIM%d (%d %d %d) from %s with energy %d and unsupported radius %.1f",
+			                                    world.provider.dimensionId, x, y, z,
+			                                    explosiveEMP, explosiveEMP.getEnergy(), explosiveEMP.getRadius()));
+			onEMP(world, x, y, z, 0.02F);
+		}
 	}
 	
 	public void onEMP(World world, final int x, final int y, final int z, final float efficiency) {

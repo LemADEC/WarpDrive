@@ -56,7 +56,10 @@ public class BlockForceFieldRelay extends BlockAbstractForceField {
 		if (side == 0 || side == 1) {
 			return icons[EnumForceFieldUpgrade.length];
 		}
-		return icons[((TileEntityForceFieldRelay)tileEntity).getUpgrade().ordinal()];
+		if (((TileEntityForceFieldRelay) tileEntity).isConnected){
+			return icons[((TileEntityForceFieldRelay) tileEntity).getUpgrade().ordinal()];
+		}
+		return icons[EnumForceFieldUpgrade.NONE.ordinal()];
 	}
 	
 	@SideOnly(Side.CLIENT)

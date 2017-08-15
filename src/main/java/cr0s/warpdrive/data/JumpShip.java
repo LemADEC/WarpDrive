@@ -316,9 +316,9 @@ public class JumpShip {
 									return false;
 								}
 								
-								int blockMeta = worldObj.getBlockMetadata(x, y, z);
-								TileEntity tileEntity = worldObj.getTileEntity(x, y, z);
-								JumpBlock jumpBlock = new JumpBlock(block, blockMeta, tileEntity, x, y, z);
+								final int blockMeta = worldObj.getBlockMetadata(x, y, z);
+								final TileEntity tileEntity = worldObj.getTileEntity(x, y, z);
+								JumpBlock jumpBlock = new JumpBlock(worldObj, x, y, z, block, blockMeta, tileEntity);
 								
 								if (jumpBlock.blockTileEntity != null && jumpBlock.externals != null) {
 									for (Entry<String, NBTBase> external : jumpBlock.externals.entrySet()) {

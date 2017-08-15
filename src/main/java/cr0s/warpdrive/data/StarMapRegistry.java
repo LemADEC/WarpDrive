@@ -4,8 +4,6 @@ import cr0s.warpdrive.LocalProfiler;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.IStarMapRegistryTileEntity;
 import cr0s.warpdrive.block.movement.TileEntityShipCore;
-import cr0s.warpdrive.block.movement.TileEntityShipCore.EnumShipCoreMode;
-import cr0s.warpdrive.config.CelestialObjectManager;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.data.StarMapRegistryItem.EnumStarMapEntryType;
 
@@ -22,7 +20,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -60,7 +57,7 @@ public class StarMapRegistry {
 		if (setRegistryItems == null) {
 			setRegistryItems = new CopyOnWriteArraySet<>();
 		}
-		for (StarMapRegistryItem registryItem : setRegistryItems) {
+		for (final StarMapRegistryItem registryItem : setRegistryItems) {
 			if (registryItem.sameIdOrCoordinates(tileEntity)) {
 				// already registered
 				registryItem.update(tileEntity);    // @TODO probably not thread safe
@@ -87,7 +84,7 @@ public class StarMapRegistry {
 			return;
 		}
 		
-		for (StarMapRegistryItem registryItem : setRegistryItems) {
+		for (final StarMapRegistryItem registryItem : setRegistryItems) {
 			if (registryItem.isSameTileEntity(tileEntity)) {
 				// found it, remove and exit
 				countRemove++;
@@ -98,12 +95,75 @@ public class StarMapRegistry {
 		// not found => ignore it
 	}
 	
+	public String find(final String nameShip) {
+		final int MAX_LENGTH = 2000;
+		final StringBuilder resultMatch = new StringBuilder();
+		final StringBuilder resultCaseInsensitive = new StringBuilder();
+		final StringBuilder resultContains = new StringBuilder();
+		for (final Integer dimensionId : registry.keySet()) {
+			final CopyOnWriteArraySet<StarMapRegistryItem> setStarMapRegistryItems = registry.get(dimensionId);
+			if (setStarMapRegistryItems == null) {
+				continue;
+			}
+			
+			for (final StarMapRegistryItem starMapRegistryItem : setStarMapRegistryItems) {
+				if (starMapRegistryItem.type == EnumStarMapEntryType.SHIP) {
+					if (starMapRegistryItem.name.equals(nameShip)) {
+						if (resultMatch.length() < MAX_LENGTH) {
+							if (resultMatch.length() > 0) {
+								resultMatch.append("\n");
+							}
+							resultContains.append(String.format("Ship '%s' found in %s",
+							                                    starMapRegistryItem.name,
+							                                    starMapRegistryItem.getFormattedLocation()));
+						} else {
+							resultMatch.append(".");
+						}
+					} else if (starMapRegistryItem.name.equalsIgnoreCase(nameShip)) {
+						if (resultCaseInsensitive.length() < MAX_LENGTH) {
+							if (resultCaseInsensitive.length() > 0) {
+								resultCaseInsensitive.append("\n");
+							}
+							resultContains.append(String.format("Ship '%s' found in %s",
+							                                    starMapRegistryItem.name,
+							                                    starMapRegistryItem.getFormattedLocation()));
+						} else {
+							resultCaseInsensitive.append(".");
+						}
+					} else if (starMapRegistryItem.name.contains(nameShip)) {
+						if (resultContains.length() < MAX_LENGTH) {
+							if (resultContains.length() > 0) {
+								resultContains.append("\n");
+							}
+							resultContains.append(String.format("Ship '%s' found in %s",
+							                                    starMapRegistryItem.name,
+							                                    starMapRegistryItem.getFormattedLocation()));
+						} else {
+							resultContains.append(".");
+						}
+					}
+				}
+			}
+		}
+		
+		if (resultMatch.length() > 0) {
+			return resultMatch.toString();
+		}
+		if (resultCaseInsensitive.length() > 0) {
+			return resultCaseInsensitive.toString();
+		}
+		if (resultContains.length() > 0) {
+			return resultContains.toString();
+		}
+		return String.format("No ship found with name '%s'", nameShip);
+	}
+	
 	public void onBlockUpdated(final World world, final int x, final int y, final int z, final Block block, final int metadata) {
 		final CopyOnWriteArraySet<StarMapRegistryItem> setStarMapRegistryItems = registry.get(world.provider.dimensionId);
 		if (setStarMapRegistryItems == null) {
 			return;
 		}
-		for (StarMapRegistryItem registryItem : setStarMapRegistryItems) {
+		for (final StarMapRegistryItem registryItem : setStarMapRegistryItems) {
 			if (registryItem.contains(x, y, z)) {
 				final TileEntity tileEntity = world.getTileEntity(registryItem.x, registryItem.y, registryItem.z);
 				if (tileEntity instanceof IStarMapRegistryTileEntity) {
@@ -113,94 +173,50 @@ public class StarMapRegistry {
 		}
 	}
 	
-	public static CelestialObject getCelestialObject(final World world, final int x, final int z) {
-		return getCelestialObject(world.provider.dimensionId, x, z);
-	}
-	
-	public static CelestialObject getCelestialObject(final int dimensionId, final int x, final int z) {
-		double distanceClosest = Double.POSITIVE_INFINITY;
-		CelestialObject celestialObjectClosest = null;
-		for (CelestialObject celestialObject : CelestialObjectManager.celestialObjects) {
-			if (dimensionId == celestialObject.dimensionId) {
-				final double distanceSquared = celestialObject.getSquareDistanceOutsideBorder(dimensionId, x, z);
-				if (distanceSquared <= 0) {
-					return celestialObject;
-				} else if (distanceClosest > distanceSquared) {
-					distanceClosest = distanceSquared;
-					celestialObjectClosest = celestialObject;
-				}
-			}
-		}
-		return celestialObjectClosest;
-	}
-	
 	public static double getGravity(final Entity entity) {
-		final CelestialObject celestialObject = getCelestialObject(entity.worldObj, (int) entity.posX, (int) entity.posZ);
-		return celestialObject == null ? 1.0D : celestialObject.gravity;
-	}
-	
-	public static CelestialObject getClosestParentCelestialObject(final int dimensionId, final int x, final int z) {
-		double closestPlanetDistance = Double.POSITIVE_INFINITY;
-		CelestialObject celestialObjectClosest = null;
-		for (CelestialObject celestialObject : CelestialObjectManager.celestialObjects) {
-			final double distanceSquared = celestialObject.getSquareDistanceOutsideBorder(dimensionId, x, z);
-			if (distanceSquared <= 0) {
-				return celestialObject;
-			} else if (closestPlanetDistance > distanceSquared) {
-				closestPlanetDistance = distanceSquared;
-				celestialObjectClosest = celestialObject;
-			}
-		}
-		return celestialObjectClosest;
-	}
-	
-	public static CelestialObject getClosestChildCelestialObject(final int dimensionId, final int x, final int z) {
-		double closestPlanetDistance = Double.POSITIVE_INFINITY;
-		CelestialObject celestialObjectClosest = null;
-		for (CelestialObject celestialObject : CelestialObjectManager.celestialObjects) {
-			final double distanceSquared = celestialObject.getSquareDistanceInParent(dimensionId, x, z);
-			if (distanceSquared <= 0.0D) {
-				return celestialObject;
-			} else if (closestPlanetDistance > distanceSquared) {
-				closestPlanetDistance = distanceSquared;
-				celestialObjectClosest = celestialObject;
-			}
-		}
-		return celestialObjectClosest;
+		final CelestialObject celestialObject = CelestialObjectManager.get(entity.worldObj, (int) entity.posX, (int) entity.posZ);
+		return celestialObject == null ? 1.0D : celestialObject.getGravity();
 	}
 	
 	public static int getSpaceDimensionId(final World world, final int x, final int z) {
-		CelestialObject celestialObject = getCelestialObject(world, x, z);
+		CelestialObject celestialObject = CelestialObjectManager.get(world, x, z);
+		if (celestialObject == null) {
+			return world.provider.dimensionId;
+		}
 		// already in space?
 		if (celestialObject.isSpace()) {
 			return celestialObject.dimensionId;
 		}
 		// coming from hyperspace?
 		if (celestialObject.isHyperspace()) {
-			celestialObject = getClosestChildCelestialObject(world.provider.dimensionId, x, z);
+			celestialObject = CelestialObjectManager.getClosestChild(world, x, z);
 			return celestialObject == null ? 0 : celestialObject.dimensionId;
 		}
 		// coming from a planet?
-		celestialObject = getClosestParentCelestialObject(world.provider.dimensionId, x, z);
-		return celestialObject == null ? 0 : (celestialObject.isSpace() ? celestialObject.dimensionId : celestialObject.parentDimensionId);
+		while (celestialObject != null && !celestialObject.isSpace()) {
+			celestialObject = celestialObject.parent;
+		}
+		return celestialObject == null ? 0 : celestialObject.dimensionId;
 	}
 	
 	public static int getHyperspaceDimensionId(final World world, final int x, final int z) {
-		CelestialObject celestialObject = getCelestialObject(world, x, z);
+		CelestialObject celestialObject = CelestialObjectManager.get(world, x, z);
+		if (celestialObject == null) {
+			return world.provider.dimensionId;
+		}
 		// already in hyperspace?
 		if (celestialObject.isHyperspace()) {
 			return celestialObject.dimensionId;
 		}
 		// coming from space?
 		if (celestialObject.isSpace()) {
-			return celestialObject.parentDimensionId;
+			return celestialObject.parent.dimensionId;
 		}
 		// coming from a planet?
-		celestialObject = getClosestParentCelestialObject(world.provider.dimensionId, x, z);
-		if (celestialObject != null && !celestialObject.isHyperspace()) {
-			celestialObject = getClosestParentCelestialObject(world.provider.dimensionId, x, z);
+		while (celestialObject != null && !celestialObject.isSpace()) {
+			celestialObject = celestialObject.parent;
 		}
-		return celestialObject == null ? 0 : celestialObject.parentDimensionId;
+		return celestialObject == null || celestialObject.parent == null ? 0 : celestialObject.parent.dimensionId;
 	}
 	
 	public static int getDimensionId(final String stringDimension, final Entity entity) {
@@ -235,8 +251,9 @@ public class StarMapRegistry {
 		final ArrayList<RadarEcho> arrayListRadarEchos = new ArrayList<>(registry.size());
 		cleanup();
 		
+		final CelestialObject celestialObject = CelestialObjectManager.get(tileEntity.getWorldObj(), tileEntity.xCoord, tileEntity.zCoord);
 		final Vector3 vectorRadar = getUniversalCoordinates(
-			tileEntity.getWorldObj().provider.dimensionId,
+			celestialObject,
 			tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord);
 		// printRegistry();
 		int radius2 = radius * radius;
@@ -245,7 +262,7 @@ public class StarMapRegistry {
 				if (starMapRegistryItem.type == EnumStarMapEntryType.ACCELERATOR) {
 					continue;
 				}
-				final Vector3 vectorItem = starMapRegistryItem.getUniversalCoordinates();
+				final Vector3 vectorItem = starMapRegistryItem.getUniversalCoordinates(tileEntity.getWorldObj().isRemote);
 				if (vectorItem == null) {
 					continue;
 				}
@@ -260,53 +277,34 @@ public class StarMapRegistry {
 				  && tileEntity.getWorldObj().rand.nextDouble() < starMapRegistryItem.isolationRate) {
 					continue;
 				}
-				arrayListRadarEchos.add( new RadarEcho(starMapRegistryItem) );
+				
+				arrayListRadarEchos.add( new RadarEcho(starMapRegistryItem.type.getName(),
+				                                       vectorItem,
+				                                       starMapRegistryItem.mass,
+				                                       starMapRegistryItem.name) );
 			}
 		}
 		
 		return arrayListRadarEchos;
 	}
 	
-	public boolean isInSpace(final World world, final int x, final int z) {
-		final CelestialObject celestialObject = getCelestialObject(world.provider.dimensionId, x, z);
-		return celestialObject != null && celestialObject.isSpace();
-	}
-	
-	public boolean isInHyperspace(final World world, final int x, final int z) {
-		final CelestialObject celestialObject = getCelestialObject(world.provider.dimensionId, x, z);
-		return celestialObject != null && celestialObject.isHyperspace();
-	}
-	
-	public boolean hasAtmosphere(final World world, final int x, final int z) {
-		final CelestialObject celestialObject = getCelestialObject(world, x, z);
-		return celestialObject == null || celestialObject.hasAtmosphere();
-	}
-	
-	public boolean isPlanet(final World world, final int x, final int z) {
-		final CelestialObject celestialObject = getCelestialObject(world, x, z);
-		return celestialObject == null
-		    || (!celestialObject.isSpace() && !celestialObject.isHyperspace());
-	}
-	
-	public static Vector3 getUniversalCoordinates(final int dimensionId, final double x, final double y, final double z) {
-		CelestialObject celestialObject = StarMapRegistry.getCelestialObject(dimensionId, MathHelper.floor_double(x), MathHelper.floor_double(z));
-		return getUniversalCoordinates(celestialObject, x, y, z);
-	}
-	
-	public static Vector3 getUniversalCoordinates(CelestialObject celestialObject, final double x, final double y, final double z) {
+	public static Vector3 getUniversalCoordinates(final CelestialObject celestialObject, final double x, final double y, final double z) {
 		if (celestialObject == null) {
 			// not a registered area
 			return null;
 		}
 		final Vector3 vec3Result = new Vector3(x, y + 512.0D, z);
-		while (!celestialObject.isHyperspace()) {
-			final VectorI vEntry = celestialObject.getEntryOffset();
+		CelestialObject celestialObjectNode = celestialObject;
+		boolean hasHyperspace = celestialObjectNode.isHyperspace();
+		while (celestialObjectNode.parent != null) {
+			final VectorI vEntry = celestialObjectNode.getEntryOffset();
 			vec3Result.x -= vEntry.x;
 			vec3Result.y -= 256.0D;
 			vec3Result.z -= vEntry.z;
-			celestialObject = StarMapRegistry.getCelestialObject(celestialObject.parentDimensionId, celestialObject.parentCenterX, celestialObject.parentCenterZ);
+			celestialObjectNode = celestialObjectNode.parent;
+			hasHyperspace |= celestialObjectNode.isHyperspace();
 		}
-		return vec3Result;
+		return hasHyperspace ? vec3Result : null;
 	}
 	
 	public void printRegistry(final String trigger) {
@@ -357,8 +355,13 @@ public class StarMapRegistry {
 			}
 			TileEntityShipCore shipCore = (TileEntityShipCore) core.getWorldObj().getTileEntity(registryItem.x, registryItem.y, registryItem.z);
 			
-			// Skip offline warp cores
-			if (shipCore.controller == null || shipCore.controller.getMode() == EnumShipCoreMode.IDLE || !shipCore.validateShipSpatialParameters(reason)) {
+			// Skip offline ship cores
+			if (shipCore.isOffline()) {
+				continue;
+			}
+			
+			// Skip invalid ships
+			if (!shipCore.validateShipSpatialParameters(reason)) {
 				continue;
 			}
 			

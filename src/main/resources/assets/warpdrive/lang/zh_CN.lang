@@ -1,4 +1,3 @@
-
 death.attack.warpdrive.asphyxia=%1$s窒息了
 death.attack.warpdrive.asphyxia.player=%1$s因%2$s窒息
 death.attack.warpdrive.cold=%1$s冻死了
@@ -50,9 +49,15 @@ item.warpdrive.atomic.electromagnetic_cell.name=电磁电池
 item.warpdrive.atomic.electromagnetic_cell.tooltip.empty=使用粒子对撞机充能!
 item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=存储%1$s Å³总量%2$s
 
+item.warpdrive.breathing.air_tank0.name=空气罐
+item.warpdrive.breathing.air_tank1.name=Basic Air Tank
+item.warpdrive.breathing.air_tank2.name=Advanced Air Tank
+item.warpdrive.breathing.air_tank3.name=Superior Air Tank
+
 item.warpdrive.energy.IC2reactorLaserFocus.name=IC2反应堆激光焦点
 
 item.warpdrive.forcefield.shape.none.name=无形状
+
 item.warpdrive.forcefield.shape.none.tooltip=§4无效的项目
 item.warpdrive.forcefield.shape.sphere.name=球体
 item.warpdrive.forcefield.shape.sphere.tooltip=
@@ -86,8 +91,8 @@ item.warpdrive.forcefield.upgrade.heating.name=加热升级
 item.warpdrive.forcefield.upgrade.heating.tooltip=加热方块和实体.添加更多加热升级来提升加热效果.为一片区域提供反转的温度效果或地球化改造.
 item.warpdrive.forcefield.upgrade.inversion.name=反向升级
 item.warpdrive.forcefield.upgrade.inversion.tooltip=§4在进行中工作\n更改体积效应区域的外观.用于实体目标或地球化改造
-item.warpdrive.forcefield.upgrade.itemPort.name=物品端口升级
-item.warpdrive.forcefield.upgrade.itemPort.tooltip=与相邻容器进行连接.添加一个引力升级来收集被破坏的方块.添加一个斥力升级来为稳定升级提供可放置的方块。
+item.warpdrive.forcefield.upgrade.item_port.name=物品端口升级
+item.warpdrive.forcefield.upgrade.item_port.tooltip=与相邻容器进行连接.添加一个引力升级来收集被破坏的方块.添加一个斥力升级来为稳定升级提供可放置的方块。
 item.warpdrive.forcefield.upgrade.pumping.name=抽吸升级
 item.warpdrive.forcefield.upgrade.pumping.tooltip=§4在进行中工作\n在力场范围内抽取液体. 添加更多的抽吸升级来吸取像岩浆那样的粘稠液体.
 item.warpdrive.forcefield.upgrade.range.name=范围升级
@@ -118,15 +123,38 @@ item.warpdrive.upgrade.Range.name=范围升级
 item.warpdrive.upgrade.Energy.name=能量升级
 
 
-item.warpdrive.tool.crystalToken.name=水晶符号
-item.warpdrive.tool.crystalToken.tooltip=晶体封装的飞船 '%1$s'\n§b进入扫描场§7去搭建你的飞船
-item.warpdrive.tool.crystalToken0.name=水晶符号#0
-item.warpdrive.tool.crystalToken1.name=水晶符号#1
-item.warpdrive.tool.crystalToken2.name=水晶符号#2
-item.warpdrive.tool.crystalToken3.name=水晶符号#3
-item.warpdrive.tool.crystalToken4.name=水晶符号#4
-item.warpdrive.tool.crystalToken5.name=水晶符号#5
-
+item.warpdrive.tool.ship_token.name=水晶符号
+item.warpdrive.tool.ship_token.tooltip=晶体封装的飞船 '%1$s'\n§b进入扫描场§7去搭建你的飞船
+item.warpdrive.tool.ship_token0.name=水晶符号#0
+item.warpdrive.tool.ship_token1.name=水晶符号#1
+item.warpdrive.tool.ship_token2.name=水晶符号#2
+item.warpdrive.tool.ship_token3.name=水晶符号#3
+item.warpdrive.tool.ship_token4.name=水晶符号#4
+item.warpdrive.tool.ship_token5.name=水晶符号#5
+item.warpdrive.tool.ship_token10.name=水晶符号#10
+item.warpdrive.tool.ship_token11.name=水晶符号#11
+item.warpdrive.tool.ship_token12.name=水晶符号#12
+item.warpdrive.tool.ship_token13.name=水晶符号#13
+item.warpdrive.tool.ship_token14.name=水晶符号#14
+item.warpdrive.tool.ship_token15.name=水晶符号#15
+item.warpdrive.tool.ship_token20.name=水晶符号#20
+item.warpdrive.tool.ship_token21.name=水晶符号#21
+item.warpdrive.tool.ship_token22.name=水晶符号#22
+item.warpdrive.tool.ship_token23.name=水晶符号#23
+item.warpdrive.tool.ship_token24.name=水晶符号#24
+item.warpdrive.tool.ship_token25.name=水晶符号#25
+item.warpdrive.tool.ship_token30.name=水晶符号#30
+item.warpdrive.tool.ship_token31.name=水晶符号#31
+item.warpdrive.tool.ship_token32.name=水晶符号#32
+item.warpdrive.tool.ship_token33.name=水晶符号#33
+item.warpdrive.tool.ship_token34.name=水晶符号#34
+item.warpdrive.tool.ship_token35.name=水晶符号#35
+item.warpdrive.tool.ship_token40.name=水晶符号#40
+item.warpdrive.tool.ship_token41.name=水晶符号#41
+item.warpdrive.tool.ship_token42.name=水晶符号#42
+item.warpdrive.tool.ship_token43.name=水晶符号#43
+item.warpdrive.tool.ship_token44.name=水晶符号#44
+item.warpdrive.tool.ship_token45.name=水晶符号#45
 
 item.warpdrive.tool.tuning_driver.video_channel.name=录像信号调节驱动器
 item.warpdrive.tool.tuning_driver.beam_frequency.name=传送频率调节驱动器
@@ -134,32 +162,33 @@ item.warpdrive.tool.tuning_driver.control_channel.name=电磁波调节驱动器
 
 item.warpdrive.tool.tuning_driver.tooltip.usage=§b右击方块§7调节水晶\n§bSneak§7取消价值\n§b右击空气§7改变模式
 
-
-item.warpdrive.tool.TuningFork.name=音叉
-item.warpdrive.tool.TuningFork.white.name=白色音叉
-item.warpdrive.tool.TuningFork.orange.name=橙色音叉
-item.warpdrive.tool.TuningFork.magenta.name=品红音叉
-item.warpdrive.tool.TuningFork.lightBlue.name=浅蓝音叉
-item.warpdrive.tool.TuningFork.yellow.name=黄色音叉
-item.warpdrive.tool.TuningFork.lime.name=黄绿音叉
-item.warpdrive.tool.TuningFork.pink.name=粉色音叉
-item.warpdrive.tool.TuningFork.gray.name=灰色音叉
-item.warpdrive.tool.TuningFork.silver.name=银色音叉
-item.warpdrive.tool.TuningFork.cyan.name=青色音叉
-item.warpdrive.tool.TuningFork.purple.name=紫色音叉
-item.warpdrive.tool.TuningFork.blue.name=蓝色音叉
-item.warpdrive.tool.TuningFork.brown.name=棕色音叉
-item.warpdrive.tool.TuningFork.green.name=绿色音叉
-item.warpdrive.tool.TuningFork.red.name=红色音叉
-item.warpdrive.tool.TuningFork.black.name=黑色音叉
+item.warpdrive.tool.tuning_fork.name=音叉
+item.warpdrive.tool.tuning_fork.white.name=白色音叉
+item.warpdrive.tool.tuning_fork.orange.name=橙色音叉
+item.warpdrive.tool.tuning_fork.magenta.name=品红音叉
+item.warpdrive.tool.tuning_fork.lightBlue.name=浅蓝音叉
+item.warpdrive.tool.tuning_fork.yellow.name=黄色音叉
+item.warpdrive.tool.tuning_fork.lime.name=黄绿音叉
+item.warpdrive.tool.tuning_fork.pink.name=粉色音叉
+item.warpdrive.tool.tuning_fork.gray.name=灰色音叉
+item.warpdrive.tool.tuning_fork.silver.name=银色音叉
+item.warpdrive.tool.tuning_fork.cyan.name=青色音叉
+item.warpdrive.tool.tuning_fork.purple.name=紫色音叉
+item.warpdrive.tool.tuning_fork.blue.name=蓝色音叉
+item.warpdrive.tool.tuning_fork.brown.name=棕色音叉
+item.warpdrive.tool.tuning_fork.green.name=绿色音叉
+item.warpdrive.tool.tuning_fork.red.name=红色音叉
+item.warpdrive.tool.tuning_fork.black.name=黑色音叉
 
 item.warpdrive.tool.tuning_fork.tooltip.usage=§b右击方块§7 to tune its crystals\n§bSneak§7 to tune alternate crystals
+item.warpdrive.tool.tuning_fork.tooltip.usage-tbc=§b右键单击一个方块§7 来调整它的水晶\n§b潜行§7来选择替换的水晶
 
 
-tile.warpdrive.decoration.decorative.energized.name=Energized Block
-tile.warpdrive.decoration.decorative.network.name=Network Block
-tile.warpdrive.decoration.decorative.plain.name=Plain Block
-tile.warpdrive.decoration.gas.name=Gas Block
+tile.warpdrive.decoration.decorative.energized.name-tbc=能量方块
+tile.warpdrive.decoration.decorative.network.name-tbc=网络方块
+tile.warpdrive.decoration.decorative.plain.name-tbc=平坦方块
+tile.warpdrive.decoration.gas.name=气密方块
+tile.warpdrive.decoration.bedrock_glass.name=Bedrock Glass
 
 tile.warpdrive.passive.IridiumBlock.name=铱块
 tile.warpdrive.passive.HighlyAdvancedMachine.name=高新机械块
@@ -200,8 +229,8 @@ tile.warpdrive.atomic.void_shell_plain.tooltip=Provides 2 empty channels for par
 tile.warpdrive.atomic.void_shell_glass.name=Glass Void Shell
 tile.warpdrive.atomic.void_shell_glass.tooltip=Same as a Plain Void Shell, except you can see particles moving through it.
 
-tile.warpdrive.breathing.air.name=Air Block
-tile.warpdrive.breathing.air_generator.name=Air Generator
+tile.warpdrive.breathing.air.name-tbc=空气方块
+tile.warpdrive.breathing.air_generator.name-tbc=空气发生器
 tile.warpdrive.breathing.air_generator1.name=Basic Air Generator
 tile.warpdrive.breathing.air_generator2.name=Advanced Air Generator
 tile.warpdrive.breathing.air_generator3.name=Superior Air Generator
@@ -258,12 +287,14 @@ tile.warpdrive.forcefield.relay2.tooltip=支持一个力场升级在其网络内
 tile.warpdrive.forcefield.relay3.name=卓越力场继电器
 tile.warpdrive.forcefield.relay3.tooltip=支持一个力场升级在其网络内共享
 
-tile.warpdrive.movement.Lift.name=Lift
-tile.warpdrive.movement.ShipController.name=Ship Controller
+tile.warpdrive.movement.Lift.name-tbc=电梯
+tile.warpdrive.movement.ShipController.name-tbc=飞船控制器
 tile.warpdrive.movement.ShipController.tooltip=Defines your ship front relative to the core. Attach a computer to open the user interface.\nShall be placed horizontally directly next to the Ship core.
-tile.warpdrive.movement.ShipCore.name=Ship Core
+tile.warpdrive.movement.ShipCore.name-tbc=飞船核心
 tile.warpdrive.movement.ShipCore.tooltip=Defines your ship center relative to the controller. Connecting an energy source will charge the core.\nShall be placed horizontally directly next to the Ship controller.
-tile.warpdrive.movement.Transporter.name=Transporter
+tile.warpdrive.movement.ShipCore.bounding_box.disabled=Bounding box display have been disabled.
+tile.warpdrive.movement.ShipCore.bounding_box.enabled=Bounding box display is now enabled. Only you can see it.\nSneak right-click the Ship core again to disable it.
+tile.warpdrive.movement.Transporter.name-tbc=传送器
 
 tile.warpdrive.weapon.LaserCamera.name=激光+相机
 tile.warpdrive.weapon.WeaponController.name=武器控制器
@@ -548,8 +579,10 @@ warpdrive.accelerator.guide.lowPower_noParticles=We need more power to start the
 warpdrive.accelerator.guide.noChiller=No chiller could be found for this accelerator!
 
 warpdrive.beam_frequency.tooltip=Beam frequency is set to %1$d
+warpdrive.beam_frequency.tooltip-tbc=光线频率设置为%1$d
 warpdrive.beam_frequency.get=Beam frequency %2$d has been retrieved from %1$s 
 warpdrive.beam_frequency.set=%1$s is now aligned with Beam frequency %2$d
+warpdrive.beam_frequency.set-tbc=%1$s正在于光线通道 %2$d进行匹配
 warpdrive.beamFrequency.statusLine.valid=光线频率%1$d是有效的
 warpdrive.beamFrequency.statusLine.invalid=§c光线频率%1$d是无效的
 warpdrive.beamFrequency.statusLine.undefined=§7未定义的光线频率.\n§b使用一个音叉§r 去设置它
@@ -586,7 +619,7 @@ warpdrive.forcefield.upgrade.statusLine.cooling=冷却
 warpdrive.forcefield.upgrade.statusLine.fusion=融合
 warpdrive.forcefield.upgrade.statusLine.heating=加热
 warpdrive.forcefield.upgrade.statusLine.inversion=反向
-warpdrive.forcefield.upgrade.statusLine.itemPort=物品端口
+warpdrive.forcefield.upgrade.statusLine.item_port=物品端口
 warpdrive.forcefield.upgrade.statusLine.pumping=抽吸
 warpdrive.forcefield.upgrade.statusLine.range=提升范围
 warpdrive.forcefield.upgrade.statusLine.repulsion=斥力
@@ -628,22 +661,30 @@ warpdrive.upgrade.statusLine.none=§7没有安装升级
 warpdrive.upgrade.statusLine.valid=用升级%1$s.
 
 warpdrive.video_channel.tooltip=Video channel is set to %1$d
+warpdrive.video_channel.tooltip-tbc=视频通道设置为%1$d
 warpdrive.video_channel.get=Video channel %2$d has been retrieved from %1$s
 warpdrive.video_channel.set=%1$s is now tuned to Video channel %2$d
-warpdrive.videoChannel.statusLine.valid=视频通道%1$d是有效的
-warpdrive.videoChannel.statusLine.validCamera=相机的视频通道 %1$d 是有效的，位置是 %2$d, %3$d, %4$d.
-warpdrive.videoChannel.statusLine.invalid=§c视频通道 %1$d 无效.
-warpdrive.videoChannel.statusLine.invalidOrNotLoaded=§c视频通道 %1$d 无效或者是相机的距离太远!
-warpdrive.videoChannel.statusLine.undefined=§7未定义的视频通道.\n§b使用一个音叉§r 去设置它.
+warpdrive.video_channel.set-tbc=%1$s正在调整到视频通道%2$d
+warpdrive.video_channel.statusLine.valid=视频通道%1$d是有效的
+warpdrive.video_channel.statusLine.validCamera=相机的视频通道 %1$d 是有效的，位置是 %2$d, %3$d, %4$d.
+warpdrive.video_channel.statusLine.invalid=§c视频通道 %1$d 无效.
+warpdrive.video_channel.statusLine.invalidOrNotLoaded=§c视频通道 %1$d 无效或者是相机的距离太远!
+warpdrive.video_channel.statusLine.undefined=§7未定义的视频通道.\n§b使用一个音叉§r 去设置它.
 
-warpdrive.cloakingCore.invalidAssembly=§c无效的装配!
+warpdrive.cloakingCore.missingInnerAndOuter=§cIntegrity down to %1$d%%: missing channeling coil(s) towards %2$s and projecting coil(s) towards %3$s
+warpdrive.cloakingCore.missingInner=§cIntegrity down to %1$d%%: missing channeling coil(s) towards %2$s
+warpdrive.cloakingCore.missingOuter=§cIntegrity down to %1$d%%: missing projecting coil(s) towards %2$s
+warpdrive.cloakingCore.valid=System is valid
 warpdrive.cloakingCore.disabled=伪装被禁用
 warpdrive.cloakingCore.lowPower=§c伪装失效，我们需要更多的能量.
 warpdrive.cloakingCore.cloaking=一个层级 %1$d 伪装目前覆盖 %2$d方块!
+
 warpdrive.IC2reactorLaserMonitor.noReactor=未发现反应堆!
 warpdrive.IC2reactorLaserMonitor.multipleReactors=%1$d反应堆已连接.
+
 warpdrive.transporter.status=从%1$.0f %2$.0f %3$.0f到 %4$.0f %5$.0f %6$.0f
 
-warpdrive.tooltip.itemTag.breathingIC2=§b太空中呼吸§r消耗背包中的IC压缩空气
+warpdrive.tooltip.itemTag.breathingHelmet=§b太空中呼吸§r消耗背包中的IC压缩空气
+warpdrive.tooltip.itemTag.breathingHelmet-tbc=§b太空中呼吸§r 从你的背包消耗IC2的压缩空气
 warpdrive.tooltip.itemTag.flyInSpace=§b太空喷气背包§r.
 warpdrive.tooltip.itemTag.noFallDamage=§b减少摔落伤害§r.

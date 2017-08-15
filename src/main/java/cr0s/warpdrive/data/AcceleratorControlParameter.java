@@ -23,7 +23,7 @@ public class AcceleratorControlParameter {
 	
 	private void readFromNBT(final NBTTagCompound nbtTagCompound) {
 		controlChannel = nbtTagCompound.getInteger(IControlChannel.CONTROL_CHANNEL_TAG);
-		isEnabled = nbtTagCompound.getBoolean("isEnabled");
+		isEnabled = !nbtTagCompound.hasKey("isEnabled") || nbtTagCompound.getBoolean("isEnabled");
 		threshold = nbtTagCompound.getDouble("threshold");
 		description = nbtTagCompound.getString("description");
 	}

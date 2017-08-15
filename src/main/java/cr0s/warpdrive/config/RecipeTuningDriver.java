@@ -35,7 +35,7 @@ public class RecipeTuningDriver implements IRecipe {
 		for (int index = 0; index < countDyes; index++) {
 			recipe[2 + index] = "dye";
 		}
-		GameRegistry.addRecipe(new ShapelessOreRecipe(itemStackResult, recipe));
+		GameRegistry.addRecipe(new ShapelessOreRecipe(itemStackTool, recipe));
 	}
 	
 	// Returns an Item that is the result of this recipe

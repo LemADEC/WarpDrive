@@ -50,6 +50,7 @@ public class BlockForceField extends BlockAbstractForceField implements IDamageR
 		setStepSound(Block.soundTypeCloth);
 		setBlockName("warpdrive.forcefield.block" + tier);
 		setBlockTextureName("warpdrive:forcefield/forcefield");
+		setBlockUnbreakable();
 	}
 	
 	@Override
@@ -118,12 +119,12 @@ public class BlockForceField extends BlockAbstractForceField implements IDamageR
 	@SideOnly(Side.CLIENT)
 	@Override
 	public boolean shouldSideBeRendered(IBlockAccess blockAccess, int x, int y, int z, int side) {
-		if (blockAccess.isAirBlock(x, y, z)) {
+		final Block blockSide = blockAccess.getBlock(x, y, z);
+		if (blockSide.isAir(blockAccess, x, y, z)) {
 			return true;
 		}
-		ForgeDirection direction = ForgeDirection.getOrientation(side).getOpposite();
-		Block sideBlock = blockAccess.getBlock(x, y, z);
-		if (sideBlock instanceof BlockGlass || sideBlock instanceof BlockHullGlass || sideBlock instanceof BlockForceField) {
+		final ForgeDirection direction = ForgeDirection.getOrientation(side).getOpposite();
+		if (blockSide instanceof BlockGlass || blockSide instanceof BlockHullGlass || blockSide instanceof BlockForceField) {
 			return blockAccess.getBlockMetadata(x, y, z)
 				!= blockAccess.getBlockMetadata(x + direction.offsetX, y + direction.offsetY, z + direction.offsetZ);
 		}
@@ -148,6 +149,9 @@ public class BlockForceField extends BlockAbstractForceField implements IDamageR
 	
 	@Override
 	public void onBlockClicked(World world, int x, int y, int z, EntityPlayer entityPlayer) {
+		if (world.isRemote) {
+			return;
+		}
 		ForceFieldSetup forceFieldSetup = getForceFieldSetup(world, x, y, z);
 		if (forceFieldSetup != null) {
 			forceFieldSetup.onEntityEffect(world, x, y, z, entityPlayer);
@@ -249,7 +253,7 @@ public class BlockForceField extends BlockAbstractForceField implements IDamageR
 	}
 	
 	private double log_explosionX;
-	private double log_explosionY = -1;
+	private double log_explosionY = -1.0D;
 	private double log_explosionZ;
 	@Override
 	public float getExplosionResistance(Entity entity, World world, int x, int y, int z, double explosionX, double explosionY, double explosionZ) {
@@ -263,38 +267,61 @@ public class BlockForceField extends BlockAbstractForceField implements IDamageR
 		// find explosion strength, defaults to no effect
 		double strength = 0.0D;
 		if (entity == null && (explosionX == Math.rint(explosionX)) && (explosionY == Math.rint(explosionY)) && (explosionZ == Math.rint(explosionZ)) ) {
-			// IC2 Reactor blowing up => bloc is already air
+			// IC2 Reactor blowing up => block is already air
 			Block block = world.getBlock((int)explosionX, (int)explosionY, (int)explosionZ);
 			TileEntity tileEntity = world.getTileEntity((int)explosionX, (int)explosionY, (int)explosionZ);
 			if (enableFirstHit && WarpDriveConfig.LOGGING_FORCEFIELD) {
 				WarpDrive.logger.info("Block at location is " + block + " " + block.getUnlocalizedName() + " with tileEntity " + tileEntity);
 			}
-			// explosion with no entity and block removed, hence we can compute the energy impact => boosting explosion resistance
+			// explosion with no entity and block removed, hence we can't compute the energy impact => boosting explosion resistance
 			return 2.0F * super.getExplosionResistance(entity, world, x, y, z, explosionX, explosionY, explosionZ);
 		}
 		
 		if (entity != null) {
 			switch (entity.getClass().toString()) {
+			// Vanilla explosive
 			case "class net.minecraft.entity.item.EntityEnderCrystal": strength = 6.0D; break;
 			case "class net.minecraft.entity.item.EntityMinecartTNT": strength = 4.0D; break;
 			case "class net.minecraft.entity.item.EntityTNTPrimed": strength = 5.0D; break;
 			case "class net.minecraft.entity.monster.EntityCreeper": strength = 3.0D; break;  // *2 for powered ones
+			
+			// Applied Energistics Tiny TNT
 			case "class appeng.entity.EntityTinyTNTPrimed": strength = 0.2D; break;
+			
+			// Blood Arsenal Blood TNT
 			case "class com.arc.bloodarsenal.common.entity.EntityBloodTNT": strength = 1.0D; break;
+			
+			// IC2 explosives
 			case "class ic2.core.block.EntityItnt": strength = 5.5D; break; 
 			case "class ic2.core.block.EntityNuke": strength = 0.02D; break;
 			case "class ic2.core.block.EntityDynamite": strength = 1.0D; break;
 			case "class ic2.core.block.EntityStickyDynamite": strength = 1.0D; break;
 			
-			// S-mine (initial)
+			// ICBM Classic & DefenseTech S-mine (initial explosion)
 			case "class defense.common.entity.EntityExplosion": strength = 1.0D; break;
+			case "class icbm.classic.content.entity.EntityExplosion": strength = 1.0D; break;
 			
-			// Condensed, Incendiary, Repulsive, Attractive, Fragmentation, Sonic, Breaching, Thermobaric, Nuclear,
+			// ICBM Classic & DefenseTech Condensed, Incendiary, Repulsive, Attractive, Fragmentation, Sonic, Breaching, Thermobaric, Nuclear,
 			// Exothermic, Endothermic, Anti-gravitational, Hypersonic, (Antimatter?)
 			case "class defense.common.entity.EntityExplosive": strength = 15.0D; break;
+			case "class icbm.classic.content.entity.EntityExplosive": strength = 15.0D; break;
 			
-			// Fragmentation, S-mine
+			// ICBM Classic & DefenseTechFragmentation, S-mine fragments
 			case "class defense.common.entity.EntityFragments": strength = 0.02D; break;
+			case "class icbm.classic.content.entity.EntityFragments": strength = 0.02D; break;
+			
+			// ICBM Classic & DefenseTech Conventional, Attractive, Repulsive, Sonic, Breaching, Thermobaric, Nuclear, 
+			// Exothermic, Endothermic, Anti-Gravitational, Hypersonic missile, (Antimatter?), (Red matter?), (Homing?), (Anti-Ballistic?)
+			case "class defense.common.entity.EntityMissile": strength = 15.0D; break;
+			case "class icbm.classic.content.entity.EntityMissile": strength = 15.0D; break;
+			
+			// ICBM Classic & DefenseTech Conventional/Incendiary/Repulsive grenade
+			case "class defense.common.entity.EntityGrenade": strength = 3.0D; break;
+			case "class icbm.classic.content.entity.EntityGrenade": strength = 3.0D; break;
+			
+			// Tinker's Construct SDX explosives
+			case "class tconstruct.mechworks.entity.item.ExplosivePrimed": strength = 5.0D; break;
+			
 			default:
 				if (enableFirstHit) {
 					WarpDrive.logger.error("Unknown explosion source " + entity.getClass().toString() + " " + entity);
@@ -337,8 +364,9 @@ public class BlockForceField extends BlockAbstractForceField implements IDamageR
 		super.onBlockExploded(world, x, y, z, explosion);
 	}
 	
+	@Override
 	public void onEMP(World world, final int x, final int y, final int z, final float efficiency) {
-		if (efficiency > 0.0F) {
+		if (efficiency * (1.0F - 0.20F * (tier - 1)) > world.rand.nextFloat()) {
 			downgrade(world, x, y, z);
 		}
 		// already handled => no ancestor call

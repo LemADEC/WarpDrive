@@ -8,6 +8,7 @@ import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
 
 public class CompatCarpentersBlocks implements IBlockTransformer {
 	
@@ -71,20 +72,21 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 	}
 	
 	@Override
-	public NBTBase saveExternals(final TileEntity tileEntity) {
+	public NBTBase saveExternals(final World world, final int x, final int y, final int z, final Block block, final int blockMeta, final TileEntity tileEntity) {
 		// nothing to do
 		return null;
 	}
 	
 	@Override
-	public void remove(TileEntity tileEntity) {
+	public void removeExternals(final World world, final int x, final int y, final int z,
+	                            final Block block, final int blockMeta, final TileEntity tileEntity) {
 		// nothing to do
 	}
 	
 	// private static final byte[] rotSlope = {  2,  3,  1,  0,  6,  7,  5,  4, 10, 11, 9, 8, 14, 15, 13, 12, 18, 19, 17, 16, 22, 23, 21, 20, 26, 27, 25, 24, 30, 31, 29, 28, 34, 35, 33, 32, 38, 39, 37, 36, 42, 43, 41, 40, 44, 45, 48, 49, 47, 46, 51, 50, 54, 55, 53, 52, 58, 59, 57, 56, 60, 63, 64, 62, 61 };
 	
 	private static final int[]  rotBed    = {  1,  2,  3,  0,  5,  6,  7,  4 }; // actual is * 8192
-	private static final byte[] rotButton = {  0,  1,  5,  4,  2,  3 }; // Button, pressure plate, torch, garage door
+	private static final byte[] rotButton = {  0,  1,  5,  4,  2,  3,  6,  7 }; // Button, pressure plate, torch, garage door
 	private static final int[]  rotDoor   = {  1,  2,  3,  0,  5,  6,  7,  4,  9, 10, 11,  8, 13, 14, 15, 12 }; // actual is * 16
 	private static final int[]  rotGate   = {  2,  1,  0,  3,  7,  6,  4,  5 }; // actual is * 16
 	private static final int[]  rotHatch  = { 12, 13, 14, 15,  8,  9, 10, 11,  0,  1,  2,  3,  4,  5,  6,  7 }; // actual is * 8
@@ -95,7 +97,7 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 	//                                         0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60  61  62  63  64 
 	private static final byte[] rotSlope  = {  3,  2,  0,  1,  7,  6,  4,  5, 11, 10,  8,  9, 15, 14, 12, 13, 19, 18, 16, 17, 23, 22, 20, 21, 27, 26, 24, 25, 31, 30, 28, 29, 35, 34, 32, 33, 39, 38, 36, 37, 43, 42, 40, 41, 44, 45, 49, 48, 46, 47, 51, 50, 55, 54, 52, 53, 59, 58, 56, 57, 60, 64, 63, 61, 62 };
 	
-	// Unused indexes for Stairs:                                                            12  13  14  15  16  17  18  19                                  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60  61  62  63  64 
+	// Unused indexes for Stairs:                                                             12  13  14  15  16  17  18  19                                  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60  61  62  63  64 
 	private static final byte[] rotStair  = {  3,  2,  0,  1,  7,  6,  4,  5, 11, 10,  8,  9, 15, 14, 12, 13, 19, 18, 16, 17, 23, 22, 20, 21, 27, 26, 24, 25, 31, 30, 28, 29, 35, 34, 32, 33, 39, 38, 36, 37, 43, 42, 40, 41, 44, 45, 49, 48, 46, 47, 51, 50, 55, 54, 52, 53, 59, 58, 56, 57, 60, 64, 63, 61, 62 };
 	
 	@Override
@@ -106,9 +108,9 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersBed.isInstance(block)) {
-			int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
-			int rotation = (metadataNBT >> 13) & 7;
-			int state = metadataNBT & 0x1FFF;
+			final int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
+			final int rotation = (metadataNBT >> 13) & 7;
+			final int state = metadataNBT & 0x1FFF;
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setInteger("cbMetadata", state | (rotBed[rotation] << 13));
@@ -127,16 +129,18 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		if ( blockCarpentersButton.isInstance(block)
 		  || blockCarpentersPressurePlate.isInstance(block)
 		  || blockCarpentersTorch.isInstance(block) ) {
-			byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
+			final byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
+			final int rotation = metadataNBT & 0x07;
+			final int state = metadataNBT & 0xF8;
 			switch (rotationSteps) {
 			case 1:
-				nbtTileEntity.setByte("cbMetadata", rotButton[metadataNBT]);
+				nbtTileEntity.setByte("cbMetadata", (byte) (state | rotButton[rotation]));
 				return metadata;
 			case 2:
-				nbtTileEntity.setByte("cbMetadata", rotButton[rotButton[metadataNBT]]);
+				nbtTileEntity.setByte("cbMetadata", (byte) (state | rotButton[rotButton[rotation]]));
 				return metadata;
 			case 3:
-				nbtTileEntity.setByte("cbMetadata", rotButton[rotButton[rotButton[metadataNBT]]]);
+				nbtTileEntity.setByte("cbMetadata", (byte) (state | rotButton[rotButton[rotButton[rotation]]]));
 				return metadata;
 			default:
 				return metadata;
@@ -144,12 +148,12 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersCollapsibleBlock.isInstance(block)) {
-			int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
-			int state = metadataNBT & 7;
-			int weightXPZP = (metadataNBT & 0x7FFF07) >>  3;
-			int weightXNZP = (metadataNBT & 0x7C1FFF) >> 13;
-			int weightXNZN = (metadataNBT & 0x03FFFF) >> 18;
-			int weightXPZN = (metadataNBT & 0x7FE0FF) >>  8;
+			final int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
+			final int state = metadataNBT & 7;
+			final int weightXPZP = (metadataNBT & 0x7FFF07) >>  3;
+			final int weightXNZP = (metadataNBT & 0x7C1FFF) >> 13;
+			final int weightXNZN = (metadataNBT & 0x03FFFF) >> 18;
+			final int weightXPZN = (metadataNBT & 0x7FE0FF) >>  8;
 			
 			switch (rotationSteps) {
 			case 1:
@@ -167,9 +171,9 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersDoor.isInstance(block)) {
-			int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
-			int rotation = (metadataNBT >> 4) & 15;
-			int state = metadataNBT & 0xFF0F;
+			final int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
+			final int rotation = (metadataNBT >> 4) & 15;
+			final int state = metadataNBT & 0xFF0F;
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setInteger("cbMetadata", state | (rotDoor[rotation] << 4));
@@ -186,9 +190,9 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersGarageDoor.isInstance(block)) {
-			int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
-			int rotation = (metadataNBT >> 4) & 7;
-			int state = metadataNBT & 0xFF8F;
+			final int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
+			final int rotation = (metadataNBT >> 4) & 7;
+			final int state = metadataNBT & 0xFF8F;
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setInteger("cbMetadata", state | (rotButton[rotation] << 4));
@@ -205,9 +209,9 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersGate.isInstance(block)) {
-			int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
-			int rotation = (metadataNBT >> 4) & 7;
-			int state = metadataNBT & 0xFF8F;
+			final int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
+			final int rotation = (metadataNBT >> 4) & 7;
+			final int state = metadataNBT & 0xFF8F;
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setInteger("cbMetadata", state | (rotGate[rotation] << 4));
@@ -224,9 +228,9 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersHatch.isInstance(block)) {
-			int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
-			int rotation = (metadataNBT >> 3) & 15;
-			int state = metadataNBT & 0xFF87;
+			final int metadataNBT = nbtTileEntity.getInteger("cbMetadata");
+			final int rotation = (metadataNBT >> 3) & 15;
+			final int state = metadataNBT & 0xFF87;
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setInteger("cbMetadata", state | (rotHatch[rotation] << 3));
@@ -243,7 +247,7 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersLadder.isInstance(block)) {
-			byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
+			final byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setByte("cbMetadata", rotLadder[metadataNBT]);
@@ -284,7 +288,7 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersSafe.isInstance(block)) {
-			byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
+			final byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setByte("cbMetadata", rotSafe[metadataNBT]);
@@ -301,7 +305,7 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		}
 		
 		if (blockCarpentersSlope.isInstance(block)) {
-			byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
+			final byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setByte("cbMetadata", rotSlope[metadataNBT]);
@@ -319,7 +323,7 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 		
 		if (blockCarpentersStairs.isInstance(block)) {
 			// metadata is original block placement, doesn't seem to influence rendering
-			byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
+			final byte metadataNBT = nbtTileEntity.getByte("cbMetadata");
 			switch (rotationSteps) {
 			case 1:
 				nbtTileEntity.setByte("cbMetadata", rotStair[metadataNBT]);
@@ -339,7 +343,9 @@ public class CompatCarpentersBlocks implements IBlockTransformer {
 	}
 	
 	@Override
-	public void restoreExternals(TileEntity tileEntity, ITransformation transformation, NBTBase nbtBase) {
+	public void restoreExternals(final World world, final int x, final int y, final int z,
+	                             final Block block, final int blockMeta, final TileEntity tileEntity,
+	                             final ITransformation transformation, final NBTBase nbtBase) {
 		// nothing to do
 	}
 }

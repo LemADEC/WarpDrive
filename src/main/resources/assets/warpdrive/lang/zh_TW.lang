@@ -1,0 +1,459 @@
+
+death.attack.warpdrive.asphyxia=%1$s 不能呼吸了
+death.attack.warpdrive.asphyxia.player=%1$s 被 %2$s 親吻導致不能呼吸了
+death.attack.warpdrive.cold=%1$s 變成了老冰棍
+death.attack.warpdrive.cold.player=%2$s 對 %1$s 使用了冰凍魔法
+death.attack.warpdrive.laser=%1$s 被粒子炮射穿了
+death.attack.warpdrive.laser.player=%2$s 用粒子炮射穿了 %1$s  
+death.attack.warpdrive.shock=%1$s 被楊叫獸電死了
+death.attack.warpdrive.shock.player=%2$s 對 %1$s 使出了十萬伏特 
+death.attack.warpdrive.teleportation=%1$s 再構成失敗了
+death.attack.warpdrive.teleportation.player=%2$s 對 %1$s 使出了超時空傳送 
+death.attack.warpdrive.warm=%1$s 在傳送中失去聯係了
+death.attack.warpdrive.warm.player=%2$s 把 %1$s 變成了綠色香蕉
+
+item.warpdrive.crafting.Malformed.name=不良道具[WD]
+item.warpdrive.crafting.EmeraldCrystal.name=翡翠調諧水晶
+item.warpdrive.crafting.EnderCrystal.name=終界調諧水晶
+item.warpdrive.crafting.DiamondCrystal.name=鑽石調諧水晶
+item.warpdrive.crafting.DiffractionGrating.name=散射光柵
+item.warpdrive.crafting.ReactorCore.name=反應核心
+item.warpdrive.crafting.ComputerInterface.name=電腦接入界面
+item.warpdrive.crafting.PowerInterface.name=電力接口
+item.warpdrive.crafting.CapacitiveCrystal.name=電容結晶
+item.warpdrive.crafting.AirCanisterEmpty.name=虛空罐
+item.warpdrive.crafting.AirCanisterEmpty.tooltip=§b右鍵單擊空氣發生器§7 填充虛空罐
+item.warpdrive.crafting.Lens.name=透鏡
+item.warpdrive.crafting.Zoom.name=放大
+item.warpdrive.crafting.GlassTank.name=玻璃罐子
+item.warpdrive.crafting.FlatScreen.name=平面屏幕
+item.warpdrive.crafting.MemoryCrystal.name=記憶水晶
+item.warpdrive.crafting.Motor.name=發動機
+item.warpdrive.crafting.BoneCharcoal.name=骨灰
+item.warpdrive.crafting.ActivatedCarbon.name=活性炭
+item.warpdrive.crafting.LaserMediumEmpty.name=激光觸媒 (空)
+item.warpdrive.crafting.CoilCrystal.name=回紋水晶
+item.warpdrive.crafting.ElectromagneticProjector.name=電磁投射器
+item.warpdrive.crafting.Superconductor.name=超導材料
+
+item.warpdrive.armor.AirCanisterFull.name=空氣罐
+item.warpdrive.armor.Helmet.name=躍遷保護盔
+
+item.warpdrive.energy.IC2reactorLaserFocus.name=IC2 反應堆鐳射
+
+item.warpdrive.forcefield.shape.none.name=虛無之物
+item.warpdrive.forcefield.shape.none.tooltip=§4失效道具
+item.warpdrive.forcefield.shape.sphere.name=球形
+item.warpdrive.forcefield.shape.sphere.tooltip=
+item.warpdrive.forcefield.shape.cylinder_h.name=橫向圓柱體
+item.warpdrive.forcefield.shape.cylinder_h.tooltip=
+item.warpdrive.forcefield.shape.cylinder_v.name=垂直圓柱體
+item.warpdrive.forcefield.shape.cylinder_v.tooltip=
+item.warpdrive.forcefield.shape.cube.name=立方體
+item.warpdrive.forcefield.shape.cube.tooltip=
+item.warpdrive.forcefield.shape.plane.name=平面圖狀
+item.warpdrive.forcefield.shape.plane.tooltip=
+item.warpdrive.forcefield.shape.tube.name=管狀
+item.warpdrive.forcefield.shape.tube.tooltip=
+item.warpdrive.forcefield.shape.tunnel.name=隧道狀
+item.warpdrive.forcefield.shape.tunnel.tooltip=
+item.warpdrive.forcefield.shape.tooltip.usage=§b右鍵單擊投射器§7 升級\n§bShift加右鍵§7 降級
+
+item.warpdrive.forcefield.upgrade.none.name=無需升級
+item.warpdrive.forcefield.upgrade.none.tooltip=§4失效道具
+item.warpdrive.forcefield.upgrade.attraction.name=引力芯片
+item.warpdrive.forcefield.upgrade.attraction.tooltip=拉出斷路器方塊來修改數值。增加更多引力芯片來增加被作用的物品,實體, 怪物以及玩家。 增加一個廣域芯片來增加作用區域。
+item.warpdrive.forcefield.upgrade.breaking.name=斷路器芯片
+item.warpdrive.forcefield.upgrade.breaking.tooltip=斷路器原件可以替代投射力場。 增加更多斷路器原件來升級采礦效率等級。
+item.warpdrive.forcefield.upgrade.camouflage.name=僞裝芯片
+item.warpdrive.forcefield.upgrade.camouflage.tooltip=偽裝力場 into 自定義方塊. 在頂部設置一個進階中轉器去確保僞裝。 增加更多僞裝芯片來升級速度。
+item.warpdrive.forcefield.upgrade.cooling.name=冷卻芯片
+item.warpdrive.forcefield.upgrade.cooling.tooltip=凝結的方塊和實體。 增加更多冷卻芯片來增强效果。 增加一個廣域芯片來增加作用區域。
+item.warpdrive.forcefield.upgrade.fusion.name=融合芯片
+item.warpdrive.forcefield.upgrade.fusion.tooltip=重疊力場以共享相同的波束和頻率的網絡
+item.warpdrive.forcefield.upgrade.heating.name=熔融芯片
+item.warpdrive.forcefield.upgrade.heating.tooltip=加熱方塊或者實體。增加更多熔融芯片來增强效果。 增加一個廣域芯片來增加反應區域。
+item.warpdrive.forcefield.upgrade.inversion.name=廣域芯片
+item.warpdrive.forcefield.upgrade.inversion.tooltip=§4工作正在進行時\n更改作用的區域。  用於定位實體或地形。
+item.warpdrive.forcefield.upgrade.itemPort.name=端口擴充芯片
+item.warpdrive.forcefield.upgrade.itemPort.tooltip=增加機械的接口。 添加更多引力升級芯片或者斷路器芯片。 增加斥力芯片以提供進行放置穩定升級芯片。
+item.warpdrive.forcefield.upgrade.pumping.name=泵升級
+item.warpdrive.forcefield.upgrade.pumping.tooltip=§4工作正在進行時\n往力場位置泵送流體。 添加更多泵升級以驅動具有較高粘度流體的流體，如熔岩。
+item.warpdrive.forcefield.upgrade.range.name=射程提升芯片
+item.warpdrive.forcefield.upgrade.range.tooltip=增加投射器的最大範圍。
+item.warpdrive forcefield.forcefield.upgrade.repulsion.name=斥力芯片
+item.warpdrive.forcefield.upgrade.repulsion.tooltip=通過穩定升級壓縮存儲的物品。增加更多斥力芯片來增加被作用的物品, 實體, 怪物以及玩家。 添加一個廣域芯片以增加作用範圍。
+item.warpdrive.forcefield.upgrade.rotation.name=旋轉芯片
+item.warpdrive.forcefield.upgrade.rotation.tooltip=啟用旋轉力場
+item.warpdrive.forcefield.upgrade.shock.name=震蕩芯片
+item.warpdrive.forcefield.upgrade.shock.tooltip=電氣塊和實體。 添加更多震蕩芯片以提高效果。 增加一個廣域芯片來增加作用區域。
+item.warpdrive.forcefield.upgrade.silencer.name=消音芯片
+item.warpdrive.forcefield.upgrade.silencer.tooltip=使安裝上的機械消音。
+item.warpdrive.forcefield.upgrade.speed.name=極速芯片
+item.warpdrive.forcefield.upgrade.speed.tooltip=增加力場投射速度。 
+item.warpdrive.forcefield.upgrade.stabilization.name=穩定芯片
+item.warpdrive.forcefield.upgrade.stabilization.tooltip=放置方塊來代替力場。
+item.warpdrive.forcefield.upgrade.thickness.name=加厚芯片
+item.warpdrive.forcefield.upgrade.thickness.tooltip=增加力場的厚度。 添加更多加厚芯片以增加效果，最多增加一倍。
+item.warpdrive.forcefield.upgrade.translation.name=轉換芯片
+item.warpdrive.forcefield.upgrade.translation.tooltip=啟用力場轉換。
+item.warpdrive.forcefield.upgrade.tooltip.usage.projector=§b右鍵單擊投射器§7 來升級它
+item.warpdrive.forcefield.upgrade.tooltip.usage.relay=§b右鍵單擊繼電器§7 來升級它
+item.warpdrive.forcefield.upgrade.tooltip.usage.dismount=§bShift加右鍵§7 使它降級
+
+item.warpdrive.upgrade.Power.name=能量芯片
+item.warpdrive.upgrade.Speed.name=極速芯片
+item.warpdrive.upgrade.Range.name=射程提升芯片
+item.warpdrive.upgrade.Energy.name=能量芯片
+
+
+item.warpdrive.tool.crystalToken.name=水晶印記
+item.warpdrive.tool.crystalToken.tooltip=將水晶封裝在船上 '%1$s'\n§b啓動掃描力場§7 來建造你的船隻。
+item.warpdrive.tool.crystalToken0.name=水晶印記 #0
+item.warpdrive.tool.crystalToken1.name=水晶印記 #1
+item.warpdrive.tool.crystalToken2.name=水晶印記 #2
+item.warpdrive.tool.crystalToken3.name=水晶印記 #3
+item.warpdrive.tool.crystalToken4.name=水晶印記 #4
+item.warpdrive.tool.crystalToken5.name=水晶印記 #5
+
+
+item.warpdrive.tool.TuningFork.name=調音叉
+item.warpdrive.tool.TuningFork.white.name=白色調音叉
+item.warpdrive.tool.TuningFork.orange.name=橙色調音叉
+item.warpdrive.tool.TuningFork.magenta.name=品紅調音叉
+item.warpdrive.tool.TuningFork.lightBlue.name=粉藍調音叉
+item.warpdrive.tool.TuningFork.yellow.name=黃色調音叉
+item.warpdrive.tool.TuningFork.lime.name=青檸調音叉
+item.warpdrive.tool.TuningFork.pink.name=粉紅調音叉
+item.warpdrive.tool.TuningFork.gray.name=灰色調音叉
+item.warpdrive.tool.TuningFork.silver.name=銀色調音叉
+item.warpdrive.tool.TuningFork.cyan.name=青色調音叉
+item.warpdrive.tool.TuningFork.purple.name=紫色調音叉
+item.warpdrive.tool.TuningFork.blue.name=藍色調音叉
+item.warpdrive.tool.TuningFork.brown.name=熊大調音叉
+item.warpdrive.tool.TuningFork.green.name=肥鋒調音叉
+item.warpdrive.tool.TuningFork.red.name=赤色調音叉
+item.warpdrive.tool.TuningFork.black.name=黑色調音叉
+
+item.warpdrive.tool.TuningFork.tooltip.videoChannel=視頻頻道設置為 %1$d
+item.warpdrive.tool.TuningFork.tooltip.beamFrequency=光束頻率設置為 %1$d
+item.warpdrive.tool.TuningFork.tooltip.usage=§b右鍵單擊一個方塊§7 以調整其水晶\n§b潛行§7 以調節交替水晶
+item.warpdrive.tool.TuningFork.use.setVideoChannel=%1$s 現在調整為視頻頻道 %2$d
+item.warpdrive.tool.TuningFork.use.setBeamFrequency=%1$s 現在與波束頻率對準 %2$d
+
+
+tile.warpdrive.passive.Air.name=空氣方塊
+tile.warpdrive.passive.Energized.name=通電方塊
+tile.warpdrive.passive.Gas.name=氣體方塊
+tile.warpdrive.passive.IridiumBlock.name=銥塊
+tile.warpdrive.passive.HighlyAdvancedMachine.name=高級機床
+tile.warpdrive.passive.Network.name=網絡方塊
+tile.warpdrive.passive.Plain.name=戰機方塊
+tile.warpdrive.passive.TransportBeacon.name=傳送坐標
+
+tile.warpdrive.machines.AirGenerator.name=空氣發生器
+tile.warpdrive.machines.ChunkLoader.name=方塊裝載器
+tile.warpdrive.machines.Laser.name=鐳射
+tile.warpdrive.machines.LaserMedium.name=鐳射單元 (粒子加速器)
+
+tile.warpdrive.building.ShipScanner.name=船隻掃描儀
+
+tile.warpdrive.collection.LaserTreeFarm.name=激光樹農場
+tile.warpdrive.collection.MiningLaser.name=采礦鐳射
+
+tile.warpdrive.detection.Camera.name=相機
+tile.warpdrive.detection.CloakingCoil.name=偽裝線圈
+tile.warpdrive.detection.CloakingCore.name=僞裝核心
+tile.warpdrive.detection.Monitor.name=監控
+tile.warpdrive.detection.Radar.name=雷達
+tile.warpdrive.detection.WarpIsolation.name=躍遷力場隔絕方塊
+
+tile.warpdrive.detection.Siren.tooltip=由紅石觸發
+tile.warpdrive.detection.Siren0.name=警報器
+tile.warpdrive.detection.Siren0.tooltip=距離32格範圍内有警報器發出了警報。
+tile.warpdrive.detection.Siren4.name=空襲警報器
+tile.warpdrive.detection.Siren4.tooltip=距離32格範圍内有空襲警報器發出了警報。
+tile.warpdrive.detection.Siren5.name=進階空襲警報器
+tile.warpdrive.detection.Siren5.tooltip=距離64格範圍内有空襲警報器發出了警報。
+tile.warpdrive.detection.Siren6.name=高階空襲警報器
+tile.warpdrive.detection.Siren6.tooltip=距離128格範圍内有空襲警報器發出了警報。
+
+tile.warpdrive.energy.EnanReactorCore.name=核反應堆核
+tile.warpdrive.energy.EnanReactorLaser.name=反應堆穩定激光
+tile.warpdrive.energy.EnergyBank.0.name=零點模具
+tile.warpdrive.energy.EnergyBank.0.tooltip=創造子空間電容
+tile.warpdrive.energy.EnergyBank.1.name=基本子空間電容
+tile.warpdrive.energy.EnergyBank.2.name=進階子空間電容
+tile.warpdrive.energy.EnergyBank.3.name=高級子空間電容器
+tile.warpdrive.energy.IC2ReactorLaserMonitor.name=IC2 反應堆激光監視器
+
+tile.warpdrive.forcefield.block1.name=基本力場方塊
+tile.warpdrive.forcefield.block2.name=進階力場方塊
+tile.warpdrive.forcefield.block3.name=高級力場方塊
+tile.warpdrive.forcefield.projector1.name=基本立場投射器
+tile.warpdrive.forcefield.projector1.single.name=半基本立場投射器
+tile.warpdrive.forcefield.projector1.double.name=全基本立場投射器
+tile.warpdrive.forcefield.projector2.name=進階立場投射器
+tile.warpdrive.forcefield.projector2.single.name=半進階立場投射器
+tile.warpdrive.forcefield.projector2.double.name=全進階立場投射器
+tile.warpdrive.forcefield.projector3.name=高階立場投射器
+tile.warpdrive.forcefield.projector3.single.name=半高階立場投射器
+tile.warpdrive.forcefield.projector3.double.name=全高階立場投射器
+
+tile.warpdrive.forcefield.relay1.name=基本力場繼電器
+tile.warpdrive.forcefield.relay1.tooltip=支持在其網絡內共享最多1個力場升級
+tile.warpdrive.forcefield.relay2.name=進階力場繼電器
+tile.warpdrive.forcefield.relay2.tooltip=支持在其網絡內共享最多1個力場升級
+tile.warpdrive.forcefield.relay3.name=Superior Force Field Relay
+tile.warpdrive.forcefield.relay3.tooltip=支持在其網絡內共享最多1個力場升級
+
+tile.warpdrive.movement.Lift.name=升降機
+tile.warpdrive.movement.ShipController.name=船艦制禦器
+tile.warpdrive.movement.ShipCore.name=波動核心
+tile.warpdrive.movement.Transporter.name=運輸
+
+tile.warpdrive.weapon.LaserCamera.name=鐳射&攝像機
+tile.warpdrive.weapon.WeaponController.name=火控系統
+
+
+
+tile.warpdrive.hull1.plain.white.name=白色船體
+tile.warpdrive.hull1.plain.orange.name=橙色船體
+tile.warpdrive.hull1.plain.magenta.name=品紅船體
+tile.warpdrive.hull1.plain.lightBlue.name=粉藍船體
+tile.warpdrive.hull1.plain.yellow.name=黃色船體
+tile.warpdrive.hull1.plain.lime.name=青檸船體
+tile.warpdrive.hull1.plain.pink.name=粉紅船體
+tile.warpdrive.hull1.plain.gray.name=灰色船體
+tile.warpdrive.hull1.plain.silver.name=銀色船體
+tile.warpdrive.hull1.plain.cyan.name=青色船體
+tile.warpdrive.hull1.plain.purple.name=紫色船體
+tile.warpdrive.hull1.plain.blue.name=藍色船體
+tile.warpdrive.hull1.plain.brown.name=熊大船體
+tile.warpdrive.hull1.plain.green.name=綠色船體
+tile.warpdrive.hull1.plain.red.name=紅色船體
+tile.warpdrive.hull1.plain.black.name=黑色船體
+
+tile.warpdrive.hull1.glass.white.name=白色船體玻璃
+tile.warpdrive.hull1.glass.orange.name=橙色船體玻璃
+tile.warpdrive.hull1.glass.magenta.name=品紅船體玻璃
+tile.warpdrive.hull1.glass.lightBlue.name=粉藍船體玻璃
+tile.warpdrive.hull1.glass.yellow.name=黃色船體玻璃
+tile.warpdrive.hull1.glass.lime.name=青檸船體玻璃
+tile.warpdrive.hull1.glass.pink.name=粉紅船體玻璃
+tile.warpdrive.hull1.glass.gray.name=灰色船體玻璃
+tile.warpdrive.hull1.glass.silver.name=銀色船體玻璃
+tile.warpdrive.hull1.glass.cyan.name=青色船體玻璃
+tile.warpdrive.hull1.glass.purple.name=紫色船體玻璃
+tile.warpdrive.hull1.glass.blue.name=藍色船體玻璃
+tile.warpdrive.hull1.glass.brown.name=熊大船體玻璃
+tile.warpdrive.hull1.glass.green.name=綠色船體玻璃
+tile.warpdrive.hull1.glass.red.name=紅色船體玻璃
+tile.warpdrive.hull1.glass.black.name=黑色船體玻璃
+
+tile.warpdrive.hull1.stairs.white.name=白色船體階梯
+tile.warpdrive.hull1.stairs.orange.name=橙色船體階梯
+tile.warpdrive.hull1.stairs.magenta.name=品紅船體階梯
+tile.warpdrive.hull1.stairs.lightBlue.name=粉藍船體階梯
+tile.warpdrive.hull1.stairs.yellow.name=黃色船體階梯
+tile.warpdrive.hull1.stairs.lime.name=青檸船體階梯
+tile.warpdrive.hull1.stairs.pink.name=粉紅船體階梯
+tile.warpdrive.hull1.stairs.gray.name=灰色船體階梯
+tile.warpdrive.hull1.stairs.silver.name=銀色船體階梯
+tile.warpdrive.hull1.stairs.cyan.name=青色船體階梯
+tile.warpdrive.hull1.stairs.purple.name=紫色船體階梯
+tile.warpdrive.hull1.stairs.blue.name=藍色船體階梯
+tile.warpdrive.hull1.stairs.brown.name=熊大船體階梯
+tile.warpdrive.hull1.stairs.green.name=綠色船體階梯
+tile.warpdrive.hull1.stairs.red.name=紅色船體階梯
+tile.warpdrive.hull1.stairs.black.name=黑色船體階梯
+
+tile.warpdrive.hull2.plain.white.name=白色進階船體
+tile.warpdrive.hull2.plain.orange.name=橙色進階船體
+tile.warpdrive.hull2.plain.magenta.name=品紅進階船體
+tile.warpdrive.hull2.plain.lightBlue.name=粉藍進階船體
+tile.warpdrive.hull2.plain.yellow.name=黃色進階船體
+tile.warpdrive.hull2.plain.lime.name=青檸進階船體
+tile.warpdrive.hull2.plain.pink.name=粉紅進階船體
+tile.warpdrive.hull2.plain.gray.name=灰色進階船體
+tile.warpdrive.hull2.plain.silver.name=銀色進階船體
+tile.warpdrive.hull2.plain.cyan.name=青色進階船體
+tile.warpdrive.hull2.plain.purple.name=紫色進階船體
+tile.warpdrive.hull2.plain.blue.name=藍色進階船體
+tile.warpdrive.hull2.plain.brown.name=熊大進階船體
+tile.warpdrive.hull2.plain.green.name=綠色進階船體
+tile.warpdrive.hull2.plain.red.name=紅色進階船體
+tile.warpdrive.hull2.plain.black.name=黑色進階船體
+
+tile.warpdrive.hull2.glass.white.name=白色進階船體玻璃
+tile.warpdrive.hull2.glass.orange.name=橙色進階船體玻璃
+tile.warpdrive.hull2.glass.magenta.name=品紅進階船體玻璃
+tile.warpdrive.hull2.glass.lightBlue.name=粉藍進階船體玻璃
+tile.warpdrive.hull2.glass.yellow.name=黃色進階船體玻璃
+tile.warpdrive.hull2.glass.lime.name=青檸進階船體玻璃
+tile.warpdrive.hull2.glass.pink.name=粉紅進階船體玻璃
+tile.warpdrive.hull2.glass.gray.name=灰色進階船體玻璃
+tile.warpdrive.hull2.glass.silver.name=銀色進階船體玻璃
+tile.warpdrive.hull2.glass.cyan.name=青色進階船體玻璃
+tile.warpdrive.hull2.glass.purple.name=紫色進階船體玻璃
+tile.warpdrive.hull2.glass.blue.name=藍色進階船體玻璃
+tile.warpdrive.hull2.glass.brown.name=熊大進階船體玻璃
+tile.warpdrive.hull2.glass.green.name=綠色進階船體玻璃
+tile.warpdrive.hull2.glass.red.name=紅色進階船體玻璃
+tile.warpdrive.hull2.glass.black.name=黑色進階船體玻璃
+
+tile.warpdrive.hull2.stairs.white.name=白色進階船體階梯
+tile.warpdrive.hull2.stairs.orange.name=橙色進階船體階梯
+tile.warpdrive.hull2.stairs.magenta.name=品紅進階船體階梯
+tile.warpdrive.hull2.stairs.lightBlue.name=粉藍進階船體階梯
+tile.warpdrive.hull2.stairs.yellow.name=黃色進階船體階梯
+tile.warpdrive.hull2.stairs.lime.name=青檸進階船體階梯
+tile.warpdrive.hull2.stairs.pink.name=粉紅進階船體階梯
+tile.warpdrive.hull2.stairs.gray.name=灰色進階船體階梯
+tile.warpdrive.hull2.stairs.silver.name=銀色進階船體階梯
+tile.warpdrive.hull2.stairs.cyan.name=青色進階船體階梯
+tile.warpdrive.hull2.stairs.purple.name=紫色進階船體階梯
+tile.warpdrive.hull2.stairs.blue.name=藍色進階船體階梯
+tile.warpdrive.hull2.stairs.brown.name=熊大進階船體階梯
+tile.warpdrive.hull2.stairs.green.name=綠色進階船體階梯
+tile.warpdrive.hull2.stairs.red.name=紅色進階船體階梯
+tile.warpdrive.hull2.stairs.black.name=黑色進階船體階梯
+
+tile.warpdrive.hull3.plain.white.name=白色高階船體
+tile.warpdrive.hull3.plain.orange.name=橙色高階船體
+tile.warpdrive.hull3.plain.magenta.name=品紅高階船體
+tile.warpdrive.hull3.plain.lightBlue.name=粉藍高階船體
+tile.warpdrive.hull3.plain.yellow.name=黃色高階船體
+tile.warpdrive.hull3.plain.lime.name=青檸高階船體
+tile.warpdrive.hull3.plain.pink.name=粉紅高階船體
+tile.warpdrive.hull3.plain.gray.name=灰色高階船體
+tile.warpdrive.hull3.plain.silver.name=銀色高階船體
+tile.warpdrive.hull3.plain.cyan.name=青色高階船體
+tile.warpdrive.hull3.plain.purple.name=紫色高階船體
+tile.warpdrive.hull3.plain.blue.name=藍色高階船體
+tile.warpdrive.hull3.plain.brown.name=熊大高階船體
+tile.warpdrive.hull3.plain.green.name=綠色高階船體
+tile.warpdrive.hull3.plain.red.name=紅色高階船體
+tile.warpdrive.hull3.plain.black.name=黑色高階船體
+
+tile.warpdrive.hull3.glass.white.name=白色高階船體玻璃
+tile.warpdrive.hull3.glass.orange.name=橙色高階船體玻璃
+tile.warpdrive.hull3.glass.magenta.name=品紅高階船體玻璃
+tile.warpdrive.hull3.glass.lightBlue.name=粉藍高階船體玻璃
+tile.warpdrive.hull3.glass.yellow.name=黃色高階船體玻璃
+tile.warpdrive.hull3.glass.lime.name=青檸高階船體玻璃
+tile.warpdrive.hull3.glass.pink.name=粉紅高階船體玻璃
+tile.warpdrive.hull3.glass.gray.name=灰色高階船體玻璃
+tile.warpdrive.hull3.glass.silver.name=銀色高階船體玻璃
+tile.warpdrive.hull3.glass.cyan.name=青色高階船體玻璃
+tile.warpdrive.hull3.glass.purple.name=紫色高階船體玻璃
+tile.warpdrive.hull3.glass.blue.name=藍色高階船體玻璃
+tile.warpdrive.hull3.glass.brown.name=熊大高階船體玻璃
+tile.warpdrive.hull3.glass.green.name=綠色高階船體玻璃
+tile.warpdrive.hull3.glass.red.name=紅色高階船體玻璃
+tile.warpdrive.hull3.glass.black.name=黑色高階船體玻璃
+
+tile.warpdrive.hull3.stairs.white.name=白色高階船體階梯
+tile.warpdrive.hull3.stairs.orange.name=橙色高階船體階梯
+tile.warpdrive.hull3.stairs.magenta.name=品紅高階船體階梯
+tile.warpdrive.hull3.stairs.lightBlue.name=粉藍高階船體階梯
+tile.warpdrive.hull3.stairs.yellow.name=黃色高階船體階梯
+tile.warpdrive.hull3.stairs.lime.name=青檸高階船體階梯
+tile.warpdrive.hull3.stairs.pink.name=粉紅高階船體階梯
+tile.warpdrive.hull3.stairs.gray.name=灰色高階船體階梯
+tile.warpdrive.hull3.stairs.silver.name=銀色高階船體階梯
+tile.warpdrive.hull3.stairs.cyan.name=青色高階船體階梯
+tile.warpdrive.hull3.stairs.purple.name=紫色高階船體階梯
+tile.warpdrive.hull3.stairs.blue.name=藍色高階船體階梯
+tile.warpdrive.hull3.stairs.brown.name=熊大高階船體階梯
+tile.warpdrive.hull3.stairs.green.name=綠色高階船體階梯
+tile.warpdrive.hull3.stairs.red.name=紅色高階船體階梯
+tile.warpdrive.hull3.stairs.black.name=黑色高階船體階梯
+
+
+warpdrive.guide.prefix=§6%1$s:§r 
+warpdrive.error.badTileEntity=§c該塊需要重新放置。
+warpdrive.monitor.viewingCamera=查看攝影機 %2$d, %3$d, %4$d 在視頻頻道 %1$d
+warpdrive.ship.attachedPlayers=屬於: %1$s
+warpdrive.ship.playerAttached=您現在已連接到船艦 %1$s.\n這艘船艦屬於 %2$s
+warpdrive.ship.playerDetached=您現在已從船艦分離 %1$s.\n這艘船艦屬於 %2$s
+warpdrive.ship.statusLine.cooling=%1$d s 升降梯的冷卻中。
+warpdrive.ship.statusLine.isolation=%1$d 主動隔離塊由 %2$2.1f%% 吸收。
+
+warpdrive.energy.statusLine=能量填充 %1$s / %2$s EU.
+warpdrive.energy.side.changedToInput=%1$s 側面變為能量輸入模式!
+warpdrive.energy.side.changedToOutput=%1$s 側面變為能量輸出模式!
+warpdrive.energy.side.changedToDisabled=%1$s 側面變為能量禁用模式!
+
+warpdrive.beamFrequency.statusLine.valid=光束頻率 %1$d 已驗證。
+warpdrive.beamFrequency.statusLine.invalid=§c光束頻率 %1$d 是無效的。
+warpdrive.beamFrequency.statusLine.undefined=§7無效的光束頻率。\n§bUse 使用調音叉§r 來設置。
+
+warpdrive.forcefield.guide.lowPower=我們的能量用完了，艦長！減少消耗，或讓引擎長提高我們的輸出！
+
+warpdrive.forcefield.shape.statusLine.none=§c形狀未定義。
+warpdrive.forcefield.shape.statusLine.double=形狀是滿的 %1$s
+warpdrive.forcefield.shape.statusLine.single=形狀是一半 %1$s
+warpdrive.forcefield.shape.statusLine.sphere=領域
+warpdrive.forcefield.shape.statusLine.cylinder_h=水平氣缸
+warpdrive.forcefield.shape.statusLine.cylinder_v=垂直氣缸
+warpdrive.forcefield.shape.statusLine.cube=立方體
+warpdrive.forcefield.shape.statusLine.plane=平面
+warpdrive.forcefield.shape.statusLine.tube=管
+warpdrive.forcefield.shape.statusLine.tunnel=隧道
+
+warpdrive.forcefield.upgrade.statusLine.attraction=引力
+warpdrive.forcefield.upgrade.statusLine.breaking=斷路器
+warpdrive.forcefield.upgrade.statusLine.camouflage=偽裝
+warpdrive.forcefield.upgrade.statusLine.cooling=冷卻
+warpdrive.forcefield.upgrade.statusLine.fusion=融合
+warpdrive.forcefield.upgrade.statusLine.heating=熔融
+warpdrive.forcefield.upgrade.statusLine.inversion=廣域
+warpdrive.forcefield.upgrade.statusLine.itemPort=端口擴充
+warpdrive.forcefield.upgrade.statusLine.pumping=泵
+warpdrive.forcefield.upgrade.statusLine.range=射程提升
+warpdrive.forcefield.upgrade.statusLine.repulsion=斥力
+warpdrive.forcefield.upgrade.statusLine.rotation=旋轉	
+warpdrive.forcefield.upgrade.statusLine.shock=震蕩
+warpdrive.forcefield.upgrade.statusLine.silencer=消音
+warpdrive.forcefield.upgrade.statusLine.speed=極速
+warpdrive.forcefield.upgrade.statusLine.stabilization=穩定
+warpdrive.forcefield.upgrade.statusLine.thickness=加厚
+warpdrive.forcefield.upgrade.statusLine.translation=轉換
+
+warpdrive.upgrade.result.noUpgradeToDismount=§c無需升級即可卸載。
+warpdrive.upgrade.result.notEnoughUpgrades=§c您需要至少1個才能升級此塊。
+warpdrive.upgrade.result.invalidUpgrade=§c這不是升級此方塊的有效項。
+warpdrive.upgrade.result.invalidProjectorUpgrade=§c此升級對於投射器而言太大，請改用繼電器。
+warpdrive.upgrade.result.invalidRelayUpgrade=§c此升級僅適用於投射器。
+warpdrive.upgrade.result.validUpgrades=此方塊塊的有效升級包括: %1$s. @TODO 尚未執行。
+warpdrive.upgrade.result.tooManyUpgrades=§c已經有 %1$d 升級安裝。
+warpdrive.upgrade.result.dismounted=升級 %1$s 成功卸下。
+warpdrive.upgrade.result.mounted=升級 %1$s 已成功掛載。
+
+warpdrive.upgrade.result.wrongShapeSide=§c這邊沒有電磁投射器。
+warpdrive.upgrade.result.noShapeToDismount=§c沒有形狀來卸下。
+warpdrive.upgrade.result.notEnoughShapes.double=§c您需要至少2個項目來設置雙面投射器的形狀。
+warpdrive.upgrade.result.notEnoughShapes.single=§c至少需要1個項目來設置單面投射器的形狀。
+warpdrive.upgrade.result.shapeDismounted=已成功卸載形狀。
+warpdrive.upgrade.result.shapeMounted=形狀已成功安裝。
+
+warpdrive.upgrade.statusLine.none=§7未安裝升級。
+warpdrive.upgrade.statusLine.valid=已升級 %1$s.
+
+warpdrive.videoChannel.statusLine.valid=視頻頻道 %1$d 有效。
+warpdrive.videoChannel.statusLine.validCamera視頻頻道 %1$d 對於攝像機 %2$d, %3$d, %4$d 有效
+warpdrive.videoChannel.statusLine.invalid=§c視頻頻道 %1$d 是無效的。
+warpdrive.videoChannel.statusLine.invalidOrNotLoaded=§c視頻頻道 %1$d 是無效的或者錄像機太過遙遠。 
+warpdrive.videoChannel.statusLine.undefined=§7未定義的視頻通道。\n§bUse 調音叉§r 來設定。
+warpdrive.cloakingCore.invalidAssembly=§c裝配無效！
+warpdrive.cloakingCore.disabled=僞裝無效！
+warpdrive.cloakingCore.lowPower=§c僞裝失效了，我們需要更多的能量！艦長！
+warpdrive.cloakingCore.cloaking=A 層 %1$d 僞裝目前正確覆蓋 %2$d 區域！
+warpdrive.IC2reactorLaserMonitor.noReactor=沒有反應堆！
+warpdrive.IC2reactorLaserMonitor.multipleReactors=%1$d 反應器連接。
+warpdrive.transporter.status=From %1$.0f %2$.0f %3$.0f to %4$.0f %5$.0f %6$.0f
+
+warpdrive.tooltip.itemTag.breathingIC2=§b空間呼吸§r 正在從您的庫存消耗IC2的壓縮空氣囊。
+warpdrive.tooltip.itemTag.flyInSpace=§b空間噴氣背包§r.
+warpdrive.tooltip.itemTag.noFallDamage=§b吸收跌落傷害§r.

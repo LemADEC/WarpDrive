@@ -39,7 +39,7 @@ public class TileEntityForceField extends TileEntityAbstractBase {
 		if (tag.hasKey("projector")) {
 			vProjector = VectorI.createFromNBT(tag.getCompoundTag("projector"));
 			cache_beamFrequency = tag.getInteger(IBeamFrequency.BEAM_FREQUENCY_TAG);
-			if (tag.hasKey("projector")) {
+			if (tag.hasKey("camouflageBlock")) {
 				try {
 					cache_blockCamouflage = Block.getBlockFromName(tag.getString("camouflageBlock"));
 					cache_metadataCamouflage = tag.getByte("camouflageMeta");
@@ -78,9 +78,9 @@ public class TileEntityForceField extends TileEntityAbstractBase {
 			tagCompound.setInteger(IBeamFrequency.BEAM_FREQUENCY_TAG, cache_beamFrequency);
 			if (cache_blockCamouflage != null) {
 				tagCompound.setString("camouflageBlock", Block.blockRegistry.getNameForObject(cache_blockCamouflage));
-				tagCompound.setByte("camouflageMeta", (byte)cache_metadataCamouflage);
+				tagCompound.setByte("camouflageMeta", (byte) cache_metadataCamouflage);
 				tagCompound.setInteger("camouflageColorMultiplier", cache_colorMultiplierCamouflage);
-				tagCompound.setByte("camouflageLight", (byte)cache_lightCamouflage);
+				tagCompound.setByte("camouflageLight", (byte) cache_lightCamouflage);
 			}
 		}
 	}

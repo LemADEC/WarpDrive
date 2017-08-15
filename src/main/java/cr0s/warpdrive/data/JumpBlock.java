@@ -3,7 +3,6 @@ package cr0s.warpdrive.data;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.IBlockTransformer;
 import cr0s.warpdrive.api.ITransformation;
-import cr0s.warpdrive.block.detection.BlockMonitor;
 import cr0s.warpdrive.compat.CompatForgeMultipart;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.config.Filler;
@@ -55,6 +54,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.Constants.NBT;
 
 public class JumpBlock {
 	
@@ -70,7 +70,7 @@ public class JumpBlock {
 	public JumpBlock() {
 	}
 	
-	public JumpBlock(Block block, int blockMeta, TileEntity tileEntity, int x, int y, int z) {
+	public JumpBlock(final World world, final int x, final int y, final int z, final Block block, final int blockMeta, final TileEntity tileEntity) {
 		this.block = block;
 		this.blockMeta = blockMeta;
 		blockTileEntity = tileEntity;
@@ -81,7 +81,8 @@ public class JumpBlock {
 		// save externals
 		for (Entry<String, IBlockTransformer> entryBlockTransformer : WarpDriveConfig.blockTransformers.entrySet()) {
 			if (entryBlockTransformer.getValue().isApplicable(block, blockMeta, tileEntity)) {
-				NBTBase nbtBase = entryBlockTransformer.getValue().saveExternals(tileEntity);
+				final NBTBase nbtBase = entryBlockTransformer.getValue().saveExternals(world, x, y, z, block, blockMeta, tileEntity);
+				// (we always save, even if null as a reminder on which transformer applies to this block)
 				setExternal(entryBlockTransformer.getKey(), nbtBase);
 			}
 		}
@@ -106,7 +107,7 @@ public class JumpBlock {
 		}
 		NBTBase nbtExternal = externals.get(modId);
 		if (WarpDriveConfig.LOGGING_JUMPBLOCKS) {
-			WarpDrive.logger.info("Restoring " + modId + " externals at " + x + " " + y + " " + z + " " + nbtExternal);
+			WarpDrive.logger.info("Returning " + modId + " externals at " + x + " " + y + " " + z + " " + nbtExternal);
 		}
 		if (nbtExternal == null) {
 			return null;
@@ -136,7 +137,7 @@ public class JumpBlock {
 	private static final byte[] mrotStair          = {  2,  3,  1,  0,  6,  7,  5,  4,  8,  9, 10, 11, 12, 13, 14, 15 };
 	private static final byte[] mrotSign           = {  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  0,  1,  2,  3 };	// Sign, Skull
 	private static final byte[] mrotTrapDoor       = {  3,  2,  0,  1,  7,  6,  4,  5, 11, 10,  8,  9, 15, 14, 12, 13 };
-	private static final byte[] mrotLever          = {  7,  2,  3,  4,  1,  6,  5,  0, 15, 11, 12, 10,  9, 14, 13,  8 };
+	private static final byte[] mrotLever          = {  7,  3,  4,  2,  1,  6,  5,  0, 15, 11, 12, 10,  9, 14, 13,  8 };
 	private static final byte[] mrotNetherPortal   = {  0,  2,  1,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 };
 	private static final byte[] mrotVine           = {  0,  2,  4,  6,  8, 10, 12, 14,  1,  3,  5,  7,  9, 11, 13, 15 };
 	private static final byte[] mrotButton         = {  0,  3,  4,  2,  1,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 };	// Button, torch (normal, redstone lit/unlit)
@@ -189,8 +190,7 @@ public class JumpBlock {
 		} else if (block instanceof BlockHugeMushroom) {
 			mrot = mrotMushroom;
 		} else if (block instanceof BlockFurnace || block instanceof BlockDispenser || block instanceof BlockHopper
-				|| block instanceof BlockChest || block instanceof BlockEnderChest || block instanceof BlockLadder
-				|| block instanceof BlockMonitor) {
+				|| block instanceof BlockChest || block instanceof BlockEnderChest || block instanceof BlockLadder) {
 			mrot = mrotForgeDirection;
 		} else if (block instanceof BlockPistonBase || block instanceof BlockPistonExtension || block instanceof BlockPistonMoving) {
 			mrot = mrotPiston;
@@ -488,6 +488,11 @@ public class JumpBlock {
 			tagCompound.removeTag("computerID");
 			tagCompound.removeTag("label");
 		}
+		// WarpDrive UUID
+		if (tagCompound.hasKey("uuidMost")) {
+			tagCompound.removeTag("uuidMost");
+			tagCompound.removeTag("uuidLeast");
+		}
 		// WarpDrive any OC connected tile
 		if (tagCompound.hasKey("oc:node")) {
 			tagCompound.removeTag("oc:node");
@@ -540,22 +545,29 @@ public class JumpBlock {
 	}
 	
 	public static void emptyEnergyStorage(final NBTTagCompound tagCompound) {
+		// BuildCraft
+		if (tagCompound.hasKey("battery", NBT.TAG_COMPOUND)) {
+			NBTTagCompound tagCompoundBattery = tagCompound.getCompoundTag("battery");
+			if (tagCompoundBattery.hasKey("energy", NBT.TAG_INT)) {
+				tagCompoundBattery.setInteger("energy", 0);
+			}
+		}
 		// IC2
-		if (tagCompound.hasKey("energy")) {
+		if (tagCompound.hasKey("energy", NBT.TAG_DOUBLE)) {
 			// energy_consume((int)Math.round(blockNBT.getDouble("energy")), true);
 			tagCompound.setDouble("energy", 0);
 		}
 		// Gregtech
-		if (tagCompound.hasKey("mStoredEnergy")) {
+		if (tagCompound.hasKey("mStoredEnergy", NBT.TAG_INT)) {
 			tagCompound.setInteger("mStoredEnergy", 0);
 		}
 		// Immersive Engineering & Thermal Expansion
-		if (tagCompound.hasKey("Energy")) {
+		if (tagCompound.hasKey("Energy", NBT.TAG_INT)) {
 			// energy_consume(blockNBT.getInteger("Energy"), true);
 			tagCompound.setInteger("Energy", 0);
 		}
 		// Mekanism
-		if (tagCompound.hasKey("electricityStored")) {
+		if (tagCompound.hasKey("electricityStored", NBT.TAG_DOUBLE)) {
 			tagCompound.setDouble("electricityStored", 0);
 		}
 	}
@@ -572,7 +584,7 @@ public class JumpBlock {
 			// This code is an IC2 hack to fix an issue on 1.7.10 up to industrialcraft-2-2.2.763-experimental, see http://bt.industrial-craft.net/view.php?id=1704
 			if (!NetworkManager_instance.getClass().getName().contains("NetworkManager")) {
 				NetworkManager_instance = Class.forName("ic2.core.util.SideGateway").getMethod("get").invoke(NetworkManager_instance);
-				WarpDrive.logger.error("Patched IC2 API, new instance is '" + NetworkManager_instance + "'");
+				WarpDrive.logger.info("Patched IC2 API, new instance is '" + NetworkManager_instance + "'");
 			}
 			// IC2 hack ends here
 		} catch (Exception exception) {
@@ -632,9 +644,11 @@ public class JumpBlock {
 				// Disable rollback on item use
 				// if (flag && blockSnapshot == null) {// Don't notify clients or update physics while capturing blockstates
 					// Modularize client and physic updates
-					w.markAndNotifyBlock(x, y, z, chunk, block1, block, par6);
+					// w.markAndNotifyBlock(x, y, z, chunk, block1, block, par6);
 				// }
-					
+				if (flag) {
+					w.markAndNotifyBlock(x, y, z, chunk, block1, block, par6);
+				}
 				return flag;
 			}
 		} else {

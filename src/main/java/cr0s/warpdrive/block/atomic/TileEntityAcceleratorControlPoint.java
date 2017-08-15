@@ -99,10 +99,10 @@ public class TileEntityAcceleratorControlPoint extends TileEntityAbstractInterfa
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound tag) {
-		super.readFromNBT(tag);
-		isEnabled = tag.getBoolean("isEnabled");
-		controlChannel = tag.getInteger(CONTROL_CHANNEL_TAG);
+	public void readFromNBT(NBTTagCompound tagCompound) {
+		super.readFromNBT(tagCompound);
+		isEnabled = !tagCompound.hasKey("isEnabled") || tagCompound.getBoolean("isEnabled");
+		controlChannel = tagCompound.getInteger(CONTROL_CHANNEL_TAG);
 	}
 	
 	@Override
@@ -182,7 +182,7 @@ public class TileEntityAcceleratorControlPoint extends TileEntityAbstractInterfa
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		try {
 			switch (methodName) {
@@ -199,6 +199,7 @@ public class TileEntityAcceleratorControlPoint extends TileEntityAbstractInterfa
 				return state();
 			}
 		} catch (Exception exception) {
+			exception.printStackTrace();
 			return new String[] { exception.getMessage() };
 		}
 		

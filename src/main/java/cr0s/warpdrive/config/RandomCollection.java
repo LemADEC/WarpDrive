@@ -38,7 +38,9 @@ public class RandomCollection<E extends IStringSerializable> {
 			return;
 		}
 		if (weightMap.containsValue(object)) {
-			WarpDrive.logger.warn("Object already has a weight defined, skipping " + object + " with weight " + weight);
+			if (WarpDriveConfig.LOGGING_WORLD_GENERATION) {
+				WarpDrive.logger.trace("Object already has a weight defined, skipping " + object + " with weight " + weight);
+			}
 			return;
 		}
 		totalWeight += weight;
@@ -60,7 +62,9 @@ public class RandomCollection<E extends IStringSerializable> {
 			return;
 		}
 		if (ratioMap.containsValue(object)) {
-			WarpDrive.logger.warn("Object already has a ratio defined, skipping " + object + " with ratio " + ratio);
+			if (WarpDriveConfig.LOGGING_WORLD_GENERATION) {
+				WarpDrive.logger.warn("Object already has a ratio defined, skipping " + object + " with ratio " + ratio);
+			}
 			return;
 		}
 		

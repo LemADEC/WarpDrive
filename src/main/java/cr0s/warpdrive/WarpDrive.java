@@ -9,6 +9,7 @@ import cr0s.warpdrive.block.TileEntityChunkLoader;
 import cr0s.warpdrive.block.TileEntityLaser;
 import cr0s.warpdrive.block.TileEntityLaserMedium;
 import cr0s.warpdrive.block.atomic.BlockAcceleratorControlPoint;
+import cr0s.warpdrive.block.atomic.BlockAcceleratorController;
 import cr0s.warpdrive.block.atomic.BlockChiller;
 import cr0s.warpdrive.block.atomic.BlockElectromagnetGlass;
 import cr0s.warpdrive.block.atomic.BlockElectromagnetPlain;
@@ -17,12 +18,14 @@ import cr0s.warpdrive.block.atomic.BlockParticlesInjector;
 import cr0s.warpdrive.block.atomic.BlockVoidShellGlass;
 import cr0s.warpdrive.block.atomic.BlockVoidShellPlain;
 import cr0s.warpdrive.block.atomic.TileEntityAcceleratorControlPoint;
+import cr0s.warpdrive.block.atomic.TileEntityAcceleratorController;
 import cr0s.warpdrive.block.atomic.TileEntityParticlesInjector;
 import cr0s.warpdrive.block.breathing.BlockAirFlow;
 import cr0s.warpdrive.block.breathing.BlockAirGenerator;
 import cr0s.warpdrive.block.breathing.BlockAirGeneratorTiered;
 import cr0s.warpdrive.block.breathing.BlockAirShield;
 import cr0s.warpdrive.block.breathing.BlockAirSource;
+import cr0s.warpdrive.block.breathing.ItemBlockAirShield;
 import cr0s.warpdrive.block.breathing.TileEntityAirGenerator;
 import cr0s.warpdrive.block.breathing.TileEntityAirGeneratorTiered;
 import cr0s.warpdrive.block.building.BlockShipScanner;
@@ -75,6 +78,7 @@ import cr0s.warpdrive.block.movement.TileEntityShipController;
 import cr0s.warpdrive.block.movement.TileEntityShipCore;
 import cr0s.warpdrive.block.movement.TileEntityTransporter;
 import cr0s.warpdrive.block.breathing.BlockAir;
+import cr0s.warpdrive.block.passive.BlockBedrockGlass;
 import cr0s.warpdrive.block.passive.BlockDecorative;
 import cr0s.warpdrive.block.passive.BlockGas;
 import cr0s.warpdrive.block.passive.BlockHighlyAdvancedMachine;
@@ -86,13 +90,16 @@ import cr0s.warpdrive.block.weapon.BlockWeaponController;
 import cr0s.warpdrive.block.weapon.TileEntityLaserCamera;
 import cr0s.warpdrive.block.weapon.TileEntityWeaponController;
 import cr0s.warpdrive.command.CommandDebug;
+import cr0s.warpdrive.command.CommandDump;
 import cr0s.warpdrive.command.CommandEntity;
+import cr0s.warpdrive.command.CommandFind;
 import cr0s.warpdrive.command.CommandGenerate;
+import cr0s.warpdrive.command.CommandBed;
 import cr0s.warpdrive.command.CommandInvisible;
 import cr0s.warpdrive.command.CommandJumpgates;
 import cr0s.warpdrive.command.CommandReload;
 import cr0s.warpdrive.command.CommandSpace;
-import cr0s.warpdrive.config.CelestialObjectManager;
+import cr0s.warpdrive.data.CelestialObjectManager;
 import cr0s.warpdrive.config.RecipeParticleShapedOre;
 import cr0s.warpdrive.config.RecipeTuningDriver;
 import cr0s.warpdrive.config.Recipes;
@@ -105,18 +112,18 @@ import cr0s.warpdrive.damage.DamageShock;
 import cr0s.warpdrive.damage.DamageTeleportation;
 import cr0s.warpdrive.damage.DamageWarm;
 import cr0s.warpdrive.data.CamerasRegistry;
-import cr0s.warpdrive.data.CelestialObject;
 import cr0s.warpdrive.data.CloakManager;
 import cr0s.warpdrive.data.EnumHullPlainType;
 import cr0s.warpdrive.data.JumpgatesRegistry;
 import cr0s.warpdrive.data.StarMapRegistry;
 import cr0s.warpdrive.event.ChunkHandler;
 import cr0s.warpdrive.event.ClientHandler;
+import cr0s.warpdrive.event.CommonWorldGenerator;
 import cr0s.warpdrive.event.LivingHandler;
 import cr0s.warpdrive.event.WorldHandler;
-import cr0s.warpdrive.item.ItemAirCanisterFull;
+import cr0s.warpdrive.item.ItemAirTank;
 import cr0s.warpdrive.item.ItemComponent;
-import cr0s.warpdrive.item.ItemCrystalToken;
+import cr0s.warpdrive.item.ItemShipToken;
 import cr0s.warpdrive.item.ItemElectromagneticCell;
 import cr0s.warpdrive.item.ItemForceFieldShape;
 import cr0s.warpdrive.item.ItemForceFieldUpgrade;
@@ -127,15 +134,15 @@ import cr0s.warpdrive.item.ItemUpgrade;
 import cr0s.warpdrive.item.ItemWarpArmor;
 import cr0s.warpdrive.network.PacketHandler;
 import cr0s.warpdrive.render.ClientCameraHandler;
+import cr0s.warpdrive.render.RenderBlockShipScanner;
 import cr0s.warpdrive.render.RenderBlockForceField;
 import cr0s.warpdrive.render.RenderBlockOmnipanel;
 import cr0s.warpdrive.render.RenderBlockStandard;
 import cr0s.warpdrive.render.RenderOverlayAir;
 import cr0s.warpdrive.render.RenderOverlayCamera;
+import cr0s.warpdrive.render.RenderOverlayLocation;
 import cr0s.warpdrive.world.BiomeSpace;
-import cr0s.warpdrive.world.HyperSpaceWorldGenerator;
 import cr0s.warpdrive.world.HyperSpaceWorldProvider;
-import cr0s.warpdrive.world.SpaceWorldGenerator;
 import cr0s.warpdrive.world.SpaceWorldProvider;
 import org.apache.logging.log4j.Logger;
 
@@ -181,7 +188,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.oredict.RecipeSorter;
 
-
 @Mod(modid = WarpDrive.MODID, name = "WarpDrive", version = WarpDrive.VERSION, dependencies = "after:IC2;" + " after:CoFHCore;" + " after:ComputerCraft;"
 		+ " after:OpenComputer;" + " after:CCTurtle;" + " after:gregtech;" + " after:AppliedEnergistics;" + " after:EnderIO;" + " after:DefenseTech;" + " after:icbmclassic;")
 public class WarpDrive implements LoadingCallback {
@@ -189,7 +195,7 @@ public class WarpDrive implements LoadingCallback {
 	public static final String VERSION = "@version@";
 	public static final boolean isDev = VERSION.equals("@" + "version" + "@") || VERSION.contains("-dev");
 	public static GameProfile gameProfile = new GameProfile(UUID.nameUUIDFromBytes("[WarpDrive]".getBytes()), "[WarpDrive]");
-
+	
 	public static Block blockShipCore;
 	public static Block blockShipController;
 	public static Block blockRadar;
@@ -217,6 +223,7 @@ public class WarpDrive implements LoadingCallback {
 	public static Block blockAirFlow;
 	public static Block blockAirSource;
 	public static Block blockAirShield;
+	public static Block blockBedrockGlass;
 	public static Block blockGas;
 	public static Block blockIridium;
 	public static Block blockHighlyAdvancedMachine;
@@ -244,7 +251,7 @@ public class WarpDrive implements LoadingCallback {
 	
 	public static Item itemIC2reactorLaserFocus;
 	public static ItemComponent itemComponent;
-	public static ItemCrystalToken itemCrystalToken;
+	public static ItemShipToken itemShipToken;
 	public static ItemUpgrade itemUpgrade;
 	public static ItemTuningFork itemTuningFork;
 	public static ItemTuningDriver itemTuningDriver;
@@ -254,7 +261,7 @@ public class WarpDrive implements LoadingCallback {
 	
 	public static final ArmorMaterial armorMaterial = EnumHelper.addArmorMaterial("WARP", 18, new int[] { 2, 6, 5, 2 }, 9);
 	public static ItemArmor[] itemWarpArmor;
-	public static ItemAirCanisterFull itemAirCanisterFull;
+	public static ItemAirTank[] itemAirTanks;
 	
 	public static DamageAsphyxia damageAsphyxia;
 	public static DamageCold damageCold;
@@ -266,9 +273,7 @@ public class WarpDrive implements LoadingCallback {
 	
 	public static BiomeGenBase spaceBiome;
 	@SuppressWarnings("FieldCanBeLocal")
-	private SpaceWorldGenerator spaceWorldGenerator;
-	@SuppressWarnings("FieldCanBeLocal")
-	private HyperSpaceWorldGenerator hyperSpaceWorldGenerator;
+	private CommonWorldGenerator commonWorldGenerator;
 	
 	public static Field fieldBlockHardness = null;
 	
@@ -302,6 +307,7 @@ public class WarpDrive implements LoadingCallback {
 		if (event.getSide() == Side.CLIENT) {
 			MinecraftForge.EVENT_BUS.register(new RenderOverlayAir());
 			MinecraftForge.EVENT_BUS.register(new RenderOverlayCamera());
+			MinecraftForge.EVENT_BUS.register(new RenderOverlayLocation());
 			
 			FMLCommonHandler.instance().bus().register(new ClientCameraHandler());
 			
@@ -313,6 +319,9 @@ public class WarpDrive implements LoadingCallback {
 			
 			RenderBlockOmnipanel.renderId = RenderingRegistry.getNextAvailableRenderId();
 			RenderingRegistry.registerBlockHandler(RenderBlockOmnipanel.instance);
+			
+			RenderBlockShipScanner.renderId = RenderingRegistry.getNextAvailableRenderId();
+			RenderingRegistry.registerBlockHandler(RenderBlockShipScanner.instance);
 		}
 	}
 	
@@ -371,7 +380,12 @@ public class WarpDrive implements LoadingCallback {
 		GameRegistry.registerBlock(blockAir, ItemBlockAbstractBase.class, "blockAir");
 		GameRegistry.registerBlock(blockAirFlow, ItemBlockAbstractBase.class, "blockAirFlow");
 		GameRegistry.registerBlock(blockAirSource, ItemBlockAbstractBase.class, "blockAirSource");
-		GameRegistry.registerBlock(blockAirShield, ItemBlockAbstractBase.class, "blockAirShield");
+		GameRegistry.registerBlock(blockAirShield, ItemBlockAirShield.class, "blockAirShield");
+		
+		// BEDROCK GLASS
+		blockBedrockGlass = new BlockBedrockGlass();
+		
+		GameRegistry.registerBlock(blockBedrockGlass, ItemBlockAbstractBase.class, "blockBedrockGlass");
 		
 		// GAS BLOCK
 		blockGas = new BlockGas();
@@ -530,12 +544,11 @@ public class WarpDrive implements LoadingCallback {
 		GameRegistry.registerItem(itemForceFieldUpgrade, "itemForceFieldUpgrade");
 		
 		if (WarpDriveConfig.ACCELERATOR_ENABLE) {
-			/*
 			// ACCELERATOR CONTROLLER
 			blockAcceleratorController = new BlockAcceleratorController();
 			GameRegistry.registerBlock(blockAcceleratorController, ItemBlockAbstractBase.class, "blockAcceleratorController");
 			GameRegistry.registerTileEntity(TileEntityAcceleratorController.class, MODID + ":blockAcceleratorController");
-			/**/
+			
 			// ACCELERATOR CONTROL POINT 
 			blockAcceleratorControlPoint = new BlockAcceleratorControlPoint();
 			GameRegistry.registerBlock(blockAcceleratorControlPoint, ItemBlockAbstractBase.class, "blockAcceleratorControlPoint");
@@ -620,8 +633,8 @@ public class WarpDrive implements LoadingCallback {
 		itemComponent = new ItemComponent();
 		GameRegistry.registerItem(itemComponent, "itemComponent");
 		
-		itemCrystalToken = new ItemCrystalToken();
-		GameRegistry.registerItem(itemCrystalToken, "itemCrystalToken");
+		itemShipToken = new ItemShipToken();
+		GameRegistry.registerItem(itemShipToken, "itemShipToken");
 		
 		itemWarpArmor = new ItemArmor[4];
 		for (int armorPart = 0; armorPart < 4; armorPart++) {
@@ -629,8 +642,11 @@ public class WarpDrive implements LoadingCallback {
 			GameRegistry.registerItem(itemWarpArmor[armorPart], "itemWarpArmor_" + ItemWarpArmor.suffixes[armorPart]);
 		}
 		
-		itemAirCanisterFull = new ItemAirCanisterFull();
-		GameRegistry.registerItem(itemAirCanisterFull, "itemAirCanisterFull");
+		itemAirTanks = new ItemAirTank[4];
+		for (int index = 0; index < 4; index++) {
+			itemAirTanks[index] = new ItemAirTank((byte) index);
+			GameRegistry.registerItem(itemAirTanks[index], "itemAirTank" + index);
+		}
 		
 		if (WarpDriveConfig.RECIPES_ENABLE_VANILLA) {
 			itemUpgrade = new ItemUpgrade();
@@ -664,10 +680,8 @@ public class WarpDrive implements LoadingCallback {
 		
 		ForgeChunkManager.setForcedChunkLoadingCallback(instance, instance);
 		
-		spaceWorldGenerator = new SpaceWorldGenerator();
-		GameRegistry.registerWorldGenerator(spaceWorldGenerator, 0);
-		hyperSpaceWorldGenerator = new HyperSpaceWorldGenerator();
-		GameRegistry.registerWorldGenerator(hyperSpaceWorldGenerator, 0);
+		commonWorldGenerator = new CommonWorldGenerator();
+		GameRegistry.registerWorldGenerator(commonWorldGenerator, 0);
 		
 		spaceBiome = (new BiomeSpace(WarpDriveConfig.G_SPACE_BIOME_ID)).setColor(0).setDisableRain().setBiomeName("Space");
 		BiomeDictionary.registerBiomeType(spaceBiome, BiomeDictionary.Type.DEAD, BiomeDictionary.Type.WASTELAND);
@@ -675,29 +689,23 @@ public class WarpDrive implements LoadingCallback {
 		
 		DimensionManager.registerProviderType(WarpDriveConfig.G_HYPERSPACE_PROVIDER_ID, HyperSpaceWorldProvider.class, true);
 		
-		// only create dimensions if we own them
-		for (CelestialObject celestialObject : CelestialObjectManager.celestialObjects) {
-			if (!celestialObject.isVirtual && celestialObject.isProvidedByWarpDrive) {
-				if (celestialObject.isSpace()) {
-					DimensionManager.registerDimension(celestialObject.dimensionId, WarpDriveConfig.G_SPACE_PROVIDER_ID);
-				} else if (celestialObject.isHyperspace()) {
-					DimensionManager.registerDimension(celestialObject.dimensionId, WarpDriveConfig.G_HYPERSPACE_PROVIDER_ID);
-				} else {
-					WarpDrive.logger.error(String.format("Only space and hyperspace dimensions can be provided by WarpDrive. Dimension %d is not what of those.", 
-					                                     celestialObject.dimensionId));
-				}
-			}
+		CelestialObjectManager.onFMLInitialization();
+		
+		if (getClass().desiredAssertionStatus()) {
+			Recipes.patchOredictionary();
 		}
 	}
 	
 	@EventHandler
 	public void onFMLPostInitialization(FMLPostInitializationEvent event) {
+		/* @TODO not sure why it would be needed, disabling for now
 		// load all owned dimensions at boot
 		for (CelestialObject celestialObject : CelestialObjectManager.celestialObjects) {
-			if (celestialObject.isProvidedByWarpDrive) {
+			if (celestialObject.provider.equals(CelestialObject.PROVIDER_OTHER)) {
 				DimensionManager.getWorld(celestialObject.dimensionId);
 			}
 		}
+		/**/
 		
 		WarpDriveConfig.onFMLPostInitialization();
 		
@@ -742,23 +750,24 @@ public class WarpDrive implements LoadingCallback {
 	
 	@EventHandler
 	public void onFMLServerStarting(FMLServerStartingEvent event) {
+		event.registerServerCommand(new CommandDebug());
+		event.registerServerCommand(new CommandDump());
+		event.registerServerCommand(new CommandEntity());
+		event.registerServerCommand(new CommandFind());
 		event.registerServerCommand(new CommandGenerate());
-		event.registerServerCommand(new CommandSpace());
+		event.registerServerCommand(new CommandBed());
 		event.registerServerCommand(new CommandInvisible());
 		event.registerServerCommand(new CommandJumpgates());
-		event.registerServerCommand(new CommandDebug());
-		event.registerServerCommand(new CommandEntity());
 		event.registerServerCommand(new CommandReload());
+		event.registerServerCommand(new CommandSpace());
 	}
 	
-	private Ticket registerChunkLoadTE(TileEntityAbstractChunkLoading tileEntity, boolean refreshLoading) {
+	public Ticket registerChunkLoadTileEntity(TileEntityAbstractChunkLoading tileEntity) {
 		World worldObj = tileEntity.getWorldObj();
 		if (ForgeChunkManager.ticketCountAvailableFor(this, worldObj) > 0) {
 			Ticket ticket = ForgeChunkManager.requestTicket(this, worldObj, Type.NORMAL);
 			if (ticket != null) {
 				tileEntity.giveTicket(ticket); // FIXME calling the caller is a bad idea
-				if (refreshLoading)
-					tileEntity.refreshLoading();
 				return ticket;
 			} else {
 				WarpDrive.logger.error("Ticket not granted");
@@ -767,14 +776,6 @@ public class WarpDrive implements LoadingCallback {
 			WarpDrive.logger.error("No tickets left!");
 		}
 		return null;
-	}
-	
-	public Ticket registerChunkLoadTE(TileEntityAbstractChunkLoading te) {
-		return registerChunkLoadTE(te, true);
-	}
-	
-	public Ticket getTicket(TileEntityAbstractChunkLoading te) {
-		return registerChunkLoadTE(te, false);
 	}
 	
 	@Override
@@ -815,7 +816,9 @@ public class WarpDrive implements LoadingCallback {
 						mapping.remap(Item.getItemFromBlock(blockAir));
 						break;
 					case "WarpDrive:airCanisterFull":
-						mapping.remap(itemAirCanisterFull);
+					case "WarpDrive:itemAirCanisterFull":
+					case "WarpDrive:itemAirTank":
+						mapping.remap(itemAirTanks[0]);
 						break;
 					case "WarpDrive:airgenBlock":
 						mapping.remap(Item.getItemFromBlock(blockAirGenerator));
@@ -913,6 +916,9 @@ public class WarpDrive implements LoadingCallback {
 						break;
 					case "WarpDrive:itemTuningRod":
 						mapping.remap(itemTuningFork);
+						break;
+					case "WarpDrive:itemCrystalToken":
+						mapping.remap(itemShipToken);
 						break;
 				}
 				

@@ -40,7 +40,6 @@ item.warpdrive.crafting.CoilCrystal.name=Spulenkristall
 item.warpdrive.crafting.ElectromagneticProjector.name=Elektromagnetischer Projektor
 item.warpdrive.crafting.Superconductor.name=Supraleiter
 
-item.warpdrive.armor.AirCanisterFull.name=Luftkanister
 item.warpdrive.armor.helmet.name=Warp Helm
 item.warpdrive.armor.chestplate.name=Warp Brustpanzer
 item.warpdrive.armor.leggings.name=Warp Beinschutz
@@ -49,6 +48,11 @@ item.warpdrive.armor.boots.name=Warp Stiefel
 item.warpdrive.atomic.electromagnetic_cell.name=Elektromagnetische Zelle
 item.warpdrive.atomic.electromagnetic_cell.tooltip.empty=Nutze einen Teilchenbeschleuniger, um mich zu füllen!
 item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=Enthält %1$s Å³ %2$s
+
+item.warpdrive.breathing.air_tank0.name=Luftkanister
+item.warpdrive.breathing.air_tank1.name=Basic Air Tank !!!
+item.warpdrive.breathing.air_tank2.name=Advanced Air Tank !!!
+item.warpdrive.breathing.air_tank3.name=Superior Air Tank !!!
 
 item.warpdrive.energy.IC2reactorLaserFocus.name=IC2 Reaktor-Laser-Fokus
 
@@ -118,15 +122,40 @@ item.warpdrive.upgrade.Range.name=Reichweiten Upgrade
 item.warpdrive.upgrade.Energy.name=Energie Upgrade
 
 
-item.warpdrive.tool.crystalToken.name=Kristall Token
 item.warpdrive.tool.crystalToken.tooltip_new=Crystal encapsulation of ship '%1$s'\n§bEnter the red builder's field§7 to claim a ship
-item.warpdrive.tool.crystalToken.tooltip=Kristall Kapsel des Schiffes '%1$s'\n§bBetritt das Scanner Feld§7 um das Schiff zu bauen.
-item.warpdrive.tool.crystalToken0.name=Kristall Token #0
-item.warpdrive.tool.crystalToken1.name=Kristall Token #1
-item.warpdrive.tool.crystalToken2.name=Kristall Token #2
-item.warpdrive.tool.crystalToken3.name=Kristall Token #3
-item.warpdrive.tool.crystalToken4.name=Kristall Token #4
-item.warpdrive.tool.crystalToken5.name=Kristall Token #5
+
+item.warpdrive.tool.ship_token.tooltip=Token exchangeable for ship '%1$s'\n§bEnter a builder's field§7 to claim it
+item.warpdrive.tool.ship_token.tooltip_legacyTranslation=Kristall Kapsel des Schiffes '%1$s'\n§bBetritt das Scanner Feld§7 um das Schiff zu bauen.
+item.warpdrive.tool.ship_token0.name=Schiffes token #0
+item.warpdrive.tool.ship_token1.name=Schiffes token #1
+item.warpdrive.tool.ship_token2.name=Schiffes token #2
+item.warpdrive.tool.ship_token3.name=Schiffes token #3
+item.warpdrive.tool.ship_token4.name=Schiffes token #4
+item.warpdrive.tool.ship_token5.name=Schiffes token #5
+item.warpdrive.tool.ship_token10.name=Schiffes token #10
+item.warpdrive.tool.ship_token11.name=Schiffes token #11
+item.warpdrive.tool.ship_token12.name=Schiffes token #12
+item.warpdrive.tool.ship_token13.name=Schiffes token #13
+item.warpdrive.tool.ship_token14.name=Schiffes token #14
+item.warpdrive.tool.ship_token15.name=Schiffes token #15
+item.warpdrive.tool.ship_token20.name=Schiffes token #20
+item.warpdrive.tool.ship_token21.name=Schiffes token #21
+item.warpdrive.tool.ship_token22.name=Schiffes token #22
+item.warpdrive.tool.ship_token23.name=Schiffes token #23
+item.warpdrive.tool.ship_token24.name=Schiffes token #24
+item.warpdrive.tool.ship_token25.name=Schiffes token #25
+item.warpdrive.tool.ship_token30.name=Schiffes token #30
+item.warpdrive.tool.ship_token31.name=Schiffes token #31
+item.warpdrive.tool.ship_token32.name=Schiffes token #32
+item.warpdrive.tool.ship_token33.name=Schiffes token #33
+item.warpdrive.tool.ship_token34.name=Schiffes token #34
+item.warpdrive.tool.ship_token35.name=Schiffes token #35
+item.warpdrive.tool.ship_token40.name=Schiffes token #40
+item.warpdrive.tool.ship_token41.name=Schiffes token #41
+item.warpdrive.tool.ship_token42.name=Schiffes token #42
+item.warpdrive.tool.ship_token43.name=Schiffes token #43
+item.warpdrive.tool.ship_token44.name=Schiffes token #44
+item.warpdrive.tool.ship_token45.name=Schiffes token #45
 
 
 item.warpdrive.tool.tuning_driver.video_channel.name=Videokanal Werkzeug
@@ -161,6 +190,7 @@ tile.warpdrive.decoration.decorative.energized.name=Energiegeladener Block
 tile.warpdrive.decoration.decorative.network.name=Netzwerk Block
 tile.warpdrive.decoration.decorative.plain.name=Ebenen Block
 tile.warpdrive.decoration.gas.name=Gas Block
+tile.warpdrive.decoration.bedrock_glass.name=Bedrock Glass !!!
 
 
 tile.warpdrive.passive.IridiumBlock.name=Iridium Block
@@ -265,6 +295,8 @@ tile.warpdrive.movement.ShipController.name=Raumschiff Steuerung
 tile.warpdrive.movement.ShipController.tooltip=Definiert dein Schiff relativ zum Kern. Schließe einen Computer an, um das Interface zu öffnen.\nSollte horizontal neben dem Kern plaziert werden.
 tile.warpdrive.movement.ShipCore.name=Raumschiff Kern
 tile.warpdrive.movement.ShipCore.tooltip=Definiert dein Schiff relativ zur Steuerung. Schließe eine Energiequelle an, um den Kern zu laden.\nSollte horizontal neben der Steuerung plaziert werden.
+tile.warpdrive.movement.ShipCore.bounding_box.disabled=Bounding box display have been disabled.
+tile.warpdrive.movement.ShipCore.bounding_box.enabled=Bounding box display is now enabled. Only you can see it.\nSneak right-click the Ship core again to disable it.
 tile.warpdrive.movement.Transporter.name=Transporter
 
 tile.warpdrive.weapon.LaserCamera.name=Laser und Kamera
@@ -638,12 +670,17 @@ warpdrive.video_channel.statusLine.invalid=§cVideokanal %1$d ist ungültig.
 warpdrive.video_channel.statusLine.invalidOrNotLoaded=§cVideokanal %1$d ist ungültig oder die Kamera ist zu weit weg!
 warpdrive.video_channel.statusLine.undefined=§7Nicht definierter Videokanal.\n§bNutze eine Stimmgabel§r um ihn einzustellen.
 
-warpdrive.cloakingCore.invalidAssembly=§Konstruktion ungültig!
+warpdrive.cloakingCore.missingInnerAndOuter=§cIntegrity down to %1$d%%: missing channeling coil(s) towards %2$s and projecting coil(s) towards %3$s !!!
+warpdrive.cloakingCore.missingInner=§cIntegrity down to %1$d%%: missing channeling coil(s) towards %2$s !!!
+warpdrive.cloakingCore.missingOuter=§cIntegrity down to %1$d%%: missing projecting coil(s) towards %2$s !!!
+warpdrive.cloakingCore.valid=System is valid !!!
 warpdrive.cloakingCore.disabled=Tarnfeld ist deaktiviert!
 warpdrive.cloakingCore.lowPower=§cTarnfeld ist ausgefallen, wir brauchen mehr Energie, Captain!
 warpdrive.cloakingCore.cloaking=Ein Stufe %1$d Tarnfeld überdeckt jetzt %2$d Blöcke!
+
 warpdrive.IC2reactorLaserMonitor.noReactor=Kein Reaktor gefunden!
 warpdrive.IC2reactorLaserMonitor.multipleReactors=%1$d Reaktor(en) verbunden.
+
 warpdrive.transporter.status=Von %1$.0f %2$.0f %3$.0f zu %4$.0f %5$.0f %6$.0f
 
 warpdrive.tooltip.itemTag.breathingHelmet=§bRaumatmung§r verbraucht Luftkanister oder IC2 Druckluftzellen.

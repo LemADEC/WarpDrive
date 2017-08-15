@@ -13,6 +13,10 @@ public interface ITransformation {
 	
 	float getRotationYaw();
 	
+	boolean isInside(final double x, final double y, final double z);
+	
+	boolean isInside(final int x, final int y, final int z);
+	
 	Vec3 apply(final double sourceX, final double sourceY, final double sourceZ);
 	
 	ChunkCoordinates apply(final int sourceX, final int sourceY, final int sourceZ);

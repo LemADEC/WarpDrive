@@ -16,6 +16,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import cpw.mods.fml.relauncher.Side;
@@ -46,7 +47,8 @@ public class BlockAirGenerator extends BlockAbstractContainer {
 	
 	@SideOnly(Side.CLIENT)
 	@Override
-	public IIcon getIcon(int side, int metadata) {
+	public IIcon getIcon(IBlockAccess blockAccess, int x, int y, int z, int side) {
+		final int metadata = blockAccess.getBlockMetadata(x, y, z);
 		/*
 		if (side == 0) {
 			return iconBuffer[ICON_BOTTOM];
@@ -66,6 +68,12 @@ public class BlockAirGenerator extends BlockAbstractContainer {
 		}
 		
 		return null;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@Override
+	public IIcon getIcon(int side, int metadata) {
+		return iconBuffer[ICON_SIDE_ACTIVATED];
 	}
 	
 	@Override

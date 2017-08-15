@@ -40,7 +40,6 @@ item.warpdrive.crafting.CoilCrystal.name=Coil Crystal
 item.warpdrive.crafting.ElectromagneticProjector.name=Electromagnetic Projector
 item.warpdrive.crafting.Superconductor.name=Superconductor
 
-item.warpdrive.armor.AirCanisterFull.name=Air Canister
 item.warpdrive.armor.helmet.name=Warp Helmet
 item.warpdrive.armor.chestplate.name=Warp Chestplate
 item.warpdrive.armor.leggings.name=Warp Leggings
@@ -49,6 +48,11 @@ item.warpdrive.armor.boots.name=Warp Boots
 item.warpdrive.atomic.electromagnetic_cell.name=Electromagnetic cell
 item.warpdrive.atomic.electromagnetic_cell.tooltip.empty=Use a particle collider to fill me!
 item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=Contains %1$s Å³ of %2$s
+
+item.warpdrive.breathing.air_tank0.name=Air Canister
+item.warpdrive.breathing.air_tank1.name=Basic Air Tank
+item.warpdrive.breathing.air_tank2.name=Advanced Air Tank
+item.warpdrive.breathing.air_tank3.name=Superior Air Tank
 
 item.warpdrive.energy.IC2reactorLaserFocus.name=IC2 Reactor Laser Focus
 
@@ -118,14 +122,38 @@ item.warpdrive.upgrade.Range.name=Range Upgrade
 item.warpdrive.upgrade.Energy.name=Energy Upgrade
 
 
-item.warpdrive.tool.crystalToken.name=Crystal token
-item.warpdrive.tool.crystalToken.tooltip=Crystal encapsulation of ship '%1$s'\n§bEnter the red builder's field§7 to claim a ship
-item.warpdrive.tool.crystalToken0.name=Crystal token #0
-item.warpdrive.tool.crystalToken1.name=Crystal token #1
-item.warpdrive.tool.crystalToken2.name=Crystal token #2
-item.warpdrive.tool.crystalToken3.name=Crystal token #3
-item.warpdrive.tool.crystalToken4.name=Crystal token #4
-item.warpdrive.tool.crystalToken5.name=Crystal token #5
+item.warpdrive.tool.ship_token.name=Ship token
+item.warpdrive.tool.ship_token.tooltip=Token exchangeable for ship '%1$s'\n§bEnter a builder's field§7 to claim it
+item.warpdrive.tool.ship_token0.name=Ship token #0
+item.warpdrive.tool.ship_token1.name=Ship token #1
+item.warpdrive.tool.ship_token2.name=Ship token #2
+item.warpdrive.tool.ship_token3.name=Ship token #3
+item.warpdrive.tool.ship_token4.name=Ship token #4
+item.warpdrive.tool.ship_token5.name=Ship token #5
+item.warpdrive.tool.ship_token10.name=Ship token #10
+item.warpdrive.tool.ship_token11.name=Ship token #11
+item.warpdrive.tool.ship_token12.name=Ship token #12
+item.warpdrive.tool.ship_token13.name=Ship token #13
+item.warpdrive.tool.ship_token14.name=Ship token #14
+item.warpdrive.tool.ship_token15.name=Ship token #15
+item.warpdrive.tool.ship_token20.name=Ship token #20
+item.warpdrive.tool.ship_token21.name=Ship token #21
+item.warpdrive.tool.ship_token22.name=Ship token #22
+item.warpdrive.tool.ship_token23.name=Ship token #23
+item.warpdrive.tool.ship_token24.name=Ship token #24
+item.warpdrive.tool.ship_token25.name=Ship token #25
+item.warpdrive.tool.ship_token30.name=Ship token #30
+item.warpdrive.tool.ship_token31.name=Ship token #31
+item.warpdrive.tool.ship_token32.name=Ship token #32
+item.warpdrive.tool.ship_token33.name=Ship token #33
+item.warpdrive.tool.ship_token34.name=Ship token #34
+item.warpdrive.tool.ship_token35.name=Ship token #35
+item.warpdrive.tool.ship_token40.name=Ship token #40
+item.warpdrive.tool.ship_token41.name=Ship token #41
+item.warpdrive.tool.ship_token42.name=Ship token #42
+item.warpdrive.tool.ship_token43.name=Ship token #43
+item.warpdrive.tool.ship_token44.name=Ship token #44
+item.warpdrive.tool.ship_token45.name=Ship token #45
 
 
 item.warpdrive.tool.tuning_driver.video_channel.name=Video Channel Tuning Driver
@@ -160,6 +188,7 @@ tile.warpdrive.decoration.decorative.energized.name=Energized Block
 tile.warpdrive.decoration.decorative.network.name=Network Block
 tile.warpdrive.decoration.decorative.plain.name=Plain Block
 tile.warpdrive.decoration.gas.name=Gas Block
+tile.warpdrive.decoration.bedrock_glass.name=Bedrock Glass
 
 tile.warpdrive.passive.IridiumBlock.name=Iridium Block
 tile.warpdrive.passive.HighlyAdvancedMachine.name=Highly Advanced Machine Block
@@ -263,6 +292,8 @@ tile.warpdrive.movement.ShipController.name=Ship Controller
 tile.warpdrive.movement.ShipController.tooltip=Defines your ship front relative to the core. Attach a computer to open the user interface.\nShall be placed horizontally directly next to the Ship core.
 tile.warpdrive.movement.ShipCore.name=Ship Core
 tile.warpdrive.movement.ShipCore.tooltip=Defines your ship center relative to the controller. Connecting an energy source will charge the core.\nShall be placed horizontally directly next to the Ship controller.
+tile.warpdrive.movement.ShipCore.bounding_box.disabled=Bounding box display have been disabled.
+tile.warpdrive.movement.ShipCore.bounding_box.enabled=Bounding box display is now enabled. Only you can see it.\nSneak right-click the Ship core again to disable it.
 tile.warpdrive.movement.Transporter.name=Transporter
 
 tile.warpdrive.weapon.LaserCamera.name=Laser + Camera
@@ -636,12 +667,17 @@ warpdrive.video_channel.statusLine.invalid=§cVideo channel %1$d is invalid.
 warpdrive.video_channel.statusLine.invalidOrNotLoaded=§cVideo channel %1$d is invalid or camera is too far away!
 warpdrive.video_channel.statusLine.undefined=§7Undefined Video channel.\n§bUse a Tuning fork§r to set it.
 
-warpdrive.cloakingCore.invalidAssembly=§cInvalid assembly!
+warpdrive.cloakingCore.missingInnerAndOuter=§cIntegrity down to %1$d%%: missing channeling coil(s) towards %2$s and projecting coil(s) towards %3$s
+warpdrive.cloakingCore.missingInner=§cIntegrity down to %1$d%%: missing channeling coil(s) towards %2$s
+warpdrive.cloakingCore.missingOuter=§cIntegrity down to %1$d%%: missing projecting coil(s) towards %2$s
+warpdrive.cloakingCore.valid=System is valid
 warpdrive.cloakingCore.disabled=Cloak is disabled
 warpdrive.cloakingCore.lowPower=§cCloak is down, we need more power Captain!
 warpdrive.cloakingCore.cloaking=A tier %1$d cloak is currently covering %2$d blocks!
+
 warpdrive.IC2reactorLaserMonitor.noReactor=No reactor found!
 warpdrive.IC2reactorLaserMonitor.multipleReactors=%1$d reactor(s) connected.
+
 warpdrive.transporter.status=From %1$.0f %2$.0f %3$.0f to %4$.0f %5$.0f %6$.0f
 
 warpdrive.tooltip.itemTag.breathingHelmet=§bSpace breathing§r consuming Air canisters and IC2 Compressed air cells from your inventory.

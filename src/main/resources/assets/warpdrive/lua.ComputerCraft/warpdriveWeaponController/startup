@@ -196,7 +196,7 @@ function laser_battery_page()
       w.write(w.format_integer(headFrequency, 5))
       w.setColorNormal()
       w.write(" @ " .. w.format_integer(headX, 7) .. " " .. w.format_integer(headY, 3) .. " " .. w.format_integer(headZ, 7)
-        .. " " .. string.sub(laserbattery.headAddress, 10, 100))
+        .. " " .. w.format_address(laserbattery.headAddress))
     end
     
     w.setCursorPos(1, 5)
@@ -217,7 +217,7 @@ function laser_battery_page()
         w.write(w.format_integer(booster.beamFrequency(), 5))
         w.setColorNormal()
         w.write(" @ " .. w.format_integer(x - headX, 7) .. " " .. w.format_integer(y - headY, 3) .. " " .. w.format_integer(z - headZ, 7)
-          .. " " .. string.sub(laserbattery.boosterAddresses[key], 10, 100))
+          .. " " .. w.format_address(laserbattery.boosterAddresses[key]))
       end
     end
   end
@@ -425,7 +425,7 @@ function laser_battery_getDescription(laserbattery)
       end
     end
   end
-  return string.sub(laserbattery.name .. "                    ", 1, 20)
+  return w.format_string(laserbattery.name, 20)
     .. msg
     .. " @ " .. w.format_integer(x, 7) .. " " .. w.format_integer(y, 3) .. " " .. w.format_integer(z, 7)
 end
@@ -515,7 +515,7 @@ function laser_station_page()
       w.write(w.format_integer(camVideoChannel, 5))
       w.setColorNormal()
       w.write(" @ " .. w.format_integer(camX, 7) .. " " .. w.format_integer(camY, 3) .. " " .. w.format_integer(camZ, 7)
-        .. " " .. string.sub(laserstation.cameraAddress, 10, 100))
+        .. " " .. w.format_address(laserstation.cameraAddress, 10, 100))
     end
     
     w.setCursorPos(1, 5)

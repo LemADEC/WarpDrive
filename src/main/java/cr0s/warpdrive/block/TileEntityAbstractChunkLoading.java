@@ -48,7 +48,7 @@ public abstract class TileEntityAbstractChunkLoading extends TileEntityAbstractE
 				int numTicketsRequired = (int) Math.ceil((double) chunkList.size() / ticketSize); // FIXME there should be only one ticket per requesting TileEntity
 				if (ticketList.size() != numTicketsRequired) {
 					for(int i = ticketList.size(); i < numTicketsRequired; i++) { 
-						WarpDrive.instance.getTicket(this);
+						WarpDrive.instance.registerChunkLoadTileEntity(this);
 					}
 				}
 				
@@ -80,8 +80,9 @@ public abstract class TileEntityAbstractChunkLoading extends TileEntityAbstractE
 				ticketList.clear();
 				areChunksLoaded = false;
 			}
-		} else if(loadRequested) {
-			WarpDrive.instance.registerChunkLoadTE(this);
+		} else if (loadRequested) {
+			WarpDrive.instance.registerChunkLoadTileEntity(this);
+			refreshLoading();
 		}
 	}
 	

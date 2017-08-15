@@ -53,6 +53,9 @@ public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 			// Evaporate fluid
 			worldObj.playSoundEffect(valuable.x + 0.5D, valuable.y + 0.5D, valuable.z + 0.5D, "random.fizz", 0.5F,
 					2.6F + (worldObj.rand.nextFloat() - worldObj.rand.nextFloat()) * 0.8F);
+			
+			// remove without updating neighbours @TODO: add proper pump upgrade
+			worldObj.setBlock(valuable.x, valuable.y, valuable.z, Blocks.air, 0, 2);
 		} else {
 			List<ItemStack> itemStacks = getItemStackFromBlock(valuable.x, valuable.y, valuable.z, block, blockMeta);
 			if (addToConnectedInventories(itemStacks)) {
@@ -60,8 +63,10 @@ public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 			}
 			// standard harvest block effect
 			worldObj.playAuxSFXAtEntity(null, 2001, valuable.x, valuable.y, valuable.z, Block.getIdFromBlock(block) + (blockMeta << 12));
+			
+			// remove while updating neighbours
+			worldObj.setBlock(valuable.x, valuable.y, valuable.z, Blocks.air, 0, 3);
 		}
-		worldObj.setBlockToAir(valuable.x, valuable.y, valuable.z);
 	}
 	
 	private List<ItemStack> getItemStackFromBlock(int x, int y, int z, Block block, int blockMeta) {

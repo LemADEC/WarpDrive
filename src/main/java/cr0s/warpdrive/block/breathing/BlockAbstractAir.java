@@ -125,8 +125,8 @@ public abstract class BlockAbstractAir extends BlockAbstractBase {
 			return side == 0 || side == 1;
 		}
 		
-		Block sideBlock = blockAccess.getBlock(x, y, z);
-		if (sideBlock instanceof BlockAbstractAir) {
+		final Block blockSide = blockAccess.getBlock(x, y, z);
+		if (blockSide instanceof BlockAbstractAir) {
 			return false;
 		}
 		

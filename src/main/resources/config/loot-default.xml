@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <worldGeneration version="2"
-				 xmlns="WarpDrive"
+				 xmlns="http://warpdrive.lemadec.org"
 				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				 xsi:schemaLocation="WarpDrive WarpDrive.xsd">
+				 xsi:schemaLocation="http://warpdrive.lemadec.org WarpDrive.xsd">
 	
 	<!--
 	  A lootSet is a list of possible loots.
@@ -13,7 +13,7 @@
 	  loot.maxQuantity needs to be higher than loot.minQuantity to have any effect. It defaults to 1.
 	  
 	  Here after is an example with NBT data.
-	<loot item="WarpDrive:itemCrystalToken" damage="5" nbt="{shipName:&quot;MySchematicName&quot;}" />
+	<loot item="WarpDrive:itemShipToken" damage="5" nbt="{shipName:&quot;MySchematicName&quot;}" />
 	  
 	  When used on machines, we'll give a few trials to find a valid slot for each loot, eventually try another loot, eventually skipping it altogether.
 	  -->

@@ -256,23 +256,6 @@ public class ForceFieldSetup extends GlobalPosition {
 		scanSpeed = Math.min(FORCEFIELD_MAX_SCAN_SPEED_BLOCKS_PER_SECOND, scanSpeed);
 		placeSpeed = Math.min(FORCEFIELD_MAX_PLACE_SPEED_BLOCKS_PER_SECOND, placeSpeed);
 		
-		// range is maximum distance
-		double range = getScaledUpgrade(EnumForceFieldUpgrade.RANGE);
-		if (range == 0.0D) {
-			range = 8.0D;
-			v3Min = new Vector3(-1.0D, -1.0D, -1.0D);
-			v3Max = new Vector3( 1.0D,  1.0D,  1.0D);
-		}
-		vMin.x = (int) Math.round(Math.min(0.0D, Math.max(-1.0D, v3Min.x)) * range);
-		vMin.y = (int) Math.round(Math.min(0.0D, Math.max(-1.0D, v3Min.y)) * range);
-		vMin.z = (int) Math.round(Math.min(0.0D, Math.max(-1.0D, v3Min.z)) * range);
-		vMax.x = (int) Math.round(Math.min(1.0D, Math.max( 0.0D, v3Max.x)) * range);
-		vMax.y = (int) Math.round(Math.min(1.0D, Math.max( 0.0D, v3Max.y)) * range);
-		vMax.z = (int) Math.round(Math.min(1.0D, Math.max( 0.0D, v3Max.z)) * range);
-		vTranslation.x += (int) Math.round(Math.min(1.0D, Math.max(-1.0D, v3Translation.x)) * range);
-		vTranslation.y += (int) Math.round(Math.min(1.0D, Math.max(-1.0D, v3Translation.y)) * range);
-		vTranslation.z += (int) Math.round(Math.min(1.0D, Math.max(-1.0D, v3Translation.z)) * range);
-		
 		// acceleration is a compound of attraction and repulsion
 		accelerationLevel = getScaledUpgrade(EnumForceFieldUpgrade.ATTRACTION) - getScaledUpgrade(EnumForceFieldUpgrade.REPULSION);
 		
@@ -289,6 +272,26 @@ public class ForceFieldSetup extends GlobalPosition {
 		breaking_maxHardness = getScaledUpgrade(EnumForceFieldUpgrade.BREAKING);
 		pumping_maxViscosity = getScaledUpgrade(EnumForceFieldUpgrade.PUMPING);
 		thickness = 1.0F + getScaledUpgrade(EnumForceFieldUpgrade.THICKNESS);
+		
+		// range is maximum distance
+		double range = getScaledUpgrade(EnumForceFieldUpgrade.RANGE);
+		if (range == 0.0D) {
+			range = 8.0D;
+			v3Min = new Vector3(-1.0D, -1.0D, -1.0D);
+			v3Max = new Vector3( 1.0D,  1.0D,  1.0D);
+		}
+		if (hasFusion || isInverted) {
+			range = Math.min(64.0D, range);
+		}
+		vMin.x = (int) Math.round(Math.min(0.0D, Math.max(-1.0D, v3Min.x)) * range);
+		vMin.y = (int) Math.round(Math.min(0.0D, Math.max(-1.0D, v3Min.y)) * range);
+		vMin.z = (int) Math.round(Math.min(0.0D, Math.max(-1.0D, v3Min.z)) * range);
+		vMax.x = (int) Math.round(Math.min(1.0D, Math.max( 0.0D, v3Max.x)) * range);
+		vMax.y = (int) Math.round(Math.min(1.0D, Math.max( 0.0D, v3Max.y)) * range);
+		vMax.z = (int) Math.round(Math.min(1.0D, Math.max( 0.0D, v3Max.z)) * range);
+		vTranslation.x += (int) Math.round(Math.min(1.0D, Math.max(-1.0D, v3Translation.x)) * range);
+		vTranslation.y += (int) Math.round(Math.min(1.0D, Math.max(-1.0D, v3Translation.y)) * range);
+		vTranslation.z += (int) Math.round(Math.min(1.0D, Math.max(-1.0D, v3Translation.z)) * range);
 	}
 	
 	public double getEntityEnergyCost(final int countEntityInteractions) {

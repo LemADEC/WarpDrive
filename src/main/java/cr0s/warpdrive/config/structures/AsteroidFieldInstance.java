@@ -41,7 +41,7 @@ public class AsteroidFieldInstance extends AbstractStructureInstance {
 	
 	@Override
 	public boolean generate(final World world, final Random random, final int x, final int y1, final int z) {
-		LocalProfiler.start("SpaceWorldGenerator.generateAsteroidField");
+		LocalProfiler.start("AsteroidFieldInstance.generate");
 		// 6.0.1 au = 120 radius with 60 to 140 big + 60 to 140 small + 5 to 13 gaz
 		// 45238 blocks surface with 120 to 280 asteroids => 161 to 376 blocks per asteroid (big & small)
 		

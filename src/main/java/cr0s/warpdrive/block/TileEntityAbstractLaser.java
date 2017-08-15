@@ -195,19 +195,21 @@ public abstract class TileEntityAbstractLaser extends TileEntityAbstractInterfac
 		return laserMediumDirection();
 	}
 	
-	// ComputerCraft methods
+	// ComputerCraft IPeripheral methods
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		switch (methodName) {
-			case "energy":
-				return energy();
-			case "laserMediumDirection":
-				return laserMediumDirection();
-			case "laserMediumCount":
-				return laserMediumCount();
+		case "energy":
+			return energy();
+			
+		case "laserMediumDirection":
+			return laserMediumDirection();
+			
+		case "laserMediumCount":
+			return laserMediumCount();
 		}
 		
 		return super.callMethod(computer, context, method, arguments);

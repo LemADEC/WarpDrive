@@ -4,11 +4,15 @@ import cr0s.warpdrive.data.VectorI;
 
 import net.minecraft.block.Block;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.command.PlayerSelector;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.ChatComponentText;
@@ -42,7 +46,6 @@ public class Commons {
 		return message
 		       .replace("§", CHAR_FORMATTING)
 		       .replace("\\n", "\n")
-		       .replace("|", "\n")
 		       .replace(CHAR_FORMATTING + "r", CHAR_FORMATTING + "7")
 		       .replaceAll("\u00A0", " ");  // u00A0 is 'NO-BREAK SPACE'
 	}
@@ -52,14 +55,51 @@ public class Commons {
 		       .replaceAll("(" + CHAR_FORMATTING + ".)", "");
 	}
 	
-	public static void addChatMessage(final ICommandSender sender, final String message) {
-		if (sender == null) {
-			WarpDrive.logger.error("Unable to send message to NULL sender: " + message);
+	private static boolean isFormatColor(char chr) {
+		return chr >= 48 && chr <= 57
+		    || chr >= 97 && chr <= 102
+		    || chr >= 65 && chr <= 70;
+	}
+	
+	private static boolean isFormatSpecial(char chr) {
+		return chr >= 107 && chr <= 111
+		    || chr >= 75 && chr <= 79
+		    || chr == 114
+		    || chr == 82;
+	}
+	
+	// inspired by FontRender.getFormatFromString
+	private static String getFormatFromString(final String message) {
+		final int indexLastChar = message.length() - 1;
+		StringBuilder result = new StringBuilder();
+		int indexEscapeCode = -1;
+		while ((indexEscapeCode = message.indexOf(167, indexEscapeCode + 1)) != -1) {
+			if (indexEscapeCode < indexLastChar) {
+				final char chr = message.charAt(indexEscapeCode + 1);
+				
+				if (isFormatColor(chr)) {
+					result = new StringBuilder("\u00a7" + chr);
+				} else if (isFormatSpecial(chr)) {
+					result.append("\u00a7").append(chr);
+				}
+			}
+		}
+		
+		return result.toString();
+	}
+	
+	public static void addChatMessage(final ICommandSender commandSender, final String message) {
+		if (commandSender == null) {
+			WarpDrive.logger.error("Unable to send message to NULL commandSender: " + message);
 			return;
 		}
 		final String[] lines = updateEscapeCodes(message).split("\n");
+		String format = "";
+		getFormatFromString(lines[0]);
 		for (String line : lines) {
-			sender.addChatMessage(new ChatComponentText(line));
+			final String formattedLine = format + line;
+			commandSender.addChatMessage(new ChatComponentText(formattedLine));
+			format = getFormatFromString(formattedLine);
 		}
 		
 		// logger.info(message);
@@ -143,6 +183,23 @@ public class Commons {
 	public static String format(final long value) {
 		// alternate: BigDecimal.valueOf(value).setScale(0, RoundingMode.HALF_EVEN).toPlainString(),
 		return String.format("%,d", Math.round(value));
+	}
+	
+	public static String format(final Object[] arguments) {
+		final StringBuilder result = new StringBuilder();
+		if (arguments != null && arguments.length > 0) {
+			for (final Object argument : arguments) {
+				if (result.length() > 0) {
+					result.append(", ");
+				}
+				if (argument instanceof String) {
+					result.append("\"").append(argument).append("\"");
+				} else {
+					result.append(argument);
+				}
+			}
+		}
+		return result.toString();
 	}
 	
 	public static ItemStack copyWithSize(ItemStack itemStack, int newSize) {
@@ -321,6 +378,24 @@ public class Commons {
 		return yMin + (x - xMin) * (yMax - yMin) / (xMax - xMin);
 	}
 	
+	public static ForgeDirection getHorizontalDirectionFromEntity(final EntityLivingBase entityLiving) {
+		if (entityLiving != null) {
+			final int direction = Math.round(entityLiving.rotationYaw / 90.0F) & 3;
+			switch (direction) {
+			default:
+			case 0:
+				return ForgeDirection.NORTH;
+			case 1:
+				return ForgeDirection.EAST;
+			case 2:
+				return ForgeDirection.SOUTH;
+			case 3:
+				return ForgeDirection.WEST;
+			}
+		}
+		return ForgeDirection.NORTH;
+	}
+	
 	public static int getFacingFromEntity(final EntityLivingBase entityLiving) {
 		if (entityLiving != null) {
 			int metadata;
@@ -351,6 +426,11 @@ public class Commons {
 			return metadata;
 		}
 		return 0;
+	}
+	
+	public static boolean isSafeThread() {
+		final String name = Thread.currentThread().getName();
+		return name.equals("Server thread") || name.equals("Client thread");
 	}
 	
 	// loosely inspired by crunchify
@@ -417,5 +497,29 @@ public class Commons {
 		}
 		
 		return null;
+	}
+	
+	public static EntityPlayerMP[] getOnlinePlayerByNameOrSelector(ICommandSender sender, final String playerNameOrSelector) {
+		@SuppressWarnings("unchecked")
+		List<EntityPlayer> onlinePlayers = MinecraftServer.getServer().getConfigurationManager().playerEntityList;
+		for (EntityPlayer onlinePlayer : onlinePlayers) {
+			if (onlinePlayer.getCommandSenderName().equalsIgnoreCase(playerNameOrSelector) && onlinePlayer instanceof EntityPlayerMP) {
+				return new EntityPlayerMP[]{ (EntityPlayerMP)onlinePlayer };
+			}
+		}
+		
+		EntityPlayerMP[] entityPlayerMPs_found = PlayerSelector.matchPlayers(sender, playerNameOrSelector);
+		if (entityPlayerMPs_found != null && entityPlayerMPs_found.length > 0) {
+			return entityPlayerMPs_found.clone();
+		}
+		
+		return null;
+	}
+	
+	public static int colorARGBtoInt(final int alpha, final int red, final int green, final int blue) {
+		return (clamp(0, 255, alpha) << 24)
+		     + (clamp(0, 255, red  ) << 16)
+			 + (clamp(0, 255, green) <<  8)
+			 +  clamp(0, 255, blue );
 	}
 }

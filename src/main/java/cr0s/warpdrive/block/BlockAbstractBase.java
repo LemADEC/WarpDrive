@@ -38,11 +38,6 @@ public abstract class BlockAbstractBase extends Block implements IBlockBase {
 	}
 	
 	@Override
-	public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z, boolean willHarvest) {
-		return willHarvest || super.removedByPlayer(world, player, x, y, z, false);
-	}
-	
-	@Override
 	public boolean rotateBlock(World world, int x, int y, int z, ForgeDirection axis) {
 		if (isRotating) {
 			world.setBlockMetadataWithNotify(x, y, z, axis.ordinal(), 3);

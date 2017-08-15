@@ -2,6 +2,7 @@ package cr0s.warpdrive.data;
 
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.IStarMapRegistryTileEntity;
+import cr0s.warpdrive.config.WarpDriveConfig;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -179,6 +180,20 @@ public class StarMapRegistryItem extends GlobalPosition {
 		tagCompound.setDouble("isolationRate", isolationRate);
 		if (name != null && !name.isEmpty()) {
 			tagCompound.setString("name", name);
+		}
+	}
+	
+	public String getFormattedLocation() {
+		final CelestialObject celestialObject = CelestialObjectManager.get(false, dimensionId, x, z);
+		if (celestialObject == null) {
+			return String.format("DIM%d @ (%d %d %d)",
+			                     dimensionId,
+			                     x, y, z);
+		} else {
+			return String.format("%s [DIM%d] @ (%d %d %d)",
+			                     celestialObject.getDisplayName(),
+			                     dimensionId,
+			                     x, y, z);
 		}
 	}
 	

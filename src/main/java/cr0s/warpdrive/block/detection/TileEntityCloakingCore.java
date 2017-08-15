@@ -26,6 +26,9 @@ import net.minecraftforge.common.util.ForgeDirection;
 public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 	
 	private static final int CLOAKING_CORE_SOUND_UPDATE_TICKS = 40;
+	private static final int DISTANCE_INNER_COILS_BLOCKS = 2;
+	private static final int LASER_REFRESH_TICKS = 100;
+	private static final int LASER_DURATION_TICKS = 110;
 	
 	public boolean isEnabled = false;
 	public byte tier = 1; // cloaking field tier, 1 or 2
@@ -36,18 +39,20 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 	final float[] innerCoilColor_b = { 0.25f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.50f, 1.00f, 1.00f, 1.00f, 1.00f, 0.75f }; 
 	
 	// Spatial cloaking field parameters
-	private static final int innerCoilsDistance = 2; // Step length from core block to main coils
-	private final int[] outerCoilsDistance = {0, 0, 0, 0, 0, 0};
-	public int minX = 0;
-	public int minY = 0;
-	public int minZ = 0;
-	public int maxX = 0;
-	public int maxY = 0;
-	public int maxZ = 0;
+	private final boolean[] isValidInnerCoils = { false, false, false, false, false, false };
+	private final int[] distanceOuterCoils_blocks = { 0, 0, 0, 0, 0, 0 };   // 0 means invalid
+	private int minX = 0;
+	private int minY = 0;
+	private int minZ = 0;
+	private int maxX = 0;
+	private int maxY = 0;
+	private int maxZ = 0;
 	
-	public boolean isValid = false;
-	public boolean isCloaking = false;
-	public int volume = 0;
+	private boolean isValid = false;
+	private String messageValidityIssues = "";
+	private boolean isCloaking = false;
+	private int volume = 0;
+	private int energyRequired = 0;
 	private int updateTicks = 0;
 	private int laserDrawingTicks = 0;
 	
@@ -80,6 +85,8 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 			soundPlayed = false;
 		}
 		
+		boolean isRefreshNeeded = false;
+		
 		updateTicks--;
 		if (updateTicks <= 0) {
 			if (WarpDriveConfig.LOGGING_CLOAKING) {
@@ -87,7 +94,8 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 			}
 			updateTicks = ((tier == 1) ? 20 : (tier == 2) ? 10 : 20) * WarpDriveConfig.CLOAKING_FIELD_REFRESH_INTERVAL_SECONDS; // resetting timer
 			
-			isValid = validateAssembly();
+			isRefreshNeeded = validateAssembly();
+			
 			isCloaking = WarpDrive.cloaks.isAreaExists(worldObj, xCoord, yCoord, zCoord); 
 			if (!isEnabled) {// disabled
 				if (isCloaking) {// disabled, cloaking => stop cloaking
@@ -95,14 +103,21 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 						WarpDrive.logger.info(this + " Disabled, cloak field going down...");
 					}
 					disableCloakingField();
-				} else {// disabled, no cloaking
+					isRefreshNeeded = true;
+				} else {// disabled, not cloaking
 					// IDLE
+					if (isRefreshNeeded) {
+						setCoilsState(false);
+					}
 				}
+				
 			} else {// isEnabled
-				boolean hasEnoughPower = countBlocksAndConsumeEnergy();
+				updateVolumeAndEnergyRequired();
+				final boolean hasEnoughPower = energy_consume(energyRequired, false);
 				if (!isCloaking) {// enabled, not cloaking
 					if (hasEnoughPower && isValid) {// enabled, can cloak and able to
 						setCoilsState(true);
+						isRefreshNeeded = true;
 						
 						// Register cloak
 						WarpDrive.cloaks.updateCloakedArea(worldObj,
@@ -122,16 +137,21 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 								WarpDrive.logger.info("getCloakedArea1 returned null for " + worldObj + " " + xCoord + "," + yCoord + "," + zCoord);
 							}
 						}
-					} else {// enabled, not cloaking but not able to
+						
+					} else {// enabled, not cloaking and not able to
 						// IDLE
+						setCoilsState(false);
 					}
-				} else {// enabled & cloaked
+					
+				} else {// enabled & cloaking
 					if (!isValid) {// enabled, cloaking but invalid
 						if (WarpDriveConfig.LOGGING_CLOAKING) {
 							WarpDrive.logger.info(this + " Coil(s) lost, cloak field is collapsing...");
 						}
 						energy_consume(energy_getEnergyStored());
-						disableCloakingField();				
+						disableCloakingField();
+						isRefreshNeeded = true;
+						
 					} else {// enabled, cloaking and valid
 						if (hasEnoughPower) {// enabled, cloaking and able to
 							// IDLE
@@ -145,19 +165,22 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 								}
 							}
 							setCoilsState(true);
+							
 						} else {// loosing power
 							if (WarpDriveConfig.LOGGING_CLOAKING) {
 								WarpDrive.logger.info(this + " Low power, cloak field is collapsing...");
 							}
 							disableCloakingField();
+							isRefreshNeeded = true;
 						}
 					}
 				}
 			}
 		}
 		
-		if (laserDrawingTicks++ > 100) {
-			laserDrawingTicks = 0;
+		laserDrawingTicks--;
+		if (isRefreshNeeded || laserDrawingTicks < 0) {
+			laserDrawingTicks = LASER_REFRESH_TICKS;
 			
 			if (isEnabled && isValid) {
 				drawLasers();
@@ -169,20 +192,29 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 		worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, (enabled) ? 1 : 0, 2);
 		
 		for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
-			setCoilState(innerCoilsDistance, direction, enabled);
-			setCoilState(outerCoilsDistance[direction.ordinal()], direction, enabled);
+			if (isValidInnerCoils[direction.ordinal()]) {
+				setCoilState(DISTANCE_INNER_COILS_BLOCKS, direction, enabled);
+			}
+			if (distanceOuterCoils_blocks[direction.ordinal()] > 0) {
+				setCoilState(distanceOuterCoils_blocks[direction.ordinal()], direction, enabled);
+			}
 		}
 	}
 	
 	private void setCoilState(final int distance, final ForgeDirection direction, final boolean enabled) {
-		int x = xCoord + distance * direction.offsetX;
-		int y = yCoord + distance * direction.offsetY;
-		int z = zCoord + distance * direction.offsetZ;
+		final int x = xCoord + distance * direction.offsetX;
+		final int y = yCoord + distance * direction.offsetY;
+		final int z = zCoord + distance * direction.offsetZ;
 		if (worldObj.getBlock(x, y, z).isAssociatedBlock(WarpDrive.blockCloakingCoil)) {
-			if (distance == innerCoilsDistance) {
-				worldObj.setBlockMetadataWithNotify(x, y, z, ((enabled) ? 9 : 1), 2);
+			final int metadata_current = worldObj.getBlockMetadata(x, y, z);
+			final int metadata_new;
+			if (distance == DISTANCE_INNER_COILS_BLOCKS) {
+				metadata_new = (enabled ? 9 : 1);
 			} else {
-				worldObj.setBlockMetadataWithNotify(x, y, z, ((enabled) ? 10 : 2) + direction.ordinal(), 2);
+				metadata_new = (enabled ? 10 : 2) + direction.ordinal();
+			}
+			if (metadata_current != metadata_new) {
+				worldObj.setBlockMetadataWithNotify(x, y, z, metadata_new, 2);
 			}
 		}
 	}
@@ -196,9 +228,9 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 			g = 0.50f;
 			b = 0.50f;
 		} else if (tier == 1) {
-			r = 0.25f;
+			r = 0.00f;
 			g = 1.00f;
-			b = 0.00f;
+			b = 0.25f;
 		} else if (tier == 2) {
 			r = 0.00f;
 			g = 0.25f;
@@ -207,24 +239,27 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 		
 		// Directions to check (all six directions: left, right, up, down, front, back)
 		for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
-			PacketHandler.sendBeamPacketToPlayersInArea(worldObj,
-					new Vector3(
-						xCoord + innerCoilsDistance * direction.offsetX,
-						yCoord + innerCoilsDistance * direction.offsetY,
-						zCoord + innerCoilsDistance * direction.offsetZ).translate(0.5),
-					new Vector3(
-						xCoord + outerCoilsDistance[direction.ordinal()] * direction.offsetX,
-						yCoord + outerCoilsDistance[direction.ordinal()] * direction.offsetY,
-						zCoord + outerCoilsDistance[direction.ordinal()] * direction.offsetZ).translate(0.5),
-					r, g, b, 110, 0,
-					AxisAlignedBB.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ));
+			if ( isValidInnerCoils[direction.ordinal()]
+			  && distanceOuterCoils_blocks[direction.ordinal()] > 0) {
+				PacketHandler.sendBeamPacketToPlayersInArea(worldObj,
+				        new Vector3(
+				                   xCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * direction.offsetX,
+				                   yCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * direction.offsetY,
+				                   zCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * direction.offsetZ),
+				        new Vector3(
+				                   xCoord + 0.5D + distanceOuterCoils_blocks[direction.ordinal()] * direction.offsetX,
+				                   yCoord + 0.5D + distanceOuterCoils_blocks[direction.ordinal()] * direction.offsetY,
+				                   zCoord + 0.5D + distanceOuterCoils_blocks[direction.ordinal()] * direction.offsetZ),
+				        r, g, b, LASER_DURATION_TICKS, 0,
+				        AxisAlignedBB.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ));
+			}
 		}
 		
 		// draw connecting coils
 		for (int i = 0; i < 5; i++) {
-			ForgeDirection start = ForgeDirection.VALID_DIRECTIONS[i];
+			final ForgeDirection start = ForgeDirection.VALID_DIRECTIONS[i];
 			for (int j = i + 1; j < 6; j++) {
-				ForgeDirection stop = ForgeDirection.VALID_DIRECTIONS[j];
+				final ForgeDirection stop = ForgeDirection.VALID_DIRECTIONS[j];
 				// skip mirrored coils (removing the inner lines)
 				if (start.getOpposite() == stop) {
 					continue;
@@ -237,9 +272,15 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 				b = innerCoilColor_b[mapIndex];
 				
 				PacketHandler.sendBeamPacketToPlayersInArea(worldObj,
-					new Vector3(xCoord + innerCoilsDistance * start.offsetX, yCoord + innerCoilsDistance * start.offsetY, zCoord + innerCoilsDistance * start.offsetZ).translate(0.5),
-					new Vector3(xCoord + innerCoilsDistance * stop .offsetX, yCoord + innerCoilsDistance * stop .offsetY, zCoord + innerCoilsDistance * stop .offsetZ).translate(0.5),
-					r, g, b, 110, 0,
+					new Vector3(
+						xCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * start.offsetX + 0.2D * stop .offsetX,
+						yCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * start.offsetY + 0.2D * stop .offsetY,
+						zCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * start.offsetZ + 0.2D * stop .offsetZ),
+					new Vector3(
+						xCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * stop .offsetX + 0.2D * start.offsetX,
+						yCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * stop .offsetY + 0.2D * start.offsetY,
+						zCoord + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * stop .offsetZ + 0.2D * start.offsetZ),
+					r, g, b, LASER_DURATION_TICKS, 0,
 					AxisAlignedBB.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ));
 			}
 		}
@@ -257,35 +298,41 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 		}
 	}
 	
-	public boolean countBlocksAndConsumeEnergy() {
-		int x, y, z, energyToConsume;
-		volume = 0;
+	public void updateVolumeAndEnergyRequired() {
+		int x, y, z;
+		int energyRequired_new;
+		int volume_new = 0;
 		if (tier == 1) {// tier1 = gaz and air blocks don't count
 			for (y = minY; y <= maxY; y++) {
 				for (x = minX; x <= maxX; x++) {
 					for(z = minZ; z <= maxZ; z++) {
 						if (!worldObj.isAirBlock(x, y, z)) {
-							volume++;
+							volume_new++;
 						} 
 					}
 				}
 			}
-			energyToConsume = volume * WarpDriveConfig.CLOAKING_TIER1_ENERGY_PER_BLOCK;
+			energyRequired_new = volume_new * WarpDriveConfig.CLOAKING_TIER1_ENERGY_PER_BLOCK;
 		} else {// tier2 = everything counts
 			for (y = minY; y <= maxY; y++) {
 				for (x = minX; x <= maxX; x++) {
 					for(z = minZ; z <= maxZ; z++) {
-						if (!worldObj.getBlock(x, y, z) .isAssociatedBlock(Blocks.air)) {
-							volume++;
+						if (worldObj.getBlock(x, y, z) != Blocks.air) {
+							volume_new++;
 						} 
 					}
 				}
 			}
-			energyToConsume = volume * WarpDriveConfig.CLOAKING_TIER2_ENERGY_PER_BLOCK;
+			energyRequired_new = volume_new * WarpDriveConfig.CLOAKING_TIER2_ENERGY_PER_BLOCK;
 		}
 		
-		// WarpDrive.logger.info(this + " Consuming " + energyToConsume + " EU for " + blocksCount + " blocks");
-		return energy_consume(energyToConsume, false);
+		volume = volume_new;
+		energyRequired = energyRequired_new;
+		
+		if (WarpDriveConfig.LOGGING_ENERGY) {
+			WarpDrive.logger.info(String.format("%s Requiring %d EU for %d blocks",
+			                                    this, energyRequired, volume));
+		}
 	}
 	
 	@Override
@@ -303,65 +350,101 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 	}
 	
 	public boolean validateAssembly() {
-		final int maxOuterCoilDistance = WarpDriveConfig.CLOAKING_MAX_FIELD_RADIUS - WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS; 
+		final int maxOuterCoilDistance = WarpDriveConfig.CLOAKING_MAX_FIELD_RADIUS - WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
+		boolean isRefreshNeeded = false;
+		int countIntegrity = 1; // 1 for the core + 1 per coil
+		final StringBuilder messageInnerCoils = new StringBuilder();
+		final StringBuilder messageOuterCoils = new StringBuilder();
 		
 		// Directions to check (all six directions: left, right, up, down, front, back)
 		for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
 			
 			// check validity of inner coil
-			int x = xCoord + innerCoilsDistance * direction.offsetX;
-			int y = yCoord + innerCoilsDistance * direction.offsetY;
-			int z = zCoord + innerCoilsDistance * direction.offsetZ;
-			if (worldObj.getBlock(x, y, z).isAssociatedBlock(WarpDrive.blockCloakingCoil)) {
-				worldObj.setBlockMetadataWithNotify(x, y, z, 1, 2);
+			int x = xCoord + DISTANCE_INNER_COILS_BLOCKS * direction.offsetX;
+			int y = yCoord + DISTANCE_INNER_COILS_BLOCKS * direction.offsetY;
+			int z = zCoord + DISTANCE_INNER_COILS_BLOCKS * direction.offsetZ;
+			final boolean isInnerValid = (worldObj.getBlock(x, y, z) == WarpDrive.blockCloakingCoil);
+			
+			// whenever a change is detected, force a laser redraw 
+			if (isInnerValid != isValidInnerCoils[direction.ordinal()]) {
+				isRefreshNeeded = true;
+				isValidInnerCoils[direction.ordinal()] = isInnerValid;
+			}
+			
+			// update validity results
+			if (isValidInnerCoils[direction.ordinal()]) {
+				countIntegrity++;
 			} else {
-				return false;
+				if (messageInnerCoils.length() != 0) {
+					messageInnerCoils.append(", ");
+				}
+				messageInnerCoils.append(direction.name());
 			}
 			
 			// find closest outer coil
 			int newCoilDistance = 0;
-			for (int distance = 3; distance < maxOuterCoilDistance; distance++) {
+			for (int distance = DISTANCE_INNER_COILS_BLOCKS + 1; distance < maxOuterCoilDistance; distance++) {
 				x += direction.offsetX;
 				y += direction.offsetY;
 				z += direction.offsetZ;
 				
-				if (worldObj.getBlock(x, y, z).isAssociatedBlock(WarpDrive.blockCloakingCoil)) {
-					worldObj.setBlockMetadataWithNotify(x, y, z, 2 + direction.ordinal(), 2);
+				if (worldObj.getBlock(x, y, z) == WarpDrive.blockCloakingCoil) {
 					newCoilDistance = distance;
 					break;
 				}
 			}
 			
-			// disable previous outer coil, in case a different one was found
-			int oldCoilDistance = outerCoilsDistance[direction.ordinal()];
-			if ( newCoilDistance != oldCoilDistance && oldCoilDistance > 0) {
-				int oldX = xCoord + oldCoilDistance * direction.offsetX;
-				int oldY = yCoord + oldCoilDistance * direction.offsetY;
-				int oldZ = zCoord + oldCoilDistance * direction.offsetZ;
-				if (worldObj.getBlock(oldX, oldY, oldZ).isAssociatedBlock(WarpDrive.blockCloakingCoil)) {
-					worldObj.setBlockMetadataWithNotify(oldX, oldY, oldZ, 0, 2);
+			// whenever a change is detected, disable previous outer coil if it was valid and force a laser redraw
+			final int oldCoilDistance = distanceOuterCoils_blocks[direction.ordinal()];
+			if (newCoilDistance != oldCoilDistance) {
+				if (oldCoilDistance > 0) {
+					final int oldX = xCoord + oldCoilDistance * direction.offsetX;
+					final int oldY = yCoord + oldCoilDistance * direction.offsetY;
+					final int oldZ = zCoord + oldCoilDistance * direction.offsetZ;
+					if (worldObj.getBlock(oldX, oldY, oldZ) == WarpDrive.blockCloakingCoil) {
+						worldObj.setBlockMetadataWithNotify(oldX, oldY, oldZ, 0, 2);
+					}
 				}
+				isRefreshNeeded = true;
+				distanceOuterCoils_blocks[direction.ordinal()] = Math.max(0, newCoilDistance);
 			}
 			
-			// check validity and save new coil position
-			if (newCoilDistance <= 0) {
-				outerCoilsDistance[direction.ordinal()] = 0;
-				if (WarpDriveConfig.LOGGING_CLOAKING) {
-					WarpDrive.logger.info("Invalid outer coil assembly at " + direction);
+			// update validity results
+			if (newCoilDistance > 0) {
+				countIntegrity++;
+			} else {
+				if (messageOuterCoils.length() != 0) {
+					messageOuterCoils.append(", ");
 				}
-				return false;
+				messageOuterCoils.append(direction.name());
 			}
-			outerCoilsDistance[direction.ordinal()] = newCoilDistance;
 		}
 		
-		// Update cloaking field parameters defined by coils		
-		minX =               xCoord - outerCoilsDistance[4] - WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
-		maxX =               xCoord + outerCoilsDistance[5] + WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
-		minY = Math.max(  0, yCoord - outerCoilsDistance[0] - WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS);
-		maxY = Math.min(255, yCoord + outerCoilsDistance[1] + WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS);
-		minZ =               zCoord - outerCoilsDistance[2] - WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
-		maxZ =               zCoord + outerCoilsDistance[3] + WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
-		return true;
+		// build status message
+		final float integrity = countIntegrity / 13.0F; 
+		if (messageInnerCoils.length() > 0 && messageOuterCoils.length() > 0) {
+			messageValidityIssues = StatCollector.translateToLocalFormatted("warpdrive.cloakingCore.missingInnerAndOuter", 
+					Math.round(100.0F * integrity), messageInnerCoils, messageOuterCoils); 
+		} else if (messageInnerCoils.length() > 0) {
+			messageValidityIssues = StatCollector.translateToLocalFormatted("warpdrive.cloakingCore.missingInner",
+			        Math.round(100.0F * integrity), messageInnerCoils);
+		} else if (messageOuterCoils.length() > 0) {
+			messageValidityIssues = StatCollector.translateToLocalFormatted("warpdrive.cloakingCore.missingOuter",
+					Math.round(100.0F * integrity), messageOuterCoils);
+		} else {
+			messageValidityIssues = StatCollector.translateToLocalFormatted("warpdrive.cloakingCore.valid");
+		}
+		
+		// Update cloaking field parameters defined by coils
+		isValid = countIntegrity >= 13;
+		minX =               xCoord - distanceOuterCoils_blocks[4] - WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
+		maxX =               xCoord + distanceOuterCoils_blocks[5] + WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
+		minY = Math.max(  0, yCoord - distanceOuterCoils_blocks[0] - WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS);
+		maxY = Math.min(255, yCoord + distanceOuterCoils_blocks[1] + WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS);
+		minZ =               zCoord - distanceOuterCoils_blocks[2] - WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
+		maxZ =               zCoord + distanceOuterCoils_blocks[3] + WarpDriveConfig.CLOAKING_COIL_CAPTURE_BLOCKS;
+		
+		return isRefreshNeeded;
 	}
 	
 	@Override
@@ -372,7 +455,7 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 		
 		final String unlocalizedStatus;
 		if (!isValid) {
-			unlocalizedStatus = "warpdrive.cloakingCore.invalidAssembly";
+			unlocalizedStatus = messageValidityIssues;
 		} else if (!isEnabled) {
 			unlocalizedStatus = "warpdrive.cloakingCore.disabled";
 		} else if (!isCloaking) {
@@ -386,64 +469,71 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergy {
 				volume);
 	}
 	
-	// OpenComputer callback methods
-	@Callback
-	@Optional.Method(modid = "OpenComputers")
-	public Object[] tier(Context context, Arguments arguments) {
-		if (arguments.count() == 1) {
-			if (arguments.checkInteger(0) == 2) {
+	// Common OC/CC methods
+	public Object[] tier(Object[] arguments) {
+		if (arguments.length == 1) {
+			int tier_new;
+			try {
+				tier_new = Commons.toInt(arguments[0]);
+			} catch(Exception exception) {
+				return new Integer[] { (int) tier };
+			}
+			if (tier_new == 2) {
 				tier = 2;
 			} else {
 				tier = 1;
 			}
 			markDirty();
 		}
-		return new Integer[] { (int)tier };
+		return new Integer[] { (int) tier };
+	}
+	
+	public Object[] isAssemblyValid() {
+		return new Object[] { isValid, Commons.removeFormatting(messageValidityIssues) };
+	}
+	
+	public Object[] enable(Object[] arguments) {
+		if (arguments.length == 1) {
+			isEnabled = Commons.toBool(arguments[0]);
+			markDirty();
+		}
+		return new Object[] { isEnabled };
+	}
+	
+	// OpenComputer callback methods
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] tier(Context context, Arguments arguments) {
+		return tier(argumentsOCtoCC(arguments));
 	}
 	
 	@Callback
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] isAssemblyValid(Context context, Arguments arguments) {
-		return new Object[] { validateAssembly() };
+		return isAssemblyValid();
 	}
 	
 	@Callback
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] enable(Context context, Arguments arguments) {
-		if (arguments.count() == 1) {
-			isEnabled = arguments.checkBoolean(0);
-			markDirty();
-		}
-		return new Object[] { isEnabled };
+		return enable(argumentsOCtoCC(arguments));
 	}
 	
 	// ComputerCraft IPeripheral methods implementation
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		switch (methodName) {
-			case "tier":
-				if (arguments.length == 1) {
-					if (Commons.toInt(arguments[0]) == 2) {
-						tier = 2;
-					} else {
-						tier = 1;
-					}
-					markDirty();
-				}
-				return new Integer[] { (int) tier };
-
-			case "isAssemblyValid":
-				return new Object[] { validateAssembly() };
-
-			case "enable":
-				if (arguments.length == 1) {
-					isEnabled = Commons.toBool(arguments[0]);
-					markDirty();
-				}
-				return new Object[] { isEnabled };
+		case "tier":
+			return tier(arguments);
+			
+		case "isAssemblyValid":
+			return isAssemblyValid();
+			
+		case "enable":
+			return enable(arguments);
 		}
 		
 		return super.callMethod(computer, context, method, arguments);

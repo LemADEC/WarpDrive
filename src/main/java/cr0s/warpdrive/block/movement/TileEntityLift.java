@@ -1,8 +1,10 @@
 package cr0s.warpdrive.block.movement;
 
 import cr0s.warpdrive.Commons;
+import cr0s.warpdrive.api.computer.ILift;
 import cr0s.warpdrive.block.TileEntityAbstractEnergy;
 import cr0s.warpdrive.config.WarpDriveConfig;
+import cr0s.warpdrive.data.EnumLiftMode;
 import cr0s.warpdrive.data.Vector3;
 import cr0s.warpdrive.network.PacketHandler;
 import dan200.computercraft.api.lua.ILuaContext;
@@ -22,23 +24,19 @@ import net.minecraft.util.AxisAlignedBB;
 import cpw.mods.fml.common.Optional;
 import net.minecraftforge.common.util.ForgeDirection;
 
-public class TileEntityLift extends TileEntityAbstractEnergy {
-	
-	private static final int MODE_REDSTONE = -1;
-	private static final int MODE_INACTIVE = 0;
-	private static final int MODE_UP = 1;
-	private static final int MODE_DOWN = 2;
+public class TileEntityLift extends TileEntityAbstractEnergy implements ILift {
 	
 	final double LIFT_GRAB_RADIUS = 0.4;
 	
 	// persistent properties
-	private int mode = MODE_INACTIVE;
-	private boolean computerEnabled = true;
-	private int computerMode = MODE_REDSTONE;
+	private EnumLiftMode mode = EnumLiftMode.INACTIVE;
+	private boolean isEnabled = true;
+	private EnumLiftMode computerMode = EnumLiftMode.REDSTONE;
 	
 	// computed properties
 	private int updateTicks = 0;
-	private boolean isEnabled = false;
+	private boolean isActive = false;
+	private boolean isValid = false;
 	private int firstUncoveredY;
 	
 	public TileEntityLift() {
@@ -47,8 +45,9 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 		IC2_sourceTier = 2;
 		peripheralName = "warpdriveLift";
 		addMethods(new String[] {
+				"enable",
 				"mode",
-				"active"
+				"state"
 		});
 	}
 	
@@ -65,29 +64,29 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 			updateTicks = WarpDriveConfig.LIFT_UPDATE_INTERVAL_TICKS;
 			
 			// Switching mode
-			if (  computerMode == MODE_DOWN
-			  || (computerMode == MODE_REDSTONE && worldObj.isBlockIndirectlyGettingPowered(xCoord, yCoord, zCoord))) {
-				mode = MODE_DOWN;
+			if (  computerMode == EnumLiftMode.DOWN
+			  || (computerMode == EnumLiftMode.REDSTONE && worldObj.isBlockIndirectlyGettingPowered(xCoord, yCoord, zCoord))) {
+				mode = EnumLiftMode.DOWN;
 			} else {
-				mode = MODE_UP;
+				mode = EnumLiftMode.UP;
 			}
 			
-			isEnabled = computerEnabled
-				     && isPassableBlock(yCoord + 1)
-				     && isPassableBlock(yCoord + 2)
-				     && isPassableBlock(yCoord - 1)
-				     && isPassableBlock(yCoord - 2);
+			isValid = isPassableBlock(yCoord + 1)
+			       && isPassableBlock(yCoord + 2)
+			       && isPassableBlock(yCoord - 1)
+			       && isPassableBlock(yCoord - 2);
+			isActive = isEnabled && isValid;
 			
-			if (energy_getEnergyStored() < WarpDriveConfig.LIFT_ENERGY_PER_ENTITY || !isEnabled) {
-				mode = MODE_INACTIVE;
+			if (energy_getEnergyStored() < WarpDriveConfig.LIFT_ENERGY_PER_ENTITY || !isActive) {
+				mode = EnumLiftMode.INACTIVE;
 				if (getBlockMetadata() != 0) {
 					worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, 0, 2); // disabled
 				}
 				return;
 			}
 			
-			if (getBlockMetadata() != mode) {
-				worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, mode, 2); // current mode
+			if (getBlockMetadata() != mode.ordinal()) {
+				worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, mode.ordinal(), 2); // current mode
 			}
 			
 			// Launch a beam: search non-air blocks under lift
@@ -99,12 +98,12 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 			}
 			
 			if (yCoord - firstUncoveredY >= 2) {
-				if (mode == MODE_UP) {
+				if (mode == EnumLiftMode.UP) {
 					PacketHandler.sendBeamPacket(worldObj,
 							new Vector3(xCoord + 0.5D, firstUncoveredY, zCoord + 0.5D),
 							new Vector3(xCoord + 0.5D, yCoord, zCoord + 0.5D),
 							0f, 1f, 0f, 40, 0, 100);
-				} else if (mode == MODE_DOWN) {
+				} else if (mode == EnumLiftMode.DOWN) {
 					PacketHandler.sendBeamPacket(worldObj,
 							new Vector3(xCoord + 0.5D, yCoord, zCoord + 0.5D),
 							new Vector3(xCoord + 0.5D, firstUncoveredY, zCoord + 0.5D), 0f,
@@ -133,7 +132,7 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 		boolean isTransferDone = false; 
 		
 		// Lift up
-		if (mode == MODE_UP) {
+		if (mode == EnumLiftMode.UP) {
 			final AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(
 					xMin, firstUncoveredY, zMin,
 					xMax, yCoord, zMax);
@@ -155,7 +154,7 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 				}
 			}
 			
-		} else if (mode == MODE_DOWN) {
+		} else if (mode == EnumLiftMode.DOWN) {
 			final AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(
 					xMin, Math.min(firstUncoveredY + 4.0D, yCoord), zMin,
 					xMax, yCoord + 2.0D, zMax);
@@ -184,22 +183,26 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 	public void readFromNBT(NBTTagCompound tag) {
 		super.readFromNBT(tag);
 		if (tag.hasKey("mode")) {
-			mode = Commons.clamp(-1, 2, tag.getByte("mode"));
+			final byte byteValue = tag.getByte("mode");
+			mode = EnumLiftMode.get(Commons.clamp(0, 3, byteValue == -1 ? 3 : byteValue));
 		}
 		if (tag.hasKey("computerEnabled")) {
-			computerEnabled = tag.getBoolean("computerEnabled");
+			isEnabled = tag.getBoolean("computerEnabled");  // up to 1.3.30 included
+		} else if (tag.hasKey("isEnabled")) {
+			isEnabled = tag.getBoolean("isEnabled");
 		}
 		if (tag.hasKey("computerMode")) {
-			computerMode = Commons.clamp(-1, 2, tag.getByte("computerMode"));
+			final byte byteValue = tag.getByte("computerMode");
+			computerMode = EnumLiftMode.get(Commons.clamp(0, 3, byteValue == -1 ? 3 : byteValue));
 		}
 	}
 	
 	@Override
 	public void writeToNBT(NBTTagCompound tag) {
 		super.writeToNBT(tag);
-		tag.setByte("mode", (byte)mode);
-		tag.setBoolean("computerEnabled", computerEnabled);
-		tag.setByte("computerMode", (byte)computerMode);
+		tag.setByte("mode", (byte) mode.ordinal());
+		tag.setBoolean("isEnabled", isEnabled);
+		tag.setByte("computerMode", (byte) computerMode.ordinal());
 	}
 	
 	@Override
@@ -212,7 +215,47 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 		return true;
 	}
 	
+	// Common OC/CC methods
+	@Override
+	public Object[] enable(Object[] arguments) {
+		if (arguments.length == 1) {
+			isEnabled = Commons.toBool(arguments[0]);
+			markDirty();
+		}
+		return new Object[] { isEnabled };
+	}
+	
+	@Override
+	public Object[] mode(Object[] arguments) {
+		if (arguments.length == 1 && arguments[0] instanceof String) {
+			final String stringValue = (String) arguments[0];
+			if (stringValue.equalsIgnoreCase("up")) {
+				computerMode = EnumLiftMode.UP;
+			} else if (stringValue.equalsIgnoreCase("down")) {
+				computerMode = EnumLiftMode.DOWN;
+			} else {
+				computerMode = EnumLiftMode.REDSTONE;
+			}
+			markDirty();
+		}
+		
+		return new Object[] { computerMode.getName() };
+	}
+	
+	@Override
+	public Object[] state() {
+		final int energy = energy_getEnergyStored();
+		final String status = getStatusHeaderInPureText();
+		return new Object[] { status, isActive, energy, isValid, isEnabled, computerMode.getName() };
+	}
+	
 	// OpenComputer callback methods
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] enable(Context context, Arguments arguments) {
+		return enable(argumentsOCtoCC(arguments));
+	}
+	
 	@Callback
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] mode(Context context, Arguments arguments) {
@@ -225,53 +268,25 @@ public class TileEntityLift extends TileEntityAbstractEnergy {
 	
 	@Callback
 	@Optional.Method(modid = "OpenComputers")
-	public Object[] active(Context context, Arguments arguments) {
-		if (arguments.count() == 1) {
-			computerEnabled = arguments.checkBoolean(0);
-			markDirty();
-		}
-		return new Object[] { !computerEnabled && isEnabled };
-	}
-	
-	private Object[] mode(Object[] arguments) {
-		if (arguments.length == 1) {
-			if (arguments[0].toString().equals("up")) {
-				computerMode = MODE_UP;
-			} else if (arguments[0].toString().equals("down")) {
-				computerMode = MODE_DOWN;
-			} else {
-				computerMode = MODE_REDSTONE;
-			}
-			markDirty();
-		}
-		
-		switch (computerMode) {
-		case MODE_REDSTONE:
-			return new Object[] { "redstone" };
-		case MODE_UP:
-			return new Object[] { "up" };
-		case MODE_DOWN:
-			return new Object[] { "down" };
-		default:
-			break;
-		}
-		return null;
+	public Object[] state(Context context, Arguments arguments) {
+		return state();
 	}
 	
 	// ComputerCraft IPeripheral methods implementation
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
-		if (methodName.equals("mode")) {
-			return mode(arguments);
+		switch (methodName) {
+		case "enable":
+			return enable(arguments);
 			
-		} else if (methodName.equals("active")) {
-			if (arguments.length == 1) {
-				computerEnabled = Commons.toBool(arguments[0]);
-			}
-			return new Object[] { !computerEnabled && isEnabled };
+		case "mode":
+			return mode(arguments);
+		
+		case "state":
+			return state();
 		}
 		
 		return super.callMethod(computer, context, method, arguments);

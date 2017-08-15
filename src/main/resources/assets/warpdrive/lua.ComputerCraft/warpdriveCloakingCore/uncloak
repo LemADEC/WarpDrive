@@ -3,26 +3,31 @@ if not term.isColor() then
   exit()
 end
 
-Side = { "bottom", "top", "back", "left", "right" }
-for i = 1,5 do
-  if peripheral.getType(Side[i]) == "warpdriveCloakingCore" then
-    warp = peripheral.wrap(Side[i])
+local sides = peripheral.getNames()
+local cloakingCore
+for _, side in pairs(sides) do
+  if peripheral.getType(side) == "warpdriveCloakingCore" then
+    print("Wrapping " .. side)
+    cloakingCore = peripheral.wrap(side)
     break
-  else
-    warp = nil
   end
 end
 
-if warp == nil then
+
+if cloakingCore == nil then
   term.setBackgroundColor(colors.red)
   term.setTextColor(colors.white)
   term.write("No cloaking core detected")
 else
-  warp.enable(false)
+  cloakingCore.enable(false)
   term.setBackgroundColor(colors.lightGray)
   term.setTextColor(colors.black)
   term.write("Cloaking is disabled")
 end
+
 term.setBackgroundColor(colors.black)
 term.setTextColor(colors.white)
+
 print()
+print()
+-- print("Program closed")

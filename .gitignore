@@ -6,9 +6,10 @@
 .gradle/
 .settings/
 build/
-eclipse/*
+run/*
+output/*
 
-!eclipse/mods/
+!run/mods-ref/
 
 *.iml
 *.iws

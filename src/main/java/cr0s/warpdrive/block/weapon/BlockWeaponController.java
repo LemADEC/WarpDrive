@@ -38,9 +38,9 @@ public class BlockWeaponController extends BlockAbstractContainer {
 	@Override
 	public void registerBlockIcons(IIconRegister iconRegister) {
 		iconBuffer = new IIcon[3];
-		iconBuffer[ICON_TOP] = iconRegister.registerIcon("warpdrive:movement/shipControllerTop");
-		iconBuffer[ICON_BOTTOM] = iconRegister.registerIcon("warpdrive:movement/shipControllerBottom");
-		iconBuffer[ICON_SIDE] = iconRegister.registerIcon("warpdrive:weapon/weaponControllerSide");
+		iconBuffer[ICON_TOP] = iconRegister.registerIcon("warpdrive:movement/ship_controller-top");
+		iconBuffer[ICON_BOTTOM] = iconRegister.registerIcon("warpdrive:movement/ship_controller-bottom");
+		iconBuffer[ICON_SIDE] = iconRegister.registerIcon("warpdrive:weapon/weapon_controller-side");
 	}
 	
 	@SideOnly(Side.CLIENT)

@@ -1,7 +1,7 @@
 package cr0s.warpdrive.render;
 
 import cr0s.warpdrive.WarpDrive;
-import cr0s.warpdrive.config.CelestialObjectManager;
+import cr0s.warpdrive.data.CelestialObjectManager;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.data.CelestialObject;
 import cr0s.warpdrive.data.CelestialObject.RenderData;
@@ -80,7 +80,7 @@ public class RenderSpaceSky extends IRenderHandler {
 	public void render(float partialTicks, WorldClient world, Minecraft mc) {
 		final Vec3 vec3Player = mc.thePlayer.getPosition(partialTicks);
 		final CelestialObject celestialObject = world.provider == null ? null
-				: StarMapRegistry.getCelestialObject(world.provider.dimensionId, (int) vec3Player.xCoord, (int) vec3Player.zCoord);
+				: CelestialObjectManager.get(world, (int) vec3Player.xCoord, (int) vec3Player.zCoord);
 		
 		final Tessellator tessellator = Tessellator.instance;
 		
@@ -113,7 +113,7 @@ public class RenderSpaceSky extends IRenderHandler {
 		// compute global alpha
 		final float alphaBase = 1.0F; // - world.getRainStrength(partialTicks);
 		
-		// draw star systems
+		// draw stars
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 		GL11.glDisable(GL11.GL_ALPHA_TEST);
@@ -180,10 +180,13 @@ public class RenderSpaceSky extends IRenderHandler {
 		/**/
 		
 		// Planets
-		if (celestialObject != null) {
+		if (celestialObject != null && celestialObject.opacityCelestialObjects > 0.0F) {
 			final Vector3 vectorPlayer = StarMapRegistry.getUniversalCoordinates(celestialObject, vec3Player.xCoord, vec3Player.yCoord, vec3Player.zCoord);
-			for (CelestialObject celestialObjectChild : CelestialObjectManager.celestialObjects) {
+			for (CelestialObject celestialObjectChild : CelestialObjectManager.getRenderStack()) {
 				if (celestialObject == celestialObjectChild) {
+					continue;
+				}
+				if (!celestialObject.id.equals(celestialObjectChild.parentId)) {
 					continue;
 				}
 				renderCelestialObject(tessellator,
@@ -260,9 +263,6 @@ public class RenderSpaceSky extends IRenderHandler {
 	private static void renderCelestialObject(final Tessellator tessellator, final CelestialObject celestialObject,
 	                                          final float alphaSky, final Vector3 vectorPlayer) {
 		// @TODO compute relative coordinates for rendering on celestialObject
-		if (celestialObject.isHyperspace() || celestialObject.isSpace()) {
-			return;
-		}
 		
 		// get universal coordinates
 		final Vector3 vectorCenter = StarMapRegistry.getUniversalCoordinates(celestialObject,
@@ -273,6 +273,9 @@ public class RenderSpaceSky extends IRenderHandler {
 				celestialObject.dimensionCenterX + celestialObject.borderRadiusX,
 				64,
 				celestialObject.dimensionCenterZ + celestialObject.borderRadiusZ);
+		if (vectorCenter == null || vectorBorderPos == null) {// probably an invalid celestial object tree
+			return;
+		}
 		final double borderRadiusX = vectorBorderPos.x - vectorCenter.x;
 		final double borderRadiusZ = vectorBorderPos.z - vectorCenter.z;
 		
@@ -312,7 +315,7 @@ public class RenderSpaceSky extends IRenderHandler {
 		final double offsetZ = (1.0 - transitionOrbit) * (distanceToCenterZ / borderRadiusZ);
 		
 		// simulating a non-planar universe...
-		final double planetY_far = (celestialObject.dimensionId + 99 % 100 - 50) * Math.log(distanceToCenter) / 4.0D;
+		final double planetY_far = (celestialObject.dimensionId + 99 % 100 - 50) * Math.log(distanceToCenter) / 1.0D;
 		final double planetY = planetY_far * transitionApproaching;
 		
 		// render range is only used for Z-ordering

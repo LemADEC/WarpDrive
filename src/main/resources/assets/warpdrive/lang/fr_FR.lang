@@ -40,7 +40,6 @@ item.warpdrive.crafting.CoilCrystal.name=Cristal bobiné
 item.warpdrive.crafting.ElectromagneticProjector.name=Projecteur électromagnétique
 item.warpdrive.crafting.Superconductor.name=Superconducteur
 
-item.warpdrive.armor.AirCanisterFull.name=Cartouche d'air
 item.warpdrive.armor.helmet.name=Casque warp
 item.warpdrive.armor.chestplate.name=Plastron warp
 item.warpdrive.armor.leggings.name=Jambières warp
@@ -49,6 +48,11 @@ item.warpdrive.armor.boots.name=Bottes warp
 item.warpdrive.atomic.electromagnetic_cell.name=Cage électromagnétique
 item.warpdrive.atomic.electromagnetic_cell.tooltip.empty=Utilise un collisionneur de particules pour me remplir!
 item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=Contient %1$s Å³ de %2$s
+
+item.warpdrive.breathing.air_tank0.name=Cartouche d'air
+item.warpdrive.breathing.air_tank1.name=Réservoir d'air élémentaire
+item.warpdrive.breathing.air_tank2.name=Réservoir d'air avancé
+item.warpdrive.breathing.air_tank3.name=Réservoir d'air supérieur
 
 item.warpdrive.energy.IC2reactorLaserFocus.name=Focus laser pour réacteur IC2
 
@@ -118,14 +122,38 @@ item.warpdrive.upgrade.Range.name=Amélioration de portée
 item.warpdrive.upgrade.Energy.name=Amélioration d'énergie
 
 
-item.warpdrive.tool.crystalToken.name=Crystal jeton
-item.warpdrive.tool.crystalToken.tooltip=Vaisseau '%1$s' encapsulé dans un crystal\n§bEntre dans le champ rouge du constructeur§7 pour réclamer ton vaisseau
-item.warpdrive.tool.crystalToken0.name=Crystal jeton #0
-item.warpdrive.tool.crystalToken1.name=Crystal jeton #1
-item.warpdrive.tool.crystalToken2.name=Crystal jeton #2
-item.warpdrive.tool.crystalToken3.name=Crystal jeton #3
-item.warpdrive.tool.crystalToken4.name=Crystal jeton #4
-item.warpdrive.tool.crystalToken5.name=Crystal jeton #5
+item.warpdrive.tool.ship_token.name=Jeton de vaisseau
+item.warpdrive.tool.ship_token.tooltip=Jeton échangeable pour un vaisseau '%1$s'\n§bEntre dans le champ d'un constructeur§7 pour réclamer ton vaisseau
+item.warpdrive.tool.ship_token0.name=Jeton de vaisseau #0
+item.warpdrive.tool.ship_token1.name=Jeton de vaisseau #1
+item.warpdrive.tool.ship_token2.name=Jeton de vaisseau #2
+item.warpdrive.tool.ship_token3.name=Jeton de vaisseau #3
+item.warpdrive.tool.ship_token4.name=Jeton de vaisseau #4
+item.warpdrive.tool.ship_token5.name=Jeton de vaisseau #5
+item.warpdrive.tool.ship_token10.name=Jeton de vaisseau #10
+item.warpdrive.tool.ship_token11.name=Jeton de vaisseau #11
+item.warpdrive.tool.ship_token12.name=Jeton de vaisseau #12
+item.warpdrive.tool.ship_token13.name=Jeton de vaisseau #13
+item.warpdrive.tool.ship_token14.name=Jeton de vaisseau #14
+item.warpdrive.tool.ship_token15.name=Jeton de vaisseau #15
+item.warpdrive.tool.ship_token20.name=Jeton de vaisseau #20
+item.warpdrive.tool.ship_token21.name=Jeton de vaisseau #21
+item.warpdrive.tool.ship_token22.name=Jeton de vaisseau #22
+item.warpdrive.tool.ship_token23.name=Jeton de vaisseau #23
+item.warpdrive.tool.ship_token24.name=Jeton de vaisseau #24
+item.warpdrive.tool.ship_token25.name=Jeton de vaisseau #25
+item.warpdrive.tool.ship_token30.name=Jeton de vaisseau #30
+item.warpdrive.tool.ship_token31.name=Jeton de vaisseau #31
+item.warpdrive.tool.ship_token32.name=Jeton de vaisseau #32
+item.warpdrive.tool.ship_token33.name=Jeton de vaisseau #33
+item.warpdrive.tool.ship_token34.name=Jeton de vaisseau #34
+item.warpdrive.tool.ship_token35.name=Jeton de vaisseau #35
+item.warpdrive.tool.ship_token40.name=Jeton de vaisseau #40
+item.warpdrive.tool.ship_token41.name=Jeton de vaisseau #41
+item.warpdrive.tool.ship_token42.name=Jeton de vaisseau #42
+item.warpdrive.tool.ship_token43.name=Jeton de vaisseau #43
+item.warpdrive.tool.ship_token44.name=Jeton de vaisseau #44
+item.warpdrive.tool.ship_token45.name=Jeton de vaisseau #45
 
 
 item.warpdrive.tool.tuning_driver.video_channel.name=Ajusteur de canal vidéo
@@ -160,6 +188,7 @@ tile.warpdrive.decoration.decorative.energized.name=Block energisé
 tile.warpdrive.decoration.decorative.network.name=Bloc de réseau
 tile.warpdrive.decoration.decorative.plain.name=Bloc ordinaire
 tile.warpdrive.decoration.gas.name=Bloc de gaz
+tile.warpdrive.decoration.bedrock_glass.name=Vitre de bedrock
 
 tile.warpdrive.passive.IridiumBlock.name=Bloc d'iridium
 tile.warpdrive.passive.HighlyAdvancedMachine.name=Bloc de machine hyper avancé
@@ -636,12 +665,17 @@ warpdrive.video_channel.statusLine.invalid=§cLe canal vidéo %1$d est invalide.
 warpdrive.video_channel.statusLine.invalidOrNotLoaded=§cLe canal vidéo %1$d est invalide ou la caméra est trop loin!
 warpdrive.video_channel.statusLine.undefined=§7Le canal vidéo est non défini.\n§bUtilises un Diapason§r pour l'ajuster.
 
-warpdrive.cloakingCore.invalidAssembly=§cL'assemblage est invalide!
+warpdrive.cloakingCore.missingInnerAndOuter=§cIntegrité réduite à %1$d%%: bobine(s) de canalisation manquante(nt) en direction de %2$s, et bobine(s) de projection manquante(nt) en direction de %3$s
+warpdrive.cloakingCore.missingInner=§cIntegrité réduite à %1$d%%: bobine(s) de canalisation manquante(nt) en direction de %2$s
+warpdrive.cloakingCore.missingOuter=§cIntegrité réduite à %1$d%%: bobine(s) de projection manquante(nt) en direction de %2$s
+warpdrive.cloakingCore.valid=Le système est valide
 warpdrive.cloakingCore.disabled=Le champ d'invisibilité est désactivé
 warpdrive.cloakingCore.lowPower=§cLe champ d'invisibilité est en panne. Il nous faut plus d'énergie, Capitaine!
 warpdrive.cloakingCore.cloaking=Un champ de niveau %1$d couvre actuellement %2$d blocs!
+
 warpdrive.IC2reactorLaserMonitor.noReactor=Pas de réacteur IC2 trouvé!
 warpdrive.IC2reactorLaserMonitor.multipleReactors=%1$d réacteur(s) connecté(s).
+
 warpdrive.transporter.status=De %1$.0f %2$.0f %3$.0f à %4$.0f %5$.0f %6$.0f
 
 warpdrive.tooltip.itemTag.breathingHelmet=Permet de §brespirer dans le vide§r en consommant des cartouches d'air et des cellules d'air comprimé de IC2 depuis l'inventaire.

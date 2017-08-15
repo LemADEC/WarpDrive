@@ -1,13 +1,15 @@
 package cr0s.warpdrive.render;
 
 import cr0s.warpdrive.BreathingManager;
+import cr0s.warpdrive.data.CelestialObjectManager;
 import cr0s.warpdrive.data.CelestialObject;
-import cr0s.warpdrive.data.StarMapRegistry;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MathHelper;
+import net.minecraft.world.IBlockAccess;
 import org.lwjgl.opengl.GL11;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -19,6 +21,8 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 
 @SideOnly(Side.CLIENT)
 public class RenderOverlayAir {
+	
+	private static final int WARNING_ON_JOIN_TICKS = 20 * 20;
 	
 	private static Minecraft minecraft = Minecraft.getMinecraft();
 	
@@ -32,16 +36,21 @@ public class RenderOverlayAir {
 			return;
 		}
 		final int x = MathHelper.floor_double(entityPlayer.posX);
+		final int y = MathHelper.floor_double(entityPlayer.posY);
 		final int z = MathHelper.floor_double(entityPlayer.posZ);
 		
 		// get celestial object
-		final CelestialObject celestialObject = StarMapRegistry.getCelestialObject(entityPlayer.dimension, x, z);
+		final CelestialObject celestialObject = CelestialObjectManager.get(entityPlayer.worldObj, x, z);
 		if (celestialObject == null || celestialObject.hasAtmosphere()) {// skip (no display) if environment is breathable
 			return;
 		}
 		
 		// get air stats
-		// final boolean hasAirBlock = BreathingManager.hasAirBlock(entityPlayer, x, y, z);
+		final boolean hasVoidNearby = isVoid(entityPlayer.worldObj, x, y, z)
+		                           || isVoid(entityPlayer.worldObj, x - 2, y, z)
+		                           || isVoid(entityPlayer.worldObj, x + 2, y, z)
+		                           || isVoid(entityPlayer.worldObj, x, y, z - 2)
+		                           || isVoid(entityPlayer.worldObj, x, y, z + 2);
 		final boolean hasValidSetup = BreathingManager.hasValidSetup(entityPlayer);
 		final float ratioAirReserve = BreathingManager.getAirReserveRatio(entityPlayer);
 		
@@ -51,12 +60,14 @@ public class RenderOverlayAir {
 		
 		// show splash message
 		int alpha = 255;
-		if (!hasValidSetup) {
-			alpha = RenderCommons.drawSplashAlarm(width, height, "warpdrive.breathing.alarm", "warpdrive.breathing.invalid_setup");
-		} else if (ratioAirReserve <= 0.0F) {
-			alpha = RenderCommons.drawSplashAlarm(width, height, "warpdrive.breathing.alarm", "warpdrive.breathing.no_air");
-		} else if (ratioAirReserve < 0.15F) {
-			alpha = RenderCommons.drawSplashAlarm(width, height, "warpdrive.breathing.alarm", "warpdrive.breathing.low_reserve");
+		if (hasVoidNearby || entityPlayer.ticksExisted < WARNING_ON_JOIN_TICKS) {
+			if (!hasValidSetup) {
+				alpha = RenderCommons.drawSplashAlarm(width, height, "warpdrive.breathing.alarm", "warpdrive.breathing.invalid_setup");
+			} else if (ratioAirReserve <= 0.0F) {
+				alpha = RenderCommons.drawSplashAlarm(width, height, "warpdrive.breathing.alarm", "warpdrive.breathing.no_air");
+			} else if (ratioAirReserve < 0.15F) {
+				alpha = RenderCommons.drawSplashAlarm(width, height, "warpdrive.breathing.alarm", "warpdrive.breathing.low_reserve");
+			}
 		}
 		
 		// restore texture
@@ -94,6 +105,11 @@ public class RenderOverlayAir {
 		
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glDisable(GL11.GL_BLEND);
+	}
+	
+	private boolean isVoid(final IBlockAccess blockAccess, final int x, final int y, final int z) {
+		final Block block = blockAccess.getBlock(x, y, z);
+		return block.isAir(blockAccess, x, y, z) && !BreathingManager.isAirBlock(block);
 	}
 	
 	@SubscribeEvent

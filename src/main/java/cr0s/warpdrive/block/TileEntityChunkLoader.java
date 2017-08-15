@@ -6,6 +6,9 @@ import cr0s.warpdrive.data.UpgradeType;
 import cr0s.warpdrive.item.ItemUpgrade;
 import dan200.computercraft.api.lua.ILuaContext;
 import dan200.computercraft.api.peripheral.IComputerAccess;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.ChunkCoordIntPair;
@@ -15,8 +18,8 @@ import cpw.mods.fml.common.Optional;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public class TileEntityChunkLoader extends TileEntityAbstractChunkLoading {
-	private boolean canLoad = false;
-	private boolean shouldLoad = false;
+	private boolean isActive = false;
+	private boolean isEnabled = false;
 
 	private boolean initialised = false;
 	private ChunkCoordIntPair myChunk;
@@ -34,10 +37,11 @@ public class TileEntityChunkLoader extends TileEntityAbstractChunkLoading {
 		posDZ = 0;
 		peripheralName = "warpdriveChunkloader";
 		addMethods(new String[] {
-				"radius",
+				"enable",
 				"bounds",
-				"active",
-				"upgrades"
+				"radius",				
+				"upgrades",
+				"getEnergyRequired"
 		});
 		
 		setUpgradeMaxCount(ItemUpgrade.getItemStack(UpgradeType.Energy), 2);
@@ -54,10 +58,14 @@ public class TileEntityChunkLoader extends TileEntityAbstractChunkLoading {
 		return true;
 	}
 	
+	public long energy_getEnergyRequired() {
+		return area * WarpDriveConfig.CL_RF_PER_CHUNKTICK;
+	}
+	
 	@Override
 	public boolean shouldChunkLoad()
 	{
-		return shouldLoad && canLoad;
+		return isEnabled && isActive;
 	}
 	
 	@Override
@@ -72,16 +80,23 @@ public class TileEntityChunkLoader extends TileEntityAbstractChunkLoading {
 			changedDistance();
 		}
 
-		if(shouldLoad)
+		if(isEnabled)
 		{
-			canLoad = energy_consume(area * WarpDriveConfig.CL_RF_PER_CHUNKTICK, false);
+			isActive = energy_consume(energy_getEnergyRequired(), false);
 		}
 		else
 		{
-			canLoad = energy_consume(area * WarpDriveConfig.CL_RF_PER_CHUNKTICK, true);
+			isActive = energy_consume(energy_getEnergyRequired(), true);
 		}
 	}
 	
+	private void setBounds(int negX, int posX, int negZ, int posZ) {
+		negDX = - Commons.clamp(0, WarpDriveConfig.CL_MAX_DISTANCE, Math.abs(negX));
+		posDX =   Commons.clamp(0, WarpDriveConfig.CL_MAX_DISTANCE, Math.abs(posX));
+		negDZ = - Commons.clamp(0, WarpDriveConfig.CL_MAX_DISTANCE, Math.abs(negZ));
+		posDZ =   Commons.clamp(0, WarpDriveConfig.CL_MAX_DISTANCE, Math.abs(posZ));
+	}
+		
 	private void changedDistance()
 	{
 		if(worldObj == null) {
@@ -95,12 +110,9 @@ public class TileEntityChunkLoader extends TileEntityAbstractChunkLoading {
 				return;
 			}
 		}
-		negDX = - Commons.clamp(0, WarpDriveConfig.CL_MAX_DISTANCE, negDX);
-		posDX =   Commons.clamp(0, WarpDriveConfig.CL_MAX_DISTANCE, posDX);
-		negDZ = - Commons.clamp(0, WarpDriveConfig.CL_MAX_DISTANCE, negDZ);
-		posDZ =   Commons.clamp(0, WarpDriveConfig.CL_MAX_DISTANCE, posDZ);
-		minChunk = new ChunkCoordIntPair(myChunk.chunkXPos+negDX,myChunk.chunkZPos+negDZ);
-		maxChunk = new ChunkCoordIntPair(myChunk.chunkXPos+posDX,myChunk.chunkZPos+posDZ);
+
+		minChunk = new ChunkCoordIntPair(myChunk.chunkXPos + negDX, myChunk.chunkZPos + negDZ);
+		maxChunk = new ChunkCoordIntPair(myChunk.chunkXPos + posDX, myChunk.chunkZPos + posDZ);
 		area = (posDX - negDX + 1) * (posDZ - negDZ + 1);
 		refreshLoading(true);
 	}
@@ -109,11 +121,7 @@ public class TileEntityChunkLoader extends TileEntityAbstractChunkLoading {
 	public void readFromNBT(NBTTagCompound nbt)
 	{
 		super.readFromNBT(nbt);
-		negDX  = nbt.getInteger("negDX");
-		negDZ  = nbt.getInteger("negDZ");
-		posDX  = nbt.getInteger("posDX");
-		posDZ  = nbt.getInteger("posDZ");
-
+		setBounds(nbt.getInteger("negDX"), nbt.getInteger("posDX"), nbt.getInteger("negDZ"), nbt.getInteger("posDZ"));
 		changedDistance();
 	}
 
@@ -126,44 +134,91 @@ public class TileEntityChunkLoader extends TileEntityAbstractChunkLoading {
 		nbt.setInteger("posDX", posDX);
 		nbt.setInteger("posDZ", posDZ);
 	}
+	
+	//Common LUA functions
+	public Object[] enable(Object[] arguments) {
+		if (arguments.length == 1)
+			isEnabled = Commons.toBool(arguments[0]);
+		return new Object[]{shouldChunkLoad()};
+	}
+	
+	public Object[] bounds(Object[] arguments) {
+		if (arguments.length == 4) {
+			setBounds(Commons.toInt(arguments[0]), Commons.toInt(arguments[1]), Commons.toInt(arguments[2]), Commons.toInt(arguments[3]));
+			changedDistance();
+		}
+		return new Object[]{negDX, posDX, negDZ, posDZ};
+	}
+	
+	public Object[] radius(Object[] arguments) {
+		if (arguments.length == 1) {
+			int dist = Commons.toInt(arguments[0]);
+			setBounds(dist,dist,dist,dist);
+			changedDistance();
+			return new Object[]{true};
+		}
+		return new Object[]{false};
+	}
+	
+	public Object[] upgrades(Object[] arguments) {
+		return new Object[] { getUpgradesAsString() };
+	}
+	
+	public Object[] getEnergyRequired(Object[] arguments) {
+		return new Object[] { energy_getEnergyRequired() };
+	}
 
 	// OpenComputer callback methods
-	// FIXME: implement OpenComputers...
-
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] radius(Context context, Arguments arguments) {
+		return radius(argumentsOCtoCC(arguments));
+	}
+	
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] bounds(Context context, Arguments arguments) {
+		return bounds(argumentsOCtoCC(arguments));
+	}
+	
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] enable(Context context, Arguments arguments) {
+		return enable(argumentsOCtoCC(arguments));
+	}
+	
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] upgrades(Context context, Arguments arguments) {
+		return upgrades(argumentsOCtoCC(arguments));
+	}
+	
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getEnergyRequired(Context context, Arguments arguments) {
+		return getEnergyRequired(argumentsOCtoCC(arguments));
+	}	
+	
+	//CC method
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		switch (methodName) {
 			case "radius":
-				if (arguments.length == 1) {
-					int dist = Commons.toInt(arguments[0]);
-					negDX = dist;
-					negDZ = dist;
-					posDX = dist;
-					posDZ = dist;
-					changedDistance();
-					return new Object[]{true};
-				}
-				return new Object[]{false};
+				return radius(arguments);
 			case "bounds":
-				if (arguments.length == 4) {
-					negDX = Commons.toInt(arguments[0]);
-					posDX = Commons.toInt(arguments[1]);
-					negDZ = Commons.toInt(arguments[2]);
-					posDZ = Commons.toInt(arguments[3]);
-					changedDistance();
-				}
-				return new Object[]{negDX, posDX, negDZ, posDZ};
-			case "active":
-				if (arguments.length == 1)
-					shouldLoad = Commons.toBool(arguments[0]);
-				return new Object[]{shouldChunkLoad()};
+				return bounds(arguments);
+			case "enable":
+				return enable(arguments);
 			case "upgrades":
-				return new Object[] { getUpgradesAsString() };
+				return upgrades(arguments);
+			case "getEnergyRequired":
+				return getEnergyRequired(arguments);
 		}
 		
 		return super.callMethod(computer, context, method, arguments);
 	}
+	
 }

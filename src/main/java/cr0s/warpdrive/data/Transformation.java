@@ -14,9 +14,21 @@ public class Transformation implements ITransformation {
 	private final VectorI move;
 	private final byte rotationSteps;
 	private final World targetWorld;
+	private final int minX;
+	private final int minY;
+	private final int minZ;
+	private final int maxX;
+	private final int maxY;
+	private final int maxZ;
 	
 	public Transformation(JumpShip ship, World targetWorld, int moveX, int moveY, int moveZ, byte rotationSteps) {
 		sourceCore = new VectorI(ship.coreX, ship.coreY, ship.coreZ);
+		minX = ship.minX;
+		minY = ship.minY;
+		minZ = ship.minZ;
+		maxX = ship.maxX;
+		maxY = ship.maxY;
+		maxZ = ship.maxZ;
 		this.targetWorld = targetWorld;
 		move = new VectorI(moveX, moveY, moveZ);
 		targetCore = sourceCore.add(move);
@@ -36,6 +48,20 @@ public class Transformation implements ITransformation {
 	@Override
 	public float getRotationYaw() {
 		return 90.0F * rotationSteps;
+	}
+	
+	@Override
+	public boolean isInside(final double x, final double y, final double z) {
+		return minX <= x && x <= maxX + 1.0D
+		    && minY <= y && y <= maxY + 1.0D
+		    && minZ <= z && z <= maxZ + 1.0D;
+	}
+	
+	@Override
+	public boolean isInside(final int x, final int y, final int z) {
+		return minX <= x && x <= maxX
+		    && minY <= y && y <= maxY
+		    && minZ <= z && z <= maxZ;
 	}
 	
 	@Override

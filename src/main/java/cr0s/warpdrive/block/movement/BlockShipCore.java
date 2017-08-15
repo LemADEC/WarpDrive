@@ -3,6 +3,7 @@ package cr0s.warpdrive.block.movement;
 import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.block.BlockAbstractContainer;
 import cr0s.warpdrive.data.EnumComponentType;
+import cr0s.warpdrive.data.EnumShipCoreState;
 import cr0s.warpdrive.item.ItemComponent;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Random;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -20,17 +22,23 @@ import net.minecraft.world.World;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraftforge.common.util.ForgeDirection;
 
 public class BlockShipCore extends BlockAbstractContainer {
 	
 	@SideOnly(Side.CLIENT)
 	private IIcon[] iconBuffer;
 	
-	private static final int ICON_BOTTOM = 1;
-	private static final int ICON_SIDE_INACTIVE = 0;
-	private static final int ICON_TOP = 2;
-	private static final int ICON_SIDE_ACTIVATED = 3;
-	private static final int ICON_SIDE_HEATED = 4;
+	private static final int ICON_TOP_BOTTOM        = 0;
+	private static final int ICON_LEFT_OFFLINE      = 1;
+	private static final int ICON_LEFT_ONLINE       = 2;
+	private static final int ICON_LEFT_ACTIVE       = 3;
+	private static final int ICON_LEFT_COOLING      = 4;
+	private static final int ICON_RIGHT_OFFLINE     = 5;
+	private static final int ICON_RIGHT_ONLINE      = 6;
+	private static final int ICON_RIGHT_ACTIVE      = 7;
+	private static final int ICON_RIGHT_COOLING     = 8;
+	private static final int ICON_CONTROL           = 9;
 	
 	public BlockShipCore() {
 		super(Material.iron);
@@ -40,51 +48,102 @@ public class BlockShipCore extends BlockAbstractContainer {
 	@SideOnly(Side.CLIENT)
 	@Override
 	public void registerBlockIcons(IIconRegister iconRegister) {
-		iconBuffer = new IIcon[5];
-		iconBuffer[ICON_SIDE_INACTIVE ] = iconRegister.registerIcon("warpdrive:movement/shipCoreSideInactive");
-		iconBuffer[ICON_BOTTOM        ] = iconRegister.registerIcon("warpdrive:movement/shipCoreBottom");
-		iconBuffer[ICON_TOP           ] = iconRegister.registerIcon("warpdrive:movement/shipCoreTop");
-		iconBuffer[ICON_SIDE_ACTIVATED] = iconRegister.registerIcon("warpdrive:movement/shipCoreSideActive");
-		iconBuffer[ICON_SIDE_HEATED   ] = iconRegister.registerIcon("warpdrive:movement/shipCoreSideHeated");
+		iconBuffer = new IIcon[18];
+		iconBuffer[ICON_TOP_BOTTOM    ] = iconRegister.registerIcon("warpdrive:movement/ship_core-top-bottom");
+		iconBuffer[ICON_LEFT_OFFLINE  ] = iconRegister.registerIcon("warpdrive:movement/ship_core-left_offline");
+		iconBuffer[ICON_LEFT_ONLINE   ] = iconRegister.registerIcon("warpdrive:movement/ship_core-left_online");
+		iconBuffer[ICON_LEFT_ACTIVE   ] = iconRegister.registerIcon("warpdrive:movement/ship_core-left_active");
+		iconBuffer[ICON_LEFT_COOLING  ] = iconRegister.registerIcon("warpdrive:movement/ship_core-left_cooling");
+		iconBuffer[ICON_RIGHT_OFFLINE ] = iconRegister.registerIcon("warpdrive:movement/ship_core-right_offline");
+		iconBuffer[ICON_RIGHT_ONLINE  ] = iconRegister.registerIcon("warpdrive:movement/ship_core-right_online");
+		iconBuffer[ICON_RIGHT_ACTIVE  ] = iconRegister.registerIcon("warpdrive:movement/ship_core-right_active");
+		iconBuffer[ICON_RIGHT_COOLING ] = iconRegister.registerIcon("warpdrive:movement/ship_core-right_cooling");
+		iconBuffer[ICON_CONTROL    ] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_inactive");
+		iconBuffer[ICON_CONTROL + 1] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active0");
+		iconBuffer[ICON_CONTROL + 2] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active1");
+		iconBuffer[ICON_CONTROL + 3] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active2");
+		iconBuffer[ICON_CONTROL + 4] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active3");
+		iconBuffer[ICON_CONTROL + 5] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active4");
+		iconBuffer[ICON_CONTROL + 6] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active5");
+		iconBuffer[ICON_CONTROL + 7] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active6");
+		iconBuffer[ICON_CONTROL + 8] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active7");
 	}
 	
 	@SideOnly(Side.CLIENT)
 	@Override
-	public IIcon getIcon(IBlockAccess blockAccess, int x, int y, int z, int side) {
-		final int metadata  = blockAccess.getBlockMetadata(x, y, z);
-		if (side == 0) {
-			return iconBuffer[ICON_BOTTOM];
-		} else if (side == 1) {
-			return iconBuffer[ICON_TOP];
+	public IIcon getIcon(final IBlockAccess blockAccess, final int x, final int y, final int z, final int side) {
+		if (side == 0 || side == 1) {
+			return iconBuffer[ICON_TOP_BOTTOM];
 		}
 		
-		if (metadata == 0) { // Inactive state
-			return iconBuffer[ICON_SIDE_INACTIVE];
-		} else if (metadata == 1) { // Activated state
-			return iconBuffer[ICON_SIDE_ACTIVATED];
-		} else if (metadata == 2) { // Heated state
-			return iconBuffer[ICON_SIDE_HEATED];
+		// get orientation
+		final TileEntity tileEntity = blockAccess.getTileEntity(x, y, z);
+		final ForgeDirection facingTile;
+		if (tileEntity instanceof TileEntityShipCore) {
+			facingTile = ((TileEntityShipCore) tileEntity).facing;
+		} else {
+			facingTile = ForgeDirection.DOWN;
 		}
+		if (facingTile == ForgeDirection.DOWN || facingTile == ForgeDirection.UP) {
+			return null;
+		}
+		final ForgeDirection facingSide = ForgeDirection.getOrientation(side);
 		
-		return null;
+		// return side texture
+		final int metadata = blockAccess.getBlockMetadata(x, y, z);
+		final EnumShipCoreState shipCoreState = EnumShipCoreState.get(metadata);
+		if (facingTile == facingSide || facingTile == facingSide.getOpposite()) {
+			return iconBuffer[ICON_CONTROL + metadata];
+		} else if (facingTile == facingSide.getRotation(ForgeDirection.UP)) {
+			switch (shipCoreState) {
+			default:
+			case DISCONNECTED: return iconBuffer[ICON_LEFT_OFFLINE];
+			case IDLE        : return iconBuffer[ICON_LEFT_ONLINE];
+			case SCANNING    : return iconBuffer[ICON_LEFT_ACTIVE];
+			case ONLINE      : return iconBuffer[ICON_LEFT_ACTIVE];
+			case WARMING_UP  : return iconBuffer[ICON_LEFT_ACTIVE];
+			case COOLING_DOWN: return iconBuffer[ICON_LEFT_COOLING];
+			}
+		} else {
+			switch (shipCoreState) {
+			default:
+			case DISCONNECTED: return iconBuffer[ICON_RIGHT_OFFLINE];
+			case IDLE        : return iconBuffer[ICON_RIGHT_ONLINE];
+			case SCANNING    : return iconBuffer[ICON_RIGHT_ACTIVE];
+			case ONLINE      : return iconBuffer[ICON_RIGHT_ACTIVE];
+			case WARMING_UP  : return iconBuffer[ICON_RIGHT_ACTIVE];
+			case COOLING_DOWN: return iconBuffer[ICON_RIGHT_COOLING];
+			}
+		}
 	}
 	
 	@SideOnly(Side.CLIENT)
 	@Override
-	public IIcon getIcon(int side, int metadata) {
-		if (side == 0) {
-			return iconBuffer[ICON_BOTTOM];
-		} else if (side == 1) {
-			return iconBuffer[ICON_TOP];
+	public IIcon getIcon(final int side, final int metadata) {
+		if (side == 0 || side == 1) {
+			return iconBuffer[ICON_TOP_BOTTOM];
 		}
 		
-		// return iconBuffer[ICON_SIDE_ACTIVATED];
-		return iconBuffer[ICON_SIDE_HEATED];
+		if (side == 3) {
+			return iconBuffer[ICON_CONTROL + 3];
+		}
+		return iconBuffer[ICON_RIGHT_ONLINE];
 	}
 	
 	@Override
 	public TileEntity createNewTileEntity(World var1, int i) {
 		return new TileEntityShipCore();
+	}
+	
+	@Override
+	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase entityLiving, ItemStack itemStack) {
+		super.onBlockPlacedBy(world, x, y, z, entityLiving, itemStack);
+		
+		final TileEntity tileEntity = world.getTileEntity(x, y, z);
+		if (tileEntity instanceof TileEntityShipCore) {
+			((TileEntityShipCore) tileEntity).facing = Commons.getHorizontalDirectionFromEntity(entityLiving).getOpposite();
+			world.markBlockForUpdate(x, y, z);
+		}
 	}
 	
 	@Override
@@ -134,15 +193,25 @@ public class BlockShipCore extends BlockAbstractContainer {
 	
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer entityPlayer, int side, float hitX, float hitY, float hitZ) {
-		if (world.isRemote) {
-			return false;
-		}
-		
 		if (entityPlayer.getHeldItem() == null) {
 			final TileEntity tileEntity = world.getTileEntity(x, y, z);
 			if (tileEntity instanceof TileEntityShipCore) {
-				Commons.addChatMessage(entityPlayer, ((TileEntityShipCore) tileEntity).getStatus());
-				return true;
+				final TileEntityShipCore tileEntityShipCore = (TileEntityShipCore) tileEntity;
+				if ( world.isRemote
+				  && entityPlayer.isSneaking() ) {
+					tileEntityShipCore.showBoundingBox = !tileEntityShipCore.showBoundingBox;
+					if (tileEntityShipCore.showBoundingBox) {
+						world.playSound(x + 0.5D, y + 0.5D, z + 0.5D, "warpdrive:lowlaser", 4.0F, 2.0F, false);
+					} else {
+						world.playSound(x + 0.5D, y + 0.5D, z + 0.5D, "warpdrive:lowlaser", 4.0F, 1.4F, false);
+					}
+					Commons.addChatMessage(entityPlayer, tileEntityShipCore.getBoundingBoxStatus());
+					return true;
+				} else if ( !world.isRemote
+				         && !entityPlayer.isSneaking() ) {
+					Commons.addChatMessage(entityPlayer, tileEntityShipCore.getStatus());
+					return true;
+				}
 			}
 		}
 		

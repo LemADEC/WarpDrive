@@ -4,6 +4,7 @@ import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.block.TileEntityAbstractEnergy;
 import cr0s.warpdrive.config.WarpDriveConfig;
+import cr0s.warpdrive.data.CelestialObjectManager;
 import cr0s.warpdrive.data.StateAir;
 import cr0s.warpdrive.event.ChunkHandler;
 import dan200.computercraft.api.lua.ILuaContext;
@@ -63,7 +64,7 @@ public class TileEntityAirGeneratorTiered extends TileEntityAbstractEnergy {
 		
 		// Air generator works only in space & hyperspace
 		final int metadata = getBlockMetadata();
-		if (WarpDrive.starMap.hasAtmosphere(worldObj, xCoord, zCoord)) {
+		if (CelestialObjectManager.hasAtmosphere(worldObj, xCoord, zCoord)) {
 			if ((metadata & 8) != 0) {
 				worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, metadata & 7, 2); // set disabled texture
 			}
@@ -81,7 +82,8 @@ public class TileEntityAirGeneratorTiered extends TileEntityAbstractEnergy {
 					worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, metadata & 7, 2); // set disabled texture
 				}
 			}
-			ForgeDirection direction = ForgeDirection.getOrientation(metadata & 7);
+			
+			final ForgeDirection direction = ForgeDirection.getOrientation(metadata & 7);
 			releaseAir(direction);
 			
 			cooldownTicks = 0;
@@ -101,26 +103,26 @@ public class TileEntityAirGeneratorTiered extends TileEntityAbstractEnergy {
 			if (isEnabled && energy_consume(energy_cost, true)) {// enough energy and enabled
 				if (stateAir.setAirSource(worldObj, direction, range)) {
 					// (needs to renew air or was not maxed out)
-					energy_consume(WarpDriveConfig.BREATHING_ENERGY_PER_NEW_AIR_BLOCK[tier - 1], false);
+					energy_consume(energy_cost, false);
 				} else {
 					// (just maintaining)
-					energy_consume(WarpDriveConfig.BREATHING_ENERGY_PER_EXISTING_AIR_BLOCK[tier - 1], false);
+					energy_consume(energy_cost, false);
 				}
 				
 			} else {// low energy => remove air block
 				if (stateAir.concentration > 4) {
 					stateAir.setConcentration(worldObj, (byte) (stateAir.concentration - 4));
 				} else if (stateAir.concentration > 1) {
-					stateAir.setConcentration(worldObj, (byte) 1);
+					stateAir.removeAirSource(worldObj);
 				}
 			}
 		}
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound tag) {
-		super.readFromNBT(tag);
-		isEnabled = tag.getBoolean("isEnabled");
+	public void readFromNBT(NBTTagCompound tagCompound) {
+		super.readFromNBT(tagCompound);
+		isEnabled = !tagCompound.hasKey("isEnabled") || tagCompound.getBoolean("isEnabled");
 	}
 	
 	@Override
@@ -165,11 +167,11 @@ public class TileEntityAirGeneratorTiered extends TileEntityAbstractEnergy {
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		switch (methodName) {
-			case "enable": 
-				return enable(arguments);		
+		case "enable": 
+			return enable(arguments);		
 		}
 		
 		return super.callMethod(computer, context, method, arguments);

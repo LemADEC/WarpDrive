@@ -1,0 +1,650 @@
+
+death.attack.warpdrive.asphyxia=%1$s is gestorven door verstikking
+death.attack.warpdrive.asphyxia.player=%1$s is gedood door %2$s met verstikking
+death.attack.warpdrive.cold=%1$s is gestorven van de kou
+death.attack.warpdrive.cold.player=%1$s is doodgevroren door %2$s 
+death.attack.warpdrive.irradiation=%1$s is gestorven door bestraling
+death.attack.warpdrive.irradiation.player=%1$s kreeg een dodelijke bestraling van %2$s 
+death.attack.warpdrive.laser=%1$s stierf door het oversteken van de straal
+death.attack.warpdrive.laser.player=%1$s werd gelaseriseerd door %2$s
+death.attack.warpdrive.shock=%1$s was geëlektrocuteerd
+death.attack.warpdrive.shock.player=%1$s was geëlektrocuteerd door %2$s
+death.attack.warpdrive.teleportation=%1$s heeft een hermaterialisatie niet overleefd
+death.attack.warpdrive.teleportation.player=%1$s was gedoos door teleportatie van %2$s
+death.attack.warpdrive.warm=%1$s is doodgegaan door oververhitting
+death.attack.warpdrive.warm.player=%1$s is gekookt door %2$s
+
+itemGroup.warpdrive=WarpDrive
+
+item.warpdrive.crafting.Malformed.name=Verkeerd item
+item.warpdrive.crafting.EmeraldCrystal.name=Smaragd afgestemd kristal
+item.warpdrive.crafting.EnderCrystal.name=Einde afgestemd kristal
+item.warpdrive.crafting.DiamondCrystal.name=Diamant afgestemd kristal
+item.warpdrive.crafting.DiffractionGrating.name=Diffractierooster
+item.warpdrive.crafting.ReactorCore.name=Reactor Kern
+item.warpdrive.crafting.ComputerInterface.name=Computer Interface
+item.warpdrive.crafting.PowerInterface.name=Stroom Interface
+item.warpdrive.crafting.CapacitiveCrystal.name=Capacitief Kristal
+item.warpdrive.crafting.AirCanisterEmpty.name=Lege zuurstoffles
+item.warpdrive.crafting.AirCanisterEmpty.tooltip=§bRechts-klik op de zuurstofgenerator§7 om me te hervullen
+item.warpdrive.crafting.Lens.name=Lens
+item.warpdrive.crafting.Zoom.name=Zoom
+item.warpdrive.crafting.GlassTank.name=Tank van Glas
+item.warpdrive.crafting.FlatScreen.name=Flat Screen
+item.warpdrive.crafting.MemoryCrystal.name=Geheugen Kristal
+item.warpdrive.crafting.Motor.name=Motor
+item.warpdrive.crafting.BoneCharcoal.name=Botkool
+item.warpdrive.crafting.ActivatedCarbon.name=Geactiveerde Koolstof
+item.warpdrive.crafting.LaserMediumEmpty.name=Lege Deeltjesversneller
+item.warpdrive.crafting.CoilCrystal.name=Spoelkristal
+item.warpdrive.crafting.ElectromagneticProjector.name=Electromagnetische Projector
+item.warpdrive.crafting.Superconductor.name=Superconductor
+
+item.warpdrive.armor.AirCanisterFull.name=zuurstoffles
+item.warpdrive.armor.helmet.name=Warp Helm
+item.warpdrive.armor.chestplate.name=Warp Borstplaat
+item.warpdrive.armor.leggings.name=Warp Broek
+item.warpdrive.armor.boots.name=Warp Schoenen
+
+item.warpdrive.atomic.electromagnetic_cell.name=Electromagnetische Cell
+item.warpdrive.atomic.electromagnetic_cell.tooltip.empty=Gebruik een deeltjesversneller om me te vullen!
+item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=Is gevuld met %1$s Å³ van %2$s
+
+item.warpdrive.energy.IC2reactorLaserFocus.name=IC2 Reactor Laser Lens
+
+item.warpdrive.forcefield.shape.none.name=Geen Vorm
+item.warpdrive.forcefield.shape.none.tooltip=§4Verkeerde item
+item.warpdrive.forcefield.shape.sphere.name=Ronde vorm
+item.warpdrive.forcefield.shape.sphere.tooltip=
+item.warpdrive.forcefield.shape.cylinder_h.name=Horizontale Cylinder-vorm
+item.warpdrive.forcefield.shape.cylinder_h.tooltip=
+item.warpdrive.forcefield.shape.cylinder_v.name=Verticale Cylinder-vorm
+item.warpdrive.forcefield.shape.cylinder_v.tooltip=
+item.warpdrive.forcefield.shape.cube.name=Kubus-vorm
+item.warpdrive.forcefield.shape.cube.tooltip=
+item.warpdrive.forcefield.shape.plane.name=Plaat-vorm
+item.warpdrive.forcefield.shape.plane.tooltip=
+item.warpdrive.forcefield.shape.tube.name=Tube-vorm
+item.warpdrive.forcefield.shape.tube.tooltip=
+item.warpdrive.forcefield.shape.tunnel.name=Tunnel-vorm
+item.warpdrive.forcefield.shape.tunnel.tooltip=
+item.warpdrive.forcefield.shape.tooltip.usage=§bRechts-klik op een projector§7 om het te upgraden\n§bBuk+rechts-click§7 om het te downgraden
+
+item.warpdrive.forcefield.upgrade.none.name=Geen upgrade
+item.warpdrive.forcefield.upgrade.none.tooltip=§4Verkeerde item
+item.warpdrive.forcefield.upgrade.attraction.name=Aantrekkings-upgrade
+item.warpdrive.forcefield.upgrade.attraction.tooltip=Trek door blokbreker gevallen items voor opslag. Voeg meer upgrades toe om items, passieve wezens, monsters en spelers te beïnvloeden. Voeg een inversie upgrade toe voor een gebiedstransformerings effect.
+item.warpdrive.forcefield.upgrade.breaking.name=Blokbreker-upgrade
+item.warpdrive.forcefield.upgrade.breaking.tooltip=Breek blokken in plaats van een krachtveld te projecteren. Voeg blokbreker upgrades toe om breekniveau te verhogen.
+item.warpdrive.forcefield.upgrade.camouflage.name=Camouflage-upgrade
+item.warpdrive.forcefield.upgrade.camouflage.tooltip=Camoufleer het krachtveld naar een bepaald blok. Plaats een blok op de relay die de camouflage upgrade heeft om het blok te kiezen. Voeg meer camouflage upgrades toe om de snelheid van het camoufleren te verhogen.
+item.warpdrive.forcefield.upgrade.cooling.name=Koelings-upgrade
+item.warpdrive.forcefield.upgrade.cooling.tooltip=Bevries blokken en wezens. Voeg meer Koelings upgrades toe om het effect te versterken. Voeg een inversie upgrade toe om een gebied te beïnvloeden.
+item.warpdrive.forcefield.upgrade.fusion.name=Fusie-upgrade
+item.warpdrive.forcefield.upgrade.fusion.tooltip=Versmelt overlappende krachtvelden met de zelfde frequentie
+item.warpdrive.forcefield.upgrade.heating.name=Verhittings-upgrade
+item.warpdrive.forcefield.upgrade.heating.tooltip=Verhit blokken en wezens. Voeg meer Verhittings upgrades toe om het effect te versterken. Voeg een inversie upgrade toe om een gebied te beïnvloeden.
+item.warpdrive.forcefield.upgrade.inversion.name=Inversie-upgrade
+item.warpdrive.forcefield.upgrade.inversion.tooltip=§4Functie nog niet klaar\nVerander van oppervlak tot gebiedsvolume effect. Gebruik dit voor wezens-selectie en gebiedstransformering.
+item.warpdrive.forcefield.upgrade.item_port.name=Item poort-upgrade
+item.warpdrive.forcefield.upgrade.item_port.tooltip=Interface voor aangesloten opslag. Voeg een aantrekkings-upgrade om gevallen items van de blokbreker-upgrade op te pakken. Voeg een afstotingsupgrade toe om blokken te plaatsen met een stabilizatie-upgrade.
+item.warpdrive.forcefield.upgrade.pumping.name=Pomp-upgrade
+item.warpdrive.forcefield.upgrade.pumping.tooltip=§4Functie nog niet klaar\nPomp vloeibaarheden dichtbij het krachtveld. Voeg meer pomp upgrades toe om vloeistoffen met hogere viscositeit zoals lava te trekken.
+item.warpdrive.forcefield.upgrade.range.name=Bereiks-upgrade
+item.warpdrive.forcefield.upgrade.range.tooltip=Vergroot de grote van het projectieveld
+item.warpdrive.forcefield.upgrade.repulsion.name=Afstotings-upgrade
+item.warpdrive.forcefield.upgrade.repulsion.tooltip=Duw opgeslagen items naar de stabilizatie-upgrade. Voeg meer afstotingsupgrades toe om passieve wezens, monsters en spelers te beïnvloeden. Voeg een inversie-upgrade toe om een gebied te beïnvloeden.
+item.warpdrive.forcefield.upgrade.rotation.name=Rotatie-upgrade
+item.warpdrive.forcefield.upgrade.rotation.tooltip=Sta toe dat krachtvelden roteren
+item.warpdrive.forcefield.upgrade.shock.name=Schok-upgrade
+item.warpdrive.forcefield.upgrade.shock.tooltip=Elektrocuteer blokken en wezens. Voeg meer schok-upgrades toe om het effect te versterken. Voeg een inversie-upgrade toe om een gebied te beïnvloeden.
+item.warpdrive.forcefield.upgrade.silencer.name=Demp-upgrade
+item.warpdrive.forcefield.upgrade.silencer.tooltip=Demp het aangesloten blok
+item.warpdrive.forcefield.upgrade.speed.name=Snelheids-upgrade
+item.warpdrive.forcefield.upgrade.speed.tooltip=Verhoog snelheid waarmee het krachtveld wordt geprojecteerd
+item.warpdrive.forcefield.upgrade.stabilization.name=Stabilizatie-upgrade
+item.warpdrive.forcefield.upgrade.stabilization.tooltip=Plaats blokken in plaats van een krachtveld te projecteren
+item.warpdrive.forcefield.upgrade.thickness.name=Dikheids-upgrade
+item.warpdrive.forcefield.upgrade.thickness.tooltip=Verhoog de dikte van het krachtveld. Voeg meer dikheids-upgrades om het effect nog meer te verhogen, tot het dubbele.
+item.warpdrive.forcefield.upgrade.translation.name=Veranderings-upgrade
+item.warpdrive.forcefield.upgrade.translation.tooltip=Sta toe dat het krachtveld wordt verandert
+item.warpdrive.forcefield.upgrade.tooltip.usage.projector=§brechts-klik op een projector§7 om het te upgraden
+item.warpdrive.forcefield.upgrade.tooltip.usage.relay=§brechts-klik op een projector-relais§7 om het te upgraden
+item.warpdrive.forcefield.upgrade.tooltip.usage.dismount=§bBuk+rechtsklik§7 om het te downgraden
+
+item.warpdrive.upgrade.Power.name=Stroom-upgrade
+item.warpdrive.upgrade.Speed.name=Snelheids-upgrade
+item.warpdrive.upgrade.Range.name=Bereiks-upgrade
+item.warpdrive.upgrade.Energy.name=Energiecapaciteits-upgrade
+
+
+item.warpdrive.tool.crystalToken.name=Kristallen kenteken
+item.warpdrive.tool.crystalToken.tooltip=Kristallen inkapseling van het schip'%1$s'\n§bGa naar het rode bouwersveldd§7 om het schip te claimen
+item.warpdrive.tool.crystalToken0.name=Kristallen kenteken #0
+item.warpdrive.tool.crystalToken1.name=Kristallen kenteken #1
+item.warpdrive.tool.crystalToken2.name=Kristallen kenteken #2
+item.warpdrive.tool.crystalToken3.name=Kristallen kenteken #3
+item.warpdrive.tool.crystalToken4.name=Kristallen kenteken #4
+item.warpdrive.tool.crystalToken5.name=Kristallen kenteken #5
+
+
+item.warpdrive.tool.tuning_driver.video_channel.name=Videokanaal afstemmer
+item.warpdrive.tool.tuning_driver.beam_frequency.name=Straal-frequentie afstemmer
+item.warpdrive.tool.tuning_driver.control_channel.name=Controle-kanaal afstemmer
+
+item.warpdrive.tool.tuning_driver.tooltip.usage=§bRechts-klik op een blok§7 om zijn kristallen af te stemmen\n§buk§7 om zijn waarden te verkrijgen\n§bRechts-klik in de lucht§7 om de modus te veranderen
+
+
+item.warpdrive.tool.tuning_fork.name=Afstemmingsvork
+item.warpdrive.tool.tuning_fork.white.name=Witte Afstemmingsvork
+item.warpdrive.tool.tuning_fork.orange.name=Oranje Afstemmingsvork
+item.warpdrive.tool.tuning_fork.magenta.name=Magenta Afstemmingsvork
+item.warpdrive.tool.tuning_fork.lightBlauw.name=Lichtblauwe Afstemmingsvork
+item.warpdrive.tool.tuning_fork.yellow.name=Gele Afstemmingsvork
+item.warpdrive.tool.tuning_fork.lime.name=Limoenkleurige Afstemmingsvork
+item.warpdrive.tool.tuning_fork.pink.name=Roze Afstemmingsvork
+item.warpdrive.tool.tuning_fork.gray.name=Grijze Afstemmingsvork
+item.warpdrive.tool.tuning_fork.silver.name=Zilveren Afstemmingsvork
+item.warpdrive.tool.tuning_fork.cyan.name=Turkooise Afstemmingsvork
+item.warpdrive.tool.tuning_fork.purple.name=Paarse Afstemmingsvork
+item.warpdrive.tool.tuning_fork.blue.name=Blauwe Afstemmingsvork
+item.warpdrive.tool.tuning_fork.brown.name=Bruine Afstemmingsvork
+item.warpdrive.tool.tuning_fork.green.name=Groene Afstemmingsvork
+item.warpdrive.tool.tuning_fork.red.name=Rode Afstemmingsvork
+item.warpdrive.tool.tuning_fork.black.name=Zwarte Afstemmingsvork
+
+item.warpdrive.tool.tuning_fork.tooltip.usage=§bRechts-klik op een blok§7 om zijn kristal af te stemmen\n§bbuk§7 om zijn andere kristallen af te stemmen
+
+
+tile.warpdrive.decoration.decorative.energized.name=Geactiveerd Blok
+tile.warpdrive.decoration.decorative.network.name=Netwerk Blok
+tile.warpdrive.decoration.decorative.plain.name=Oppervlaksblok
+tile.warpdrive.decoration.gas.name=Gasblok
+
+tile.warpdrive.passive.IridiumBlock.name=Iridium Blok
+tile.warpdrive.passive.HighlyAdvancedMachine.name=Heel geavanceerd machineblok
+tile.warpdrive.passive.TransportBeacon.name=Transport-baken
+
+tile.warpdrive.machines.ChunkLoader.name=Chunk-lader
+tile.warpdrive.machines.Laser.name=Laser
+tile.warpdrive.machines.LaserMedium.name=Deeltjesversneller
+
+tile.warpdrive.atomic.accelerator_controller.name=Versnellers-regelaar
+tile.warpdrive.atomic.accelerator_controller.tooltip=Regelt één of meer deeltjesversnellers.\nMoet naast een elektromagneet worden geplaats.
+tile.warpdrive.atomic.accelerator_control_point.name=Versnellings-regelaars punt
+tile.warpdrive.atomic.accelerator_control_point.tooltip=Reguleer versnellingsknooppunten zoals de deeltjesbotser, input en output.\nSMoet exact op een afstand van 1 blok van een void shell staan.\nSlaat de resultaten op naar een direct aangesloten opslag.
+tile.warpdrive.atomic.chiller1.name=Normale Koeler
+tile.warpdrive.atomic.chiller1.tooltip=Geeft geleidelijke afkoeling van elektromagneten van een aangesloten deeltjesversneller.\nMoet naast een elektromagneet staan.
+tile.warpdrive.atomic.chiller2.name=Geavanceerde Koeler
+tile.warpdrive.atomic.chiller2.tooltip=Geeft geleidelijke afkoeling van elektromagneten van een aangesloten deeltjesversneller.\nMoet naast een elektromagneet staan. Beter dan Normale Koeler
+tile.warpdrive.atomic.chiller3.name=Superieure Koeler
+tile.warpdrive.atomic.chiller3.tooltip=Geeft geleidelijke afkoeling van elektromagneten van een aangesloten deeltjesversneller.\nMoet naast een elektromagneet staan. Beter dan Geavanceerde Koeler
+tile.warpdrive.atomic.electromagnet1.plain.name=Normale Electromagneet
+tile.warpdrive.atomic.electromagnet1.plain.tooltip=Versnel, focus en orienteer deeltjes in de aangesloten Void Shell.
+tile.warpdrive.atomic.electromagnet1.glass.name=Normale Glazen Elektromagneet
+tile.warpdrive.atomic.electromagnet1.glass.tooltip=Hetzelfde als een normale elektromagneet, je kan er alleen door heen kijken.
+tile.warpdrive.atomic.electromagnet2.plain.name=Geavanceerde Elektromagneet
+tile.warpdrive.atomic.electromagnet2.plain.tooltip=Versnel, focus en orienteer deeltjes in de aangesloten Void Shell. Beter dan Normale Elektromagneet
+tile.warpdrive.atomic.electromagnet2.glass.name=Geavanceerde Glazen Elektromageneet
+tile.warpdrive.atomic.electromagnet2.glass.tooltip=Hetzelfde als een normale elektromagneet, je kan er alleen door heen kijken. Beter dan de Normale Glazen Elektromagneet
+tile.warpdrive.atomic.electromagnet3.plain.name=Superieure Elektromagneet
+tile.warpdrive.atomic.electromagnet3.plain.tooltip=Versnel, focus en orienteer deeltjes in de aangesloten Void Shell. Beter dan de Geavanceerde Elektromagneet
+tile.warpdrive.atomic.electromagnet3.glass.name=Superior Glass Electromagnet
+tile.warpdrive.atomic.electromagnet3.glass.tooltip=Hetzelfde als een normale elektromagneet, je kan er alleen door heen kijken. Beter dan Geavanceerde Glazen Elektromagneet.
+tile.warpdrive.atomic.particles_collider.name=Deeltjes-botser
+tile.warpdrive.atomic.particles_collider.tooltip=Wijkt deeltjes af om elkaar of een bepaald doel te raken.\nHeeft 12 blokken en een Versneller-regelaars punt nodig om resultaten te collecteren.
+tile.warpdrive.atomic.particles_injector.name=Deeltjes-injecteur
+tile.warpdrive.atomic.particles_injector.tooltip=Injecteer items of deeltjes van een aangesloten opslag in een Normale Verneller.
+tile.warpdrive.atomic.void_shell_plain.name=Normale Void Shell
+tile.warpdrive.atomic.void_shell_plain.tooltip=Geeft 2 lege kanalen voor deeltjes om een deeltjesversneller-setup te reizen.\nVerbind alleen horizontaal met andere Void Shells.
+tile.warpdrive.atomic.void_shell_glass.name=Glazen Void Shell
+tile.warpdrive.atomic.void_shell_glass.tooltip=Hetzelfde als Normale Void Shell, alleen je kan er deeltjes in zien bewegen.
+
+tile.warpdrive.breathing.air.name=Zuurstofblok
+tile.warpdrive.breathing.air_generator.name=zuurstofgenerator
+tile.warpdrive.breathing.air_generator1.name=Normale zuurstofgenerator
+tile.warpdrive.breathing.air_generator2.name=Geavanceerde zuurstofgenerator
+tile.warpdrive.breathing.air_generator3.name=Superieure zuurstof
+tile.warpdrive.breathing.air_shield.name=Energie-gebaseerd Luchtschild
+
+tile.warpdrive.building.ShipScanner.name=Schip Scanner
+
+tile.warpdrive.collection.LaserTreeFarm.name=Laser-boomboerderij
+tile.warpdrive.collection.MiningLaser.name=Mijnlaser
+
+tile.warpdrive.detection.Camera.name=Camera
+tile.warpdrive.detection.CloakingCoil.name=Dekmantelveld-spoel
+tile.warpdrive.detection.CloakingCore.name=Dekmantelveld-kern
+tile.warpdrive.detection.Monitor.name=Monitor
+tile.warpdrive.detection.Radar.name=Radar
+tile.warpdrive.detection.WarpIsolation.name=Warp-veld isolatieblok
+
+tile.warpdrive.detection.Siren.tooltip=Aangezet door redstone
+tile.warpdrive.detection.Siren0.name=Industrieële Sirene
+tile.warpdrive.detection.Siren0.tooltip=Je kan deze Sirene vanaf 32 m verderop horen
+tile.warpdrive.detection.Siren4.name=Normale Luchtsirene
+tile.warpdrive.detection.Siren4.tooltip=Je kan deze Luchtsirene vanaf 32 meter verderop horen.
+tile.warpdrive.detection.Siren5.name=Geavanceerde Luchtsirene
+tile.warpdrive.detection.Siren5.tooltip=Je kan deze Luchtsirene vanaf 64 meter verderop nog horen.
+tile.warpdrive.detection.Siren6.name=Superieure Luchtsirene
+tile.warpdrive.detection.Siren6.tooltip=Je kan deze Luchtsirene vanaf 128 m verderop horen.
+
+tile.warpdrive.energy.EnanReactorCore.name=Enantiomorfe Reactor Kern
+tile.warpdrive.energy.EnanReactorLaser.name=Enantiomorfe Stabilizatielaser
+tile.warpdrive.energy.EnergyBank.0.name=Nullpunt Module
+tile.warpdrive.energy.EnergyBank.0.tooltip=Creative Subruimte Condensator
+tile.warpdrive.energy.EnergyBank.1.name=Normale Subruimte Condensator
+tile.warpdrive.energy.EnergyBank.2.name=Geavanceerde Subruimte Condensator
+tile.warpdrive.energy.EnergyBank.3.name=Superieure Subruimte Condensator
+tile.warpdrive.energy.IC2ReactorLaserMonitor.name=IC2 Reactor Laser Monitor
+
+tile.warpdrive.forcefield.block1.name=Normale Krachtvelds-blok
+tile.warpdrive.forcefield.block2.name=Geavanceerde Krachtvelds-blok
+tile.warpdrive.forcefield.block3.name=Superieure Krachtvelds-blok
+tile.warpdrive.forcefield.projector1.name=Normale Kractveld projector
+tile.warpdrive.forcefield.projector1.single.name=Normale Half Krachtveld Projector
+tile.warpdrive.forcefield.projector1.double.name=normale Volledig Krachtveld Projector
+tile.warpdrive.forcefield.projector2.name=Geavanceerde Krachtvelds projector
+tile.warpdrive.forcefield.projector2.single.name=Geavanceerde Half-krachtveld projector
+tile.warpdrive.forcefield.projector2.double.name=Geavanceerde Volledig-krachtveld projector
+tile.warpdrive.forcefield.projector3.name=Superieure krachtvelds projector
+tile.warpdrive.forcefield.projector3.single.name=Superieure Half-krachtveld Projector
+tile.warpdrive.forcefield.projector3.double.name=Superieure Volledig-krachtveld Projector
+
+tile.warpdrive.forcefield.relay1.name=Normale Krachtvelds-relais
+tile.warpdrive.forcefield.relay1.tooltip=Kan tot maar 1 krachtveld-upgrade delen in zijn netwerk
+tile.warpdrive.forcefield.relay2.name=Geavanceerde Krachtvelds-relais
+tile.warpdrive.forcefield.relay2.tooltip=Kan tot maar 1 krachtveld-upgrade delen in zijn netwerk
+tile.warpdrive.forcefield.relay3.name=Superieure Krachtvelds-relais
+tile.warpdrive.forcefield.relay3.tooltip=Kan tot maar 1 krachtveld-upgrade delen in zijn netwerk
+
+tile.warpdrive.movement.Lift.name=Lift
+tile.warpdrive.movement.ShipController.name=Schips-Bestuurder
+tile.warpdrive.movement.ShipController.tooltip=Difineert uw schips-voorkant ten opzigte van kern. Sluit een computer aan om de interface te openen.\nMoet horizontaal naast een Schips-Kern worden geplaatst.
+tile.warpdrive.movement.ShipCore.name=Schip-Kern
+tile.warpdrive.movement.ShipCore.tooltip=Definieert uw schips-middelpunt ten opzichte van ships-bestuurder. Sluit een stroombron aan om de kern op te laden.\nMoet horizontaal naast een Schips-bestuurder worden geplaatst.
+tile.warpdrive.movement.Transporter.name=Transporteur
+
+tile.warpdrive.weapon.LaserCamera.name=Laser met Camera
+tile.warpdrive.weapon.WeaponController.name=Wapens-Bestuurder
+
+
+
+tile.warpdrive.hull1.plain.white.name=Wit Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.orange.name=Oranje Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.magenta.name=Magenta Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.lightBlauw.name=Licht blauw Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.yellow.name=Geel Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.lime.name=Limoen Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.pink.name=Roze Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.gray.name=Grijs Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.silver.name=Zilver Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.cyan.name=Turkoois Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.purple.name=Paars Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.blue.name=Blauw Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.brown.name=Bruin Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.green.name=Groen Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.red.name=Rood Gekleurd Normaal Pantser
+tile.warpdrive.hull1.plain.black.name=Zwart Gekleurd Normaal Pantser
+
+tile.warpdrive.hull1.glass.white.name=Wit Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.orange.name=Oranje Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.magenta.name=Magenta Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.lightBlauw.name=Licht blauw Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.yellow.name=Geel Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.lime.name=Limoen Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.pink.name=Roze Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.gray.name=Grijs Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.silver.name=Zilver Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.cyan.name=Turkoois Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.purple.name=Paars Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.blue.name=Blauw Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.brown.name=Bruin Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.green.name=Groen Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.red.name=Rood Gekleurd Normaal Pantser Glas
+tile.warpdrive.hull1.glass.black.name=Zwart Gekleurd Normaal Pantser Glas
+
+tile.warpdrive.hull1.omnipanel.white.name=Wit Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.orange.name=Oranje Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.magenta.name=Magenta Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.lightBlauw.name=Licht Blauw Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.yellow.name=Geel Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.lime.name=Limoen Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.pink.name=Roze Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.gray.name=Grijs Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.silver.name=Zilver Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.cyan.name=Turkoois Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.purple.name=Paars Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.blue.name=Blauw Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.brown.name=Bruin Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.green.name=Groen Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.red.name=Rood Gekleurd Normaal Pantser Omnipaneel
+tile.warpdrive.hull1.omnipanel.black.name=Zwart Gekleurd Normaal Pantser Omnipaneel
+
+tile.warpdrive.hull1.slab.white.name=Wit Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.orange.name=Oranje Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.magenta.name=Magenta Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.lightBlauw.name=Licht Blauw Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.yellow.name=Geel Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.lime.name=Limoen Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.pink.name=Roze Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.gray.name=Grijs Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.silver.name=Zilver Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.cyan.name=Turkoois Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.purple.name=Purple Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.blue.name=Blauw Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.brown.name=Brown Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.green.name=Groen Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.red.name=Rood Gekleurd Normaal Pantser Plaat
+tile.warpdrive.hull1.slab.black.name=Zwart Gekleurd Normaal Pantser Plaat
+
+tile.warpdrive.hull1.stairs.white.name=Wit Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.orange.name=Oranje Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.magenta.name=Magenta Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.lightBlauw.name=Licht Blauw Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.yellow.name=Geel Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.lime.name=Limoen Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.pink.name=Roze Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.gray.name=Grijs Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.silver.name=Zilver Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.cyan.name=Turkoois Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.purple.name=Purple Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.blue.name=Blauw Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.brown.name=Brown Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.green.name=Groen Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.red.name=Rood Gekleurd Normaal Pantser Trap
+tile.warpdrive.hull1.stairs.black.name=Zwart Gekleurd Normaal Pantser Trap
+
+
+tile.warpdrive.hull2.plain.white.name=Wit Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.orange.name=Oranje Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.magenta.name=Magenta Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.lightBlauw.name=Licht Blauw Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.yellow.name=Geel Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.lime.name=Limoen Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.pink.name=Roze Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.gray.name=Grijs Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.silver.name=Zilver Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.cyan.name=Turkoois Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.purple.name=Purple Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.blue.name=Blauw Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.brown.name=Brown Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.green.name=Groen Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.red.name=Rood Gekleurd Geavanceerd Pantser
+tile.warpdrive.hull2.plain.black.name=Zwart Gekleurd Geavanceerd Pantser
+
+tile.warpdrive.hull2.glass.white.name=Wit Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.orange.name=Oranje Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.magenta.name=Magenta Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.lightBlauw.name=Licht Blauw Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.yellow.name=Geel Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.lime.name=Limoen Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.pink.name=Roze Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.gray.name=Grijs Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.silver.name=Zilver Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.cyan.name=Turkoois Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.purple.name=Purple Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.blue.name=Blauw Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.brown.name=Brown Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.green.name=Groen Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.red.name=Rood Gekleurd Geavanceerd Pantser Glas
+tile.warpdrive.hull2.glass.black.name=Zwart Gekleurd Geavanceerd Pantser Glas
+
+tile.warpdrive.hull2.omnipanel.white.name=Wit Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.orange.name=Oranje Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.magenta.name=Magenta Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.lightBlauw.name=Licht Blauw Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.yellow.name=Geel Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.lime.name=Limoen Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.pink.name=Roze Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.gray.name=Grijs Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.silver.name=Zilver Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.cyan.name=Turkoois Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.purple.name=Purple Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.blue.name=Blauw Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.brown.name=Brown Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.green.name=Groen Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.red.name=Rood Gekleurd Geavanceerd Pantser Omnipanel
+tile.warpdrive.hull2.omnipanel.black.name=Zwart Gekleurd Geavanceerd Pantser Omnipanel
+
+tile.warpdrive.hull2.slab.white.name=Wit Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.orange.name=Oranje Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.magenta.name=Magenta Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.lightBlauw.name=Licht Blauw Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.yellow.name=Geel Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.lime.name=Limoen Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.pink.name=Roze Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.gray.name=Grijs Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.silver.name=Zilver Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.cyan.name=Turkoois Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.purple.name=Purple Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.blue.name=Blauw Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.brown.name=Brown Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.green.name=Groen Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.red.name=Rood Gekleurd Geavanceerd Pantser plaat
+tile.warpdrive.hull2.slab.black.name=Zwart Gekleurd Geavanceerd Pantser plaat
+
+tile.warpdrive.hull2.stairs.white.name=Wit Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.orange.name=Oranje Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.magenta.name=Magenta Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.lightBlauw.name=Licht Blauw Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.yellow.name=Geel Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.lime.name=Limoen Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.pink.name=Roze Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.gray.name=Grijs Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.silver.name=Zilver Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.cyan.name=Turkoois Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.purple.name=Purple Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.blue.name=Blauw Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.brown.name=Brown Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.green.name=Groen Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.red.name=Rood Gekleurd Geavanceerd Pantser Trap
+tile.warpdrive.hull2.stairs.black.name=Zwart Gekleurd Geavanceerd Pantser Trap
+
+
+tile.warpdrive.hull3.plain.white.name=Wit Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.orange.name=Oranje Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.magenta.name=Magenta Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.lightBlauw.name=Licht Blauw Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.yellow.name=Geel Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.lime.name=Limoen Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.pink.name=Roze Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.gray.name=Grijs Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.silver.name=Zilver Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.cyan.name=Turkoois Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.purple.name=Purple Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.blue.name=Blauw Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.brown.name=Brown Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.green.name=Groen Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.red.name=Rood Gekleurd Superieur Pantser
+tile.warpdrive.hull3.plain.black.name=Zwart Gekleurd Superieur Pantser
+
+tile.warpdrive.hull3.glass.white.name=Wit Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.orange.name=Oranje Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.magenta.name=Magenta Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.lightBlauw.name=Licht Blauw Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.yellow.name=Geel Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.lime.name=Limoen Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.pink.name=Roze Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.gray.name=Grijs Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.silver.name=Zilver Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.cyan.name=Turkoois Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.purple.name=Purple Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.blue.name=Blauw Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.brown.name=Brown Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.green.name=Groen Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.red.name=Rood Gekleurd Superieur Pantser Glas
+tile.warpdrive.hull3.glass.black.name=Zwart Gekleurd Superieur Pantser Glas
+
+tile.warpdrive.hull3.omnipanel.white.name=Wit Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.orange.name=Oranje Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.magenta.name=Magenta Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.lightBlauw.name=Licht Blauw Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.yellow.name=Geel Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.lime.name=Limoen Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.pink.name=Roze Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.gray.name=Grijs Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.silver.name=Zilver Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.cyan.name=Turkoois Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.purple.name=Purple Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.blue.name=Blauw Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.brown.name=Brown Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.green.name=Groen Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.red.name=Rood Gekleurd Superieur Pantser Omnipaneel
+tile.warpdrive.hull3.omnipanel.black.name=Zwart Gekleurd Superieur Pantser Omnipaneel
+
+tile.warpdrive.hull3.slab.white.name=Wit Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.orange.name=Oranje Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.magenta.name=Magenta Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.lightBlauw.name=Licht Blauw Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.yellow.name=Geel Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.lime.name=Limoen Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.pink.name=Roze Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.gray.name=Grijs Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.silver.name=Zilver Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.cyan.name=Turkoois Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.purple.name=Purple Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.blue.name=Blauw Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.brown.name=Brown Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.green.name=Groen Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.red.name=Rood Gekleurd Superieur Pantser Plaat
+tile.warpdrive.hull3.slab.black.name=Zwart Gekleurd Superieur Pantser Plaat
+
+tile.warpdrive.hull3.stairs.white.name=Wit Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.orange.name=Oranje Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.magenta.name=Magenta Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.lightBlauw.name=Licht Blauw Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.yellow.name=Geel Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.lime.name=Limoen Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.pink.name=Roze Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.gray.name=Grijs Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.silver.name=Zilver Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.cyan.name=Turkoois Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.purple.name=Purple Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.blue.name=Blauw Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.brown.name=Brown Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.green.name=Groen Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.red.name=Rood Gekleurd Superieur Pantser Trap
+tile.warpdrive.hull3.stairs.black.name=Zwart Gekleurd Superieur Pantser Trap
+
+
+warpdrive.guide.prefix=§6%1$s:§r 
+warpdrive.error.badTileEntity=§cDit blok heeft een verversing nodig door het de breken en weer te plaatsen.
+warpdrive.monitor.viewingCamera=Camera op%2$d, %3$d, %4$d met videokanaal %1$d aan het bekijken...
+warpdrive.ship.attachedPlayers=Aangesloten Spelers: %1$s
+warpdrive.ship.playerAttached=Je bent nu aangesloten op schip %1$s.\nDe aangesloten spelers zijn %2$s
+warpdrive.ship.playerDetached=Je bent nu afgesloten op schip %1$s.\nDe aangesloten spelers zijn %2$s
+warpdrive.ship.statusLine.cooling=%1$d seconden over van afkoeling
+warpdrive.ship.statusLine.isolation=%1$d actieve isolatie-blokken geven %2$2.1f%% absorptie.
+
+warpdrive.energy.statusLine=Energielevel is op %1$s / %2$s EU.
+warpdrive.energy.side.changedToInput=%1$s kant verandert naar energie input modus!
+warpdrive.energy.side.changedToOutput=%1$s kant verandert naar energie output modus!
+warpdrive.energy.side.changedToDisabled=%1$s kant verandert naar inactief modus!
+
+warpdrive.accelerator.guide.lowPower_noStorage=Energie-opslagcapaciteit is te weinig; we hebben tenminste %1$d om verder te opereren maar we kunnen alleen %2$d opslaan
+warpdrive.accelerator.guide.lowPower_accelerating=We verliezen stroom baas, deeltjes vliegen in het rond, bereid je voor op grote bestraling!
+warpdrive.accelerator.guide.lowPower_noParticles=We hebben meer stroom nodig om de versneller te activeren!
+warpdrive.accelerator.guide.noChiller=Geen koeler gevonden voor deze versneller!
+
+warpdrive.beam_frequency.tooltip=Straal-frequentie is gezet naar %1$d
+warpdrive.beam_frequency.get=Straal-frequentie %2$d is opgehaald door %1$s 
+warpdrive.beam_frequency.set=%1$s is nu afgestemd op straal-frequentie %2$d
+warpdrive.beam_frequency.statusLine.valid=Straal-frueqentie %1$d is Geldig.
+warpdrive.beam_frequency.statusLine.invalid=§cStraal-frequentie %1$d is incorrect.
+warpdrive.beam_frequency.statusLine.undefined=§7Niet gedefinieerde straal-frequentie.\n§bGebruik een Affstemmingsvork§r om deze te zetten.
+
+warpdrive.breathing.alarm=Ademhalings-alarm
+warpdrive.breathing.invalid_setup=Geen helm om in te ademen\of verkeerde armor!
+warpdrive.breathing.low_reserve=Laag Zuurstofniveau!
+warpdrive.breathing.no_air=Geen Zuurstof meer!
+
+warpdrive.control_channel.tooltip=Controlekanaal is gezet op %1$d
+warpdrive.control_channel.get=Controlekanaal %2$d is opgehaald door %1$s 
+warpdrive.control_channel.set=%1$s is nu afgestemd met een controlekanaal %2$d
+warpdrive.control_channel.statusLine.valid=Controlekanaal %1$d is Geldig.
+warpdrive.control_channel.statusLine.invalid=§cControlekanaal %1$d is incorrect.
+warpdrive.control_channel.statusLine.undefined=§7Niet gedefinieerde controlekanaal.\n§bGebruik een Afstemmingsvork§r om deze te zetten.
+
+warpdrive.forcefield.guide.lowPower=we verliezen stroom kapitein, verminder onze consumptie of laat die schotse ingenieur onze stroomkracht vergroten!
+
+warpdrive.forcefield.shape.statusLine.none=§cVorm is niet gedefinieerd.
+warpdrive.forcefield.shape.statusLine.double=Vorm is een volledig vorm %1$s
+warpdrive.forcefield.shape.statusLine.single=Vorm is een halve vorm %1$s
+warpdrive.forcefield.shape.statusLine.sphere=Ball
+warpdrive.forcefield.shape.statusLine.cylinder_h=Horizontale cylinder
+warpdrive.forcefield.shape.statusLine.cylinder_v=Verticale cylinder
+warpdrive.forcefield.shape.statusLine.cube=kubus
+warpdrive.forcefield.shape.statusLine.plane=Plat oppervlak
+warpdrive.forcefield.shape.statusLine.tube=tube
+warpdrive.forcefield.shape.statusLine.tunnel=tunnel
+
+warpdrive.forcefield.upgrade.statusLine.attraction=aantrekking
+warpdrive.forcefield.upgrade.statusLine.breaking=blokbreker
+warpdrive.forcefield.upgrade.statusLine.camouflage=camouflage
+warpdrive.forcefield.upgrade.statusLine.cooling=koeling
+warpdrive.forcefield.upgrade.statusLine.fusion=fusie
+warpdrive.forcefield.upgrade.statusLine.heating=verhitting
+warpdrive.forcefield.upgrade.statusLine.inversion=inversie
+warpdrive.forcefield.upgrade.statusLine.item_port=itempoort
+warpdrive.forcefield.upgrade.statusLine.pumping=pompen
+warpdrive.forcefield.upgrade.statusLine.range=vergroot bereik
+warpdrive.forcefield.upgrade.statusLine.repulsion=afstoting
+warpdrive.forcefield.upgrade.statusLine.rotation=rotatie
+warpdrive.forcefield.upgrade.statusLine.shock=schok
+warpdrive.forcefield.upgrade.statusLine.silencer=demper
+warpdrive.forcefield.upgrade.statusLine.speed=snelheid
+warpdrive.forcefield.upgrade.statusLine.stabilization=stabilizatie
+warpdrive.forcefield.upgrade.statusLine.thickness=dikte
+warpdrive.forcefield.upgrade.statusLine.translation=verandering
+
+warpdrive.particle.ion.name=ioon
+warpdrive.particle.ion.tooltip=Geproduceerd door de botsing van een aantal deeltjes in de Normale Versneller
+warpdrive.particle.proton.name=protoon
+warpdrive.particle.proton.tooltip=Geproduceerd door de botsing van een aantal deeltjes in de Geavanceerde Versneller
+warpdrive.particle.antimatter.name=antimaterie
+warpdrive.particle.antimatter.tooltip=Geproduceerd door de botsing van een aantal deeltjes in de Superieure Versneller
+warpdrive.particle.strange_matter.name=rare materie
+warpdrive.particle.strange_matter.tooltip=Geproduceerd door de botsing van 2 wolkjes van deeltjes in de Superieure Versneller
+
+warpdrive.upgrade.result.noUpgradeToDismount=§cGeen upgrade om uit te schakelen
+warpdrive.upgrade.result.notEnoughUpgrades=§cJe hebt tenminste 1 item nodig om dit blok te upgraden.
+warpdrive.upgrade.result.invalidUpgrade=§cDid is niet het correcte item om dit blok te upgraden.
+warpdrive.upgrade.result.invalidProjectorUpgrade=§cDeze upgrade is te groot voor de projector, probeer een relais te gebruiken.
+warpdrive.upgrade.result.invalidRelayUpgrade=§cDeze upgrade kan alleen op projectors.
+warpdrive.upgrade.result.validUpgrades=Geldige upgrades voor dit block zijn: %1$s. @TODO nog niet ingebouwd
+warpdrive.upgrade.result.tooManyUpgrades=§cEr zijn al %1$d upgrades geinstalleert.
+warpdrive.upgrade.result.dismounted=Upgrade %1$s is succesvol uitgeschakeld.
+warpdrive.upgrade.result.mounted=Upgrade %1$s is succesvol geplaatst.
+
+warpdrive.upgrade.result.wrongShapeSide=§cEr is geen elektromagnetische-projector aan deze kant.
+warpdrive.upgrade.result.noShapeToDismount=§cGeen vorm om uit te schakelen.
+warpdrive.upgrade.result.notEnoughShapes.double=§cJe hebt tenminste 2 items nodig om de vorm van een dubbelzijdige-projector te zetten.
+warpdrive.upgrade.result.notEnoughShapes.single=§cJe hebt tenminste 1 items nodig om de vorm van een eenzijdige-projector te zetten.
+warpdrive.upgrade.result.shapeDismounted=Vorm succesvol uitgeschakeld.
+warpdrive.upgrade.result.shapeMounted=Vorm succesvol geplaatst.
+
+warpdrive.upgrade.statusLine.none=§7Geen upgrade geinstalleerd.
+warpdrive.upgrade.statusLine.valid=Geupgrade met1$s.
+
+warpdrive.video_channel.tooltip=Videokanaal is gezet naar %1$d
+warpdrive.video_channel.get=Videokanaal %2$d is achterhaald door %1$s
+warpdrive.video_channel.set=%1$s is nu afgestemd op videokanaal %2$d
+warpdrive.video_channel.statusLine.valid=Videokanaal %1$d is geldig.
+warpdrive.video_channel.statusLine.validCamera=Videokanaal %1$d is geldig voor camera op %2$d, %3$d, %4$d.
+warpdrive.video_channel.statusLine.invalid=§cVideokanaal %1$d is ongeldig.
+warpdrive.video_channel.statusLine.invalidOrNotLoaded=§cVideokanaal %1$d is ongeldig of camera is te ver weg!
+warpdrive.video_channel.statusLine.undefined=§7niet gedefinieerd videokanaal.\n§bGebruik een Afstemmingsvork§r om het te zetten.
+
+warpdrive.cloakingCore.invalidAssembly=§cOngeldige vormatie!
+warpdrive.cloakingCore.disabled=Dekmantelveld is uitgeschakeld
+warpdrive.cloakingCore.lowPower=§cDekmantelveld is uit, We hebben meer stroom nodig kapitein!
+warpdrive.cloakingCore.cloaking=Een Niveau %1$d dekmantelveld bedekt huidig %2$d blokken!
+warpdrive.IC2reactorLaserMonitor.noReactor=Geen reactor gevonden!
+warpdrive.IC2reactorLaserMonitor.multipleReactors=%1$d reactor(s) aangesloten.
+warpdrive.transporter.status=Van %1$.0f %2$.0f %3$.0f naar %4$.0f %5$.0f %6$.0f
+
+warpdrive.tooltip.itemTag.breathingHelmet=§Ademhalen in de ruimte§r consumeert de inhoud van een Zuurstoffles en/of IC2 Gecompresseerde Luchtcellen uit je inventory.
+warpdrive.tooltip.itemTag.flyInSpace=§bJetpack Die werkt in de ruimte§r.
+warpdrive.tooltip.itemTag.noFallDamage=§bAbsorbeert Schade van vallen§r.
+

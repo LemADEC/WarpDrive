@@ -7,7 +7,7 @@ local data
 
 ----------- Ship support
 
-local ship_x, ship_y, ship_z = 0, 0, 0
+local ship
 local ship_front = 0
 local ship_right = 0
 local ship_up = 0
@@ -15,18 +15,20 @@ local ship_back = 0
 local ship_left = 0
 local ship_down = 0
 local ship_isInHyper = false
-local ship_jumpCost = 0
+local ship_x, ship_y, ship_z = 0, 0, 0
+local ship_xTarget, ship_yTarget, ship_zTarget = 0, 0, 0
+local ship_actualDistance = 0
+local ship_energyRequired = 0
 local ship_shipSize = 0
 local ship_movement = { 0, 0, 0 }
 local ship_rotationSteps = 0
 local ship_indexPlayer = 0
+local ship_arrayPlayers = { }
 local ship_indexTarget = 0
-local ship = nil
-local ship_actualDistance
 
 function ship_read(parData)
   data = parData
-  if data.ship_summon == nil then data.ship_summon = false; end
+  if data.ship_summon == nil then data.ship_summon = false end
 end
 
 function ship_boot()
@@ -38,34 +40,32 @@ function ship_boot()
   w.writeLn("Booting Ship")
   
   if data.ship_summon then
-    ship.summon_all()
+    ship.targetName("")
+    ship.command("SUMMON")
+    ship.enable(true)
   end
   
   w.write("- internal parameters: ")
   ship_front, ship_right, ship_up = ship.dim_positive()
   ship_back, ship_left, ship_down = ship.dim_negative()
   ship_isInHyper = ship.isInHyperspace()
-  ship_rotationSteps = ship.rotationSteps()
   ship_movement = { ship.movement() }
-  if ship.direction ~= nil then
-    ship.direction(666)
-    ship.distance(0)
-  end
+  ship_rotationSteps = ship.rotationSteps()
   w.setColorSuccess()
   w.writeLn("ok")
   
   w.setColorNormal()
   w.write("- detecting Ship Core: ")
   local timeout = 10
-  local isAttached
+  local isValid, message
   repeat
-    isAttached = ship.isAttached()
+    isValid, message = ship.isAssemblyValid()
     w.sleep(0.05)
     timeout = timeout - 1
-  until isAttached ~= false or timeout < 0
+  until isValid == true or timeout < 0
   if timeout < 0 then
     w.setColorWarning()
-    w.writeLn("failed")
+    w.writeLn("failed (" .. message .. ")")
     w.writeLn("")
     w.writeLn("Ship Core shall be attached horizontally")
     w.writeLn("with Ship Controller!")
@@ -87,7 +87,6 @@ function ship_boot()
     w.sleep(0.05)
     timeout = timeout - 1
   until pos ~= nil or timeout < 0
-  ship_x, ship_y, ship_z = ship.position()
   if timeout < 0 then
     w.setColorWarning()
     w.writeLn("failed")
@@ -100,6 +99,7 @@ function ship_boot()
     w.setColorSuccess()
     w.writeLn("triangulated")
   end
+  ship_updateMovementStats()
   w.sleep(0.2)
   
   w.setColorNormal()
@@ -122,12 +122,12 @@ function ship_boot()
     w.writeLn("passed")
   end
   
-  ship.mode(1)
+  ship.command("IDLE")
   w.sleep(0.3)
 end
 
-function ship_writeMovement()
-  local message = " Movement         = "
+function ship_writeMovement(prefix)
+  local message = prefix
   local count = 0
   if ship_movement[1] > 0 then
     message = message .. ship_movement[1] .. " front"
@@ -137,34 +137,34 @@ function ship_writeMovement()
     count = count + 1
   end
   if ship_movement[2] > 0 then
-    if count > 0 then message = message .. ", "; end
+    if count > 0 then message = message .. ", " end
     message = message .. ship_movement[2] .. " up"
     count = count + 1
   elseif ship_movement[2] < 0 then
-    if count > 0 then message = message .. ", "; end
+    if count > 0 then message = message .. ", " end
     message = message .. (- ship_movement[2]) .. " down"
     count = count + 1
   end
   if ship_movement[3] > 0 then
-    if count > 0 then message = message .. ", "; end
+    if count > 0 then message = message .. ", " end
     message = message .. ship_movement[3] .. " right"
     count = count + 1
   elseif ship_movement[3] < 0 then
-    if count > 0 then message = message .. ", "; end
+    if count > 0 then message = message .. ", " end
     message = message .. (- ship_movement[3]) .. " left"
     count = count + 1
   end
   
   if ship_rotationSteps == 1 then
-    if count > 0 then message = message .. ", "; end
+    if count > 0 then message = message .. ", " end
     message = message .. "Turn right"
     count = count + 1
   elseif ship_rotationSteps == 2 then
-    if count > 0 then message = message .. ", "; end
+    if count > 0 then message = message .. ", " end
     message = message .. "Turn back"
     count = count + 1
   elseif ship_rotationSteps == 3 then
-    if count > 0 then message = message .. ", "; end
+    if count > 0 then message = message .. ", " end
     message = message .. "Turn left"
     count = count + 1
   end
@@ -187,8 +187,14 @@ function ship_writeRotation()
   end
 end
 
-function ship_computeNewCoordinates(cx, cy, cz)
-  local res = { x = cx, y = cy, z = cz }
+function ship_updateMovementStats()
+  -- get current position
+  ship_x, ship_y, ship_z = ship.position()
+  if ship_x == nil then
+    ship_x, ship_y, ship_z = 0, 0, 0
+  end
+  
+  -- compute movement
   local dx, dy, dz = ship.getOrientation()
   if dx == nil then
     dx, dy, dz = 0, 0, 0
@@ -198,21 +204,27 @@ function ship_computeNewCoordinates(cx, cy, cz)
   worldMovement.y = ship_movement[2]
   worldMovement.z = dz * ship_movement[1] + dx * ship_movement[3]
   ship_actualDistance = math.ceil(math.sqrt(worldMovement.x * worldMovement.x + worldMovement.y * worldMovement.y + worldMovement.z * worldMovement.z))
-  ship_jumpCost = ship.getEnergyRequired(ship_actualDistance)
-  res.x = res.x + worldMovement.x
-  res.y = res.y + worldMovement.y
-  res.z = res.z + worldMovement.z
-  return res
+  ship_xTarget = ship_x + worldMovement.x
+  ship_yTarget = ship_y + worldMovement.y
+  ship_zTarget = ship_z + worldMovement.z
+  
+  -- update energy requirement
+  local success, result = ship.getEnergyRequired()
+  if success then
+    ship_energyRequired = result
+  else
+    w.status_showWarning(result)
+  end
 end
 
 function ship_warp()
   -- rs.setOutput(alarm_side, true)
   if w.input_readConfirmation("Engage jump drive? (Y/n)") then
     -- rs.setOutput(alarm_side, false)
+    ship.command("MANUAL")
     ship.movement(ship_movement[1], ship_movement[2], ship_movement[3])
     ship.rotationSteps(ship_rotationSteps)
-    ship.mode(1)
-    ship.jump()
+    ship.enable(true)
     -- ship = nil
   end
   -- rs.setOutput(alarm_side, false)
@@ -228,15 +240,23 @@ function ship_page_setMovement()
   w.writeFullLine(" Press Enter to save your selection")
   w.setColorNormal()
   w.setCursorPos(1, 3)
+  ship_writeMovement("Current movement is ")
+  w.setCursorPos(1, 5)
   
-  ship_movement[1] = ship_page_setDistanceAxis(3, "Forward" , "Front", "Back", ship_movement[1], math.abs(ship_front + ship_back + 1))
-  ship_movement[2] = ship_page_setDistanceAxis(5, "Vertical", "Up"   , "Down", ship_movement[2], math.abs(ship_up + ship_down + 1))
-  ship_movement[3] = ship_page_setDistanceAxis(7, "Lateral" , "Right", "Left", ship_movement[3], math.abs(ship_left + ship_right + 1))
+  ship_movement[1] = ship_page_setDistanceAxis(4, "Forward" , "Front", "Back", ship_movement[1], math.abs(ship_front + ship_back + 1))
+  ship_movement[2] = ship_page_setDistanceAxis(6, "Vertical", "Up"   , "Down", ship_movement[2], math.abs(ship_up + ship_down + 1))
+  ship_movement[3] = ship_page_setDistanceAxis(8, "Lateral" , "Right", "Left", ship_movement[3], math.abs(ship_left + ship_right + 1))
   ship_movement = { ship.movement(ship_movement[1], ship_movement[2], ship_movement[3]) }
+  ship_updateMovementStats()
 end
 
 function ship_page_setDistanceAxis(line, axis, positive, negative, userEntry, shipLength)
-  local maximumDistance = shipLength + ship.getMaxJumpDistance()
+  local success, maxJumpDistance = ship.getMaxJumpDistance()
+  if success ~= true then
+    w.status_showSuccess("" .. maxJumpDistance)
+    maxJumpDistance = 0
+  end
+  local maximumDistance = shipLength + maxJumpDistance
   w.setColorDisabled()
   w.setCursorPos(3, line + 1)
   w.write(positive .. " is " .. ( shipLength + 1) .. " to " ..  maximumDistance .. " blocks      ")
@@ -355,27 +375,13 @@ function ship_page_summon() -- no longer used
   w.write(":")
   local input = w.input_readNumber("")
   if input == "" then
-    ship.summon_all()
+    ship.targetName("")
   else
     input = tonumber(input)
-    ship.summon(input - 1)
+    ship.targetName(arrayPlayers[input - 1])
   end
-end
-
-function ship_page_jumpToBeacon()
-  w.page_begin("<==== Jump to beacon ====>")
-  
-  w.write("Enter beacon frequency: ")
-  local freq = w.input_readText("")
-  -- rs.setOutput(alarm_side, true)
-  if w.input_readConfirmation() then
-    -- rs.setOutput(alarm_side, false)
-    ship.mode(4)
-    ship.beaconFrequency(freq)
-    ship.jump()
-    -- ship = nil
-  end
-  -- rs.setOutput(alarm_side, false)
+  ship.command("SUMMON")
+  ship.enable(true)
 end
 
 function ship_page_jumpToGate()
@@ -391,13 +397,13 @@ function ship_page_jumpToGate()
   w.setCursorPos(1, 5)
   w.setColorNormal()
   w.write("Target jumpgate name: ")
-  local name = w.input_readText("")
+  local targetName = w.input_readText("")
   -- rs.setOutput(alarm_side, true)
   if w.input_readConfirmation("Engage gate jumping? (Y/n)") then
     -- rs.setOutput(alarm_side, false)
-    ship.mode(6)
-    ship.targetJumpgate(name)
-    ship.jump()
+    ship.command("GATE")
+    ship.targetName(targetName)
+    ship.enable(true)
     -- ship = nil
   end
   -- rs.setOutput(alarm_side, false)
@@ -407,33 +413,36 @@ function ship_page_controls()
   w.page_begin(w.data_getName() .. " - Ship controls")
   if ship == nil then
     w.status_showWarning("No ship controller detected")
-  elseif ship.isAttached() ~= true then
-    w.status_showWarning("No ship core detected")
   else
-    -- w.writeLn("")
-    ship_x, ship_y, ship_z = ship.position()
-    if ship_x == nil then
-      ship_x, ship_y, ship_z = 0, 0, 0
+    local isValid, message = ship.isAssemblyValid()
+    if isValid ~= true then
+      w.status_showWarning(message)
+    else
+      local command = ship.command()
+      if command ~= "MANUAL" and command ~= "HYPERDRIVE" then
+        ship.command("MANUAL")
+        ship_updateMovementStats()
+      end
+      -- w.writeLn("")
+      w.writeLn("Ship:")
+      w.writeLn(" Current position = " .. ship_x .. ", " .. ship_y .. ", " .. ship_z)
+      local energy, energyMax = ship.energy()
+      if energy == nil then energy = 0 end
+      if energyMax == nil or energyMax == 0 then energyMax = 1 end
+      w.writeLn(" Energy           = " .. math.floor(energy / energyMax * 100) .. " % (" .. energy .. " EU)")
+      
+      w.writeLn("")
+      -- w.writeLn("")
+      w.writeLn("Dimensions:")
+      w.writeLn(" Front, Right, Up = " .. w.format_integer(ship_front) .. ", " .. w.format_integer(ship_right) .. ", " .. w.format_integer(ship_up) .. " blocks")
+      w.writeLn(" Back, Left, Down = " .. w.format_integer(ship_back) .. ", " .. w.format_integer(ship_left) .. ", " .. w.format_integer(ship_down) .. " blocks")
+      w.writeLn(" Size             = " .. ship_shipSize .. " blocks")
+      w.writeLn("")
+      w.writeLn("Warp data:")
+      ship_writeMovement(" Movement         = ")
+      w.writeLn(" Distance         = " .. ship_actualDistance .. " m (" .. ship_energyRequired .. " EU, " .. math.floor(energy / ship_energyRequired) .. " jumps)")
+      w.writeLn(" Target position  = " .. w.format_integer(ship_xTarget) .. ", " .. w.format_integer(ship_yTarget) .. ", " .. w.format_integer(ship_zTarget))
     end
-    w.writeLn("Ship:")
-    w.writeLn(" Current position = " .. ship_x .. ", " .. ship_y .. ", " .. ship_z)
-    local energy, energyMax = ship.energy()
-    if energy == nil then energy = 0 end
-    if energyMax == nil or energyMax == 0 then energyMax = 1 end
-    w.writeLn(" Energy           = " .. math.floor(energy / energyMax * 100) .. " % (" .. energy .. " EU)")
-    
-    w.writeLn("")
-    -- w.writeLn("")
-    w.writeLn("Dimensions:")
-    w.writeLn(" Front, Right, Up = " .. w.format_integer(ship_front) .. ", " .. w.format_integer(ship_right) .. ", " .. w.format_integer(ship_up) .. " blocks")
-    w.writeLn(" Back, Left, Down = " .. w.format_integer(ship_back) .. ", " .. w.format_integer(ship_left) .. ", " .. w.format_integer(ship_down) .. " blocks")
-    w.writeLn(" Size             = " .. ship_shipSize .. " blocks")
-    w.writeLn("")
-    w.writeLn("Warp data:")
-    ship_writeMovement()
-    local dest = ship_computeNewCoordinates(ship_x, ship_y, ship_z)
-    w.writeLn(" Distance         = " .. ship_actualDistance .. " (" .. ship_jumpCost .. " EU, " .. math.floor(energy / ship_jumpCost) .. " jumps)")
-    w.writeLn(" Target position  = " .. w.format_integer(dest.x) .. ", " .. w.format_integer(dest.y) .. ", " .. w.format_integer(dest.z))
   end
   
   w.setCursorPos(1, 16)
@@ -460,10 +469,17 @@ function ship_key_controls(character, keycode)
     return true
   elseif character == 'h' or character == 'H' then -- H
     -- rs.setOutput(alarm_side, true)
-    if w.input_readConfirmation("Engage hyperdrive? (Y/n)") then
+    local isConfirmed
+    if ship_isInHyper then
+      isConfirmed = w.input_readConfirmation("Disengage hyperdrive? (Y/n)")
+    else
+      isConfirmed = w.input_readConfirmation("Engage hyperdrive? (Y/n)")
+    end
+    if isConfirmed then
       -- rs.setOutput(alarm_side, false)
-      ship.mode(5)
-      ship.jump()
+      ship.command("HYPERDRIVE")
+      ship.enable(true)
+      ship_updateMovementStats()
       -- ship = nil
     end
     -- rs.setOutput(alarm_side, false)
@@ -508,20 +524,21 @@ function ship_page_crew()
   w.page_begin(w.data_getName() .. " - Ship crew")
   if ship == nil then
     w.status_showWarning("No ship controller detected")
-  elseif ship.isAttached() ~= true then
-    w.status_showWarning("No ship core detected")
   else
-    w.writeLn("Attached players:")
-    local stringPlayers, _ = ship.getAttachedPlayers()
-    if stringPlayers == nil or stringPlayers == "" then
-      stringPlayers = "~ no registered player ~"
+    local isValid, message = ship.isAssemblyValid()
+    if isValid ~= true then
+      w.status_showWarning(message)
+    else
+      w.writeLn("Attached players:")
+      local stringPlayers, _ = ship.getAttachedPlayers()
+      if stringPlayers == nil or stringPlayers == "" then
+        stringPlayers = "~ no registered player ~"
+      end
+      ship_arrayPlayers = w.data_splitString(stringPlayers, ",")
+      ship_indexPlayer = ship_writeArray(ship_arrayPlayers, ship_indexPlayer)
+      w.writeLn("")
+      w.writeLn("Summon crew after short jump = " .. w.format_boolean(data.ship_summon, "YES", "no"))
     end
-    local arrayPlayers = w.data_splitString(stringPlayers, ",")
-    ship_indexPlayer = ship_writeArray(arrayPlayers, ship_indexPlayer)
-    w.writeLn("")
-    w.writeLn("Summon crew after short jump = " .. w.format_boolean(data.ship_summon, "YES", "no"))
---    w.writeLn("")
---    w.writeLn("Beacon jump: -admin only-")
   end
   
   w.setCursorPos(1, 16)
@@ -540,15 +557,16 @@ function ship_key_crew(character, keycode)
     w.data_save()
     return true
   elseif character == 's' or character == 'S' then -- S
-    ship.summon_all()
+    ship.targetName("")
+    ship.command("SUMMON")
+    ship.enable(true)
     return true
   elseif keycode == 28 then -- Enter
-    local success, namePlayer = ship.summon(ship_indexPlayer)
-    if success then
-      w.status_showSuccess("Engaging teleportation for " .. namePlayer .. "...")
-    else
-      w.status_showWarning("Failed to summon crew member")
-    end
+    local namePlayer = ship_arrayPlayers[ship_indexPlayer + 1]
+    ship.targetName(namePlayer)
+    ship.command("SUMMON")
+    ship.enable(true)
+    w.status_showSuccess("Engaging teleportation for " .. namePlayer .. "...")
     return true
   elseif keycode == 200 or keycode == 203 or character == '-' then -- Up or Left or -
     ship_indexPlayer = ship_indexPlayer - 1
@@ -564,20 +582,21 @@ function ship_page_navigation()
   w.page_begin(w.data_getName() .. " - Ship navigation")
   if ship == nil then
     w.status_showWarning("No ship controller detected")
-  elseif ship.isAttached() ~= true then
-    w.status_showWarning("No ship core detected")
   else
-    local locationCurrent = "somewhere..."  -- @TODO ship.getLocation()
-    w.writeLn("Current ship location        : " .. locationCurrent)
-    w.writeLn("Jumpgates or beacons in range:")
-    local stringTargets, _ = "not implemented", nil -- ship.getTargets()
-    if stringTargets == nil or stringTargets == "" then
-      stringTargets = "~ no beacon nor jumpgate in range ~"
+    local isValid, message = ship.isAssemblyValid()
+    if isValid ~= true then
+      w.status_showWarning(message)
+    else
+      local locationCurrent = "somewhere..."  -- @TODO ship.getLocation()
+      w.writeLn("Current ship location        : " .. locationCurrent)
+      w.writeLn("Jumpgates or beacons in range:")
+      local stringTargets, _ = "not implemented", nil -- ship.getTargets()
+      if stringTargets == nil or stringTargets == "" then
+        stringTargets = "~ no beacon nor jumpgate in range ~"
+      end
+      local arrayTargets = w.data_splitString(stringTargets, ",")
+      ship_indexTarget = ship_writeArray(arrayTargets, ship_indexTarget)
     end
-    local arrayTargets = w.data_splitString(stringTargets, ",")
-    ship_indexTarget = ship_writeArray(arrayTargets, ship_indexTarget)
---    w.writeLn("")
---    w.writeLn("Beacon jump: -admin only-")
   end
   
   w.setCursorPos(1, 16)
@@ -682,7 +701,8 @@ if data.ship_summon then
 end
 
 if ship ~= nil then
-  ship.mode(0)
+  ship.command("OFFLINE")
+  ship.enable(false)
 end
 
 w.close()

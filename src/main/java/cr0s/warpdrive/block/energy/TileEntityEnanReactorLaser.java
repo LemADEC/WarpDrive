@@ -134,13 +134,13 @@ public class TileEntityEnanReactorLaser extends TileEntityAbstractLaser {
 	}
 	
 	@Override
-	public void writeToNBT(NBTTagCompound nbt) {
-		super.writeToNBT(nbt);
+	public void writeToNBT(final NBTTagCompound tagCompound) {
+		super.writeToNBT(tagCompound);
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound nbt) {
-		super.readFromNBT(nbt);
+	public void readFromNBT(final NBTTagCompound tagCompound) {
+		super.readFromNBT(tagCompound);
 	}
 	
 	// OpenComputers callback methods
@@ -166,24 +166,24 @@ public class TileEntityEnanReactorLaser extends TileEntityAbstractLaser {
 		return new Object[] { side.ordinal() - 2 };
 	}
 	
-	// ComputerCraft methods
+	// ComputerCraft IPeripheral methods
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		switch (methodName) {
-			case "hasReactor":
-				return new Object[]{scanForReactor() != null};
-
-			case "stabilize":
-				if (arguments.length >= 1) {
-					stabilize(Commons.toInt(arguments[0]));
-				}
-				break;
-
-			case "side":
-				return new Object[]{side.ordinal() - 2};
+		case "hasReactor":
+			return new Object[] { scanForReactor() != null };
+			
+		case "stabilize":
+			if (arguments.length >= 1) {
+				stabilize(Commons.toInt(arguments[0]));
+			}
+			break;
+			
+		case "side":
+			return new Object[] { side.ordinal() - 2 };
 		}
 		
 		return super.callMethod(computer, context, method, arguments);

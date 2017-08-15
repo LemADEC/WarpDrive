@@ -169,7 +169,7 @@ public class TileEntityLaserCamera extends TileEntityLaser implements IVideoChan
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		if (methodName.equals("videoChannel")) {
 			if (arguments.length == 1) {

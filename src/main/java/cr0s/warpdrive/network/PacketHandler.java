@@ -2,6 +2,7 @@ package cr0s.warpdrive.network;
 
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.config.WarpDriveConfig;
+import cr0s.warpdrive.data.CelestialObject;
 import cr0s.warpdrive.data.CloakedArea;
 import cr0s.warpdrive.data.Vector3;
 
@@ -10,7 +11,6 @@ import java.util.List;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTrackerEntry;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
 import net.minecraft.server.MinecraftServer;
@@ -28,12 +28,14 @@ public class PacketHandler {
 	
 	public static void init() {
 		// Forge packets
-		simpleNetworkManager.registerMessage(MessageBeamEffect.class   , MessageBeamEffect.class   , 0, Side.CLIENT);
-		simpleNetworkManager.registerMessage(MessageVideoChannel.class , MessageVideoChannel.class , 1, Side.CLIENT);
-		simpleNetworkManager.registerMessage(MessageCloak.class        , MessageCloak.class        , 2, Side.CLIENT);
-		simpleNetworkManager.registerMessage(MessageSpawnParticle.class, MessageSpawnParticle.class, 3, Side.CLIENT);
+		simpleNetworkManager.registerMessage(MessageBeamEffect.class          , MessageBeamEffect.class          , 0, Side.CLIENT);
+		simpleNetworkManager.registerMessage(MessageClientSync.class          , MessageClientSync.class          , 2, Side.CLIENT);
+		simpleNetworkManager.registerMessage(MessageCloak.class               , MessageCloak.class               , 3, Side.CLIENT);
+		simpleNetworkManager.registerMessage(MessageSpawnParticle.class       , MessageSpawnParticle.class       , 4, Side.CLIENT);
+		simpleNetworkManager.registerMessage(MessageVideoChannel.class        , MessageVideoChannel.class        , 5, Side.CLIENT);
 		
-		simpleNetworkManager.registerMessage(MessageTargeting.class    , MessageTargeting.class    , 100, Side.SERVER);
+		simpleNetworkManager.registerMessage(MessageTargeting.class           , MessageTargeting.class           , 100, Side.SERVER);
+		simpleNetworkManager.registerMessage(MessageClientValidation.class    , MessageClientValidation.class    , 101, Side.SERVER);
 		
 		// Entity packets for 'uncloaking' entities
 		try {
@@ -60,7 +62,7 @@ public class PacketHandler {
 				int dimensionId = worldObj.provider.dimensionId;
 				int radius_square = radius * radius;
 				for (int index = 0; index < playerEntityList.size(); index++) {
-					EntityPlayerMP entityplayermp = playerEntityList.get(index);
+					final EntityPlayerMP entityplayermp = playerEntityList.get(index);
 					
 					if (entityplayermp.dimension == dimensionId) {
 						Vector3 player = new Vector3(entityplayermp);
@@ -131,12 +133,20 @@ public class PacketHandler {
 	}
 	
 	// Sending cloaking area definition (server -> client)
-	public static void sendCloakPacket(EntityPlayer player, CloakedArea area, final boolean decloak) {
-		MessageCloak messageCloak = new MessageCloak(area, decloak);
-		simpleNetworkManager.sendTo(messageCloak, (EntityPlayerMP) player);
+	public static void sendCloakPacket(final EntityPlayerMP entityPlayerMP, final CloakedArea area, final boolean decloak) {
+		final MessageCloak messageCloak = new MessageCloak(area, decloak);
+		simpleNetworkManager.sendTo(messageCloak, entityPlayerMP);
 		if (WarpDriveConfig.LOGGING_CLOAKING) {
 			WarpDrive.logger.info("Sent cloak packet (area " + area + " decloak " + decloak + ")");
 		}
+	}
+	
+	public static void sendClientSync(final EntityPlayerMP entityPlayerMP, final CelestialObject celestialObject) {
+		if (WarpDriveConfig.LOGGING_CLIENT_SYNCHRONIZATION) {
+			WarpDrive.logger.info(String.format("PacketHandler.sendClientSync %s", entityPlayerMP));
+		}
+		final MessageClientSync messageClientSync = new MessageClientSync(entityPlayerMP, celestialObject);
+		simpleNetworkManager.sendTo(messageClientSync, entityPlayerMP);
 	}
 	
 	public static Packet getPacketForThisEntity(Entity entity) {

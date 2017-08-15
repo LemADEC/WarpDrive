@@ -9,6 +9,7 @@ import cr0s.warpdrive.block.weapon.BlockLaserCamera;
 import cr0s.warpdrive.block.weapon.TileEntityLaserCamera;
 import cr0s.warpdrive.config.Dictionary;
 import cr0s.warpdrive.config.WarpDriveConfig;
+import cr0s.warpdrive.data.CelestialObjectManager;
 import cr0s.warpdrive.data.Vector3;
 import cr0s.warpdrive.data.VectorI;
 import cr0s.warpdrive.network.PacketHandler;
@@ -435,7 +436,7 @@ public class TileEntityLaser extends TileEntityAbstractLaser implements IBeamFre
 			return 1.0D;
 		}
 		double attenuation;
-		if (WarpDrive.starMap.hasAtmosphere(worldObj, xCoord, zCoord)) {
+		if (CelestialObjectManager.hasAtmosphere(worldObj, xCoord, zCoord)) {
 			attenuation = WarpDriveConfig.LASER_CANNON_ENERGY_ATTENUATION_PER_AIR_BLOCK;
 		} else {
 			attenuation = WarpDriveConfig.LASER_CANNON_ENERGY_ATTENUATION_PER_VOID_BLOCK;
@@ -647,24 +648,23 @@ public class TileEntityLaser extends TileEntityAbstractLaser implements IBeamFre
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		switch (methodName) {
-			case "emitBeam":  // emitBeam(yaw, pitch) or emitBeam(deltaX, deltaY, deltaZ)
-				return emitBeam(arguments);
-
-			case "position":
-				return new Integer[]{ xCoord, yCoord, zCoord };
-
-			case "beamFrequency":
-				if (arguments.length == 1) {
-					setBeamFrequency(Commons.toInt(arguments[0]));
-				}
-				return new Integer[]{ beamFrequency };
-
-			case "getScanResult":
-				return getScanResult();
+		case "emitBeam":  // emitBeam(yaw, pitch) or emitBeam(deltaX, deltaY, deltaZ)
+			return emitBeam(arguments);
 			
+		case "position":
+			return new Integer[]{ xCoord, yCoord, zCoord };
+			
+		case "beamFrequency":
+			if (arguments.length == 1) {
+				setBeamFrequency(Commons.toInt(arguments[0]));
+			}
+			return new Integer[]{ beamFrequency };
+			
+		case "getScanResult":
+			return getScanResult();
 		}
 		
 		return super.callMethod(computer, context, method, arguments);

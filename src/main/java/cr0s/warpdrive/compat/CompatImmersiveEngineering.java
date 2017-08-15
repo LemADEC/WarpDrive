@@ -44,7 +44,7 @@ public class CompatImmersiveEngineering implements IBlockTransformer {
 	
 	@Override
 	@Optional.Method(modid = "ImmersiveEngineering")
-	public NBTBase saveExternals(final TileEntity tileEntity) {
+	public NBTBase saveExternals(final World world, final int x, final int y, final int z, final Block block, final int blockMeta, final TileEntity tileEntity) {
 		if (tileEntity instanceof IImmersiveConnectable) {
 			ChunkCoordinates node = new ChunkCoordinates(tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord);
 			Collection<Connection> connections = ImmersiveNetHandler.INSTANCE.getConnections(tileEntity.getWorldObj(), node);
@@ -61,8 +61,8 @@ public class CompatImmersiveEngineering implements IBlockTransformer {
 	}
 	
 	@Override
-	@Optional.Method(modid = "ImmersiveEngineering")
-	public void remove(TileEntity tileEntity) {
+	public void removeExternals(final World world, final int x, final int y, final int z,
+	                            final Block block, final int blockMeta, final TileEntity tileEntity) {
 		// nothing to do
 	}
 	
@@ -92,7 +92,9 @@ public class CompatImmersiveEngineering implements IBlockTransformer {
 	
 	@Override
 	@Optional.Method(modid = "ImmersiveEngineering")
-	public void restoreExternals(TileEntity tileEntity, ITransformation transformation, NBTBase nbtBase) {
+	public void restoreExternals(final World world, final int x, final int y, final int z,
+	                             final Block block, final int blockMeta, final TileEntity tileEntity,
+	                             final ITransformation transformation, final NBTBase nbtBase) {
 		NBTTagList nbtImmersiveEngineering = (NBTTagList) nbtBase;
 		if (nbtImmersiveEngineering == null) {
 			return;

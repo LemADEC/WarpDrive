@@ -1,37 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <worldGeneration version="2"
-				 xmlns="WarpDrive"
+				 xmlns="http://warpdrive.lemadec.org"
 				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				 xsi:schemaLocation="WarpDrive WarpDrive.xsd">
+				 xsi:schemaLocation="http://warpdrive.lemadec.org WarpDrive.xsd">
 	
 	<!--
 	  An astronomical object or celestial object is a naturally occurring physical entity, association, or structure in the observable universe.
 	  They can be a planet, a more abstract construct like solar system (space dimension) or the all mighty hyperspace.
-	  Hyperspace is a dimension which is its own parent. In other words, hyperspace.dimensionId = hyperspace.parentDimensionId.
+	  Hyperspace is defined by it's WarpDriveHyperspace dimension provider. It may a virtual parent celestial object (i.e. one with no dimension defined).
 	  Space is a dimension with Hyperspace as its parent.
-	  In theory, multiple planets can exists in the same minecraft world.
-	  In theory, multiple hyperspaces can be defined.
+	  In theory, multiple planets can exists in the same minecraft world (for example: The Twilight Forest exist on multiple planets in different star systems).
+	  Multiple hyperspaces can be defined.
+	  
+	  celestialObject.id should be unique for each Celestial object.
+	  When provided by WarpDrive, this is the world folder name instead of DIMxxx or WarpDriveHyperspace and WarpDriveSpace.
 	  -->
 	
 	
 	<!-- Top level is hyperspace, typically a galaxy. -->
-	<celestialObject group="milkyWay" name="hyperspace">
+	<celestialObject id="Hyperspace">
 		<!--
-		  side defines the world border size, measured in blocks. This is also the size of the orbit area in space, so don't go too big.
+		  size defines the world border size, measured in blocks. This is also the size of the orbit area in space, so don't go too big.
+		  name defines an optional display name for the player HUD. It defaults to the celestialObject's id. 
+		  description defines an optional text displayed on the player HUD.
+		  name and description support colors with § or & as the escape code. '\n' is also supported.
+		  nbt defines a JSON string for custom tags. It's used by WarpDrive extensions.
 		  -->
-		<size x="100000" z="100000" />
+		<size x="400000" z="400000" />
+		<name>Hyperspace</name>
+		<description>Your ship warp bubble is your\nonly protection.</description>
 		
 		<!--
 		  dimension defines an actual game world. If it's missing, that celestialObject remains visible but you can't "land" on it.  
 		  dimension.id: this is the id of the dimension. 0 is the Overworld, -1 is the Nether, 1 is the End.
 		  dimension.isBreathable: this is a boolean flag defining if ambient atmosphere is breathable.
-		  dimension.gravity: this is the gravity simulation type. 0 is vanilla, 1 is space, 2 is hyperspace.
+		  dimension.isHyperspace: this is a boolean flag defining if this an hyperspace dimension. 
+		  dimension.gravity: this is the gravity simulation type. Valid keywords are none (0.0), legacySpace, legacyHyperspace, normal (1.0).
 		  dimension.center.x, dimension.center.z: those are the center coordinate of that dimension world border, measured in blocks. For convenience, it's usually 0, 0.
-		  dimension.isProvidedByWarpDrive (optional): this is a boolean flag defining if WarpDrive provides this dimension or not.
-		  Currently only Space and Hyperspace can be provided: use other mods to generate planet world.
 		  -->
-		<dimension id="-3" isBreathable="false" gravity="legacyHyperspace" isProvidedByWarpDrive="true">
+		<dimension id="-3" isBreathable="false" isHyperspace="true" gravity="legacyHyperspace">
 			<center x="0" z="0" />
+			<!--
+              provider defines how the world biomes are generated. If it's missing, the mod tries to self-assign space and hyperspace dimensions.
+              provider.type: this is the provider type. Valid keywords are "auto", "WarpDriveSpace", "WarpDriveHyperspace", "other".
+              Currently only Space and Hyperspace can be provided: use other mods to generate planet world.
+              -->
+			<provider type="WarpDriveHyperspace" />
 		</dimension>
 		
 		<!--
@@ -54,26 +68,29 @@
 		</skybox>
 		
 		<!-- Second level is space, typically a star system. -->
-		<celestialObject group="milkyWay" name="solarSystem">
+		<celestialObject id="solarSystem">
 			<!--
 			  parent defines the relation with a bigger enveloping celestial object.
 			  parent.group, parent.name (optional): when using multiple files, you can attach to a parent by its group and name.
 			  parent.center.x, parent.center.z: this is the center coordinates in the parent dimension, measured in blocks.
 			  -->
 			<parent>
-				<center x="0" z="0" />
+				<center x="50000" z="10000" />
 			</parent>
 			<size x="200000" z="200000" />
-			<dimension id="-2" isBreathable="false" gravity="legacySpace" isProvidedByWarpDrive="true">
+			<name>Space</name>
+			<description>The void, filled with §6resources§r.</description>
+			<dimension id="-2" isBreathable="false" gravity="legacySpace">
 				<center x="0" z="0" />
+				<provider type="WarpDriveSpace" />
 				<!--
 					generate defines the chance of different structures to generate
 					generate.group, generate.name: identify the structure from the related XML files
 					Those only works in WarpDrive dimensions, they're ignored otherwise.
 				  -->
-				<generate group="moon" ratio="0.008" />
-				<generate group="asteroid" ratio="0.0015" />
-				<generate group="asteroidField" ratio="0.006" />
+				<generate group="moon" ratio="0.00125" />
+				<generate group="asteroid" ratio="0.0067" />
+				<generate group="asteroids_field" ratio="0.0016" />
 			</dimension>
 			
 			<skybox>
@@ -86,7 +103,7 @@
 			</skybox>
 			
 			<!-- Sun is just displayed, there's no actual game dimension -->
-			<celestialObject group="solarSystem" name="sun">
+			<celestialObject id="sun">
 				<parent>
 					<!-- sun is at the center of the solarSystem -->
 					<center x="0" z="0" />
@@ -97,20 +114,26 @@
 				  red, green, blue: color mixing from 0.00 (black) to 1.00 (white)
 				  alpha: transparency factor from 0.00 (invisible) to 1.00 (opaque)
 				  texture: optional texture to use, can come from resource pack, vanilla or the mod itself
-				  periodU, periodV: optional rotation period, measured in seconds, defaults to 0 (disabled)
+				  periodU, periodV: optional texture rotation period over the planet, measured in seconds, defaults to 0 (disabled)
+				  		Texture coordinates are defined along U and V axis (you can see them as X and Y axs in the context of the texture pixels).
+				  		A periodU of 40 means the texture will do progressively shift along U axis, doing a full rotation in 40s.
+				  		A periodU of -80 means the texture will shift twice slower in the opposite direction. 
 				  additive: optional blending function, defaults to false (multiplicative)
+				  		Blending is the mathematical operation to mix existing pixel (previous layer or sky background) with the new one.
+				  
+				  In most cases, you want the first layer to be alpha="1.00", or the players will see the sky through the planet.
 				  -->
 				<render red="0.80" green="0.50" blue="0.20" alpha="1.00" texture="" />
-				<render red="0.80" green="0.70" blue="0.30" alpha="0.40" texture="warpdrive:textures/celestial/planet_icy.png" periodU="-20" periodV="104" additive="true" />
-				<render red="0.80" green="0.55" blue="0.10" alpha="0.48" texture="warpdrive:textures/celestial/planet_metallic.png" periodU="-40" periodV="140" additive="true" />
-				<render red="0.80" green="0.45" blue="0.30" alpha="0.34" texture="warpdrive:textures/celestial/planet_magma.png" periodU="24" periodV="-35" additive="true" />
+				<render red="0.80" green="0.70" blue="0.30" alpha="0.40" texture="warpdrive:textures/celestial/surface_icy2.png" periodU="-20" periodV="104" additive="true" />
+				<render red="0.80" green="0.55" blue="0.10" alpha="0.48" texture="warpdrive:textures/celestial/surface_metallic1.png" periodU="-40" periodV="140" additive="true" />
+				<render red="0.80" green="0.45" blue="0.30" alpha="0.34" texture="warpdrive:textures/celestial/surface_magma1.png" periodU="24" periodV="-35" additive="true" />
 				<render red="0.80" green="0.50" blue="0.20" alpha="0.08" texture="" />
 				<render red="0.75" green="0.48" blue="0.20" alpha="0.08" texture="" />
 				<render red="0.70" green="0.55" blue="0.20" alpha="0.08" texture="" />
 			</celestialObject>
 			
 			<!-- Earth is the overworld (dimension.id is 0) -->
-			<celestialObject group="solarSystem" name="earth">
+			<celestialObject id="earth">
 				<parent>
 					<!-- coordinates in the solar system, measured in blocks -->
 					<center x="-40000" z="20000" />
@@ -119,16 +142,16 @@
 				<dimension id="0" isBreathable="true" gravity="normal">
 					<center x="0" z="0" />
 				</dimension>
-				<render red="0.70" green="0.70" blue="0.70" alpha="1.00" texture="warpdrive:textures/celestial/planet_temperate.png" />
-				<render red="0.90" green="0.95" blue="1.00" alpha="0.15" texture="warpdrive:textures/celestial/cloud_small.png" periodU="100" periodV="1100" additive="true" />
-				<render red="0.90" green="0.90" blue="1.00" alpha="0.15" texture="warpdrive:textures/celestial/cloud_medium.png" periodU="300" periodV="1500" additive="false" />
-				<render red="0.80" green="0.70" blue="1.00" alpha="0.15" texture="warpdrive:textures/celestial/cloud_large.png" periodU="500" periodV="2100" additive="false" />
+				<render red="0.70" green="0.70" blue="0.70" alpha="1.00" texture="warpdrive:textures/celestial/surface_temperate2.png" />
+				<render red="0.90" green="0.95" blue="1.00" alpha="0.15" texture="warpdrive:textures/celestial/cloud_small1.png" periodU="100" periodV="1100" additive="true" />
+				<render red="0.90" green="0.90" blue="1.00" alpha="0.15" texture="warpdrive:textures/celestial/cloud_medium1.png" periodU="300" periodV="1500" additive="false" />
+				<render red="0.80" green="0.70" blue="1.00" alpha="0.15" texture="warpdrive:textures/celestial/cloud_large1.png" periodU="500" periodV="2100" additive="false" />
 				<render red="0.50" green="0.50" blue="1.00" alpha="0.08" />
 				<render red="0.50" green="0.50" blue="1.00" alpha="0.08" />
 				<render red="0.50" green="0.50" blue="1.00" alpha="0.08" />
 				
 				<!-- Hell is the nether. It's located below earth. In other words, falling below bedrock will drop you to the nether... -->
-				<celestialObject group="solarSystem" name="hell">
+				<celestialObject id="hell">
 					<parent>
 						<center x="0" z="0" />
 					</parent>
@@ -140,7 +163,7 @@
 			</celestialObject>
 			
 			<!-- Pluto is The End. It's a far planet. --> 
-			<celestialObject group="solarSystem" name="pluto">
+			<celestialObject id="pluto">
 				<parent>
 					<center x="90000" z="70000" />
 				</parent>

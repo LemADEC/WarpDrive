@@ -6,6 +6,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 public class SpaceTeleporter extends Teleporter {
+	
 	final int x;
 	final int y;
 	final int z;
@@ -22,24 +23,24 @@ public class SpaceTeleporter extends Teleporter {
 	}
 	
 	@Override
-	public void placeInPortal(Entity par1Entity, double par2, double par4, double par6, float par8) {
-		//EntityPlayer player = (EntityPlayer) par1Entity;
+	public void placeInPortal(Entity entity, double x, double y, double z, float rotationYaw) {
+		//EntityPlayer player = (EntityPlayer) entity;
 		//player.setWorld(world);
 		//player.setPositionAndUpdate(x, y, z);
 	}
 	
 	@Override
-	public boolean placeInExistingPortal(Entity par1Entity, double par2, double par4, double par6, float par8) {
+	public boolean placeInExistingPortal(Entity entity, double x, double y, double z, float rotationYaw) {
 		return true;
 	}
 	
 	@Override
-	public boolean makePortal(Entity par1Entity) {
+	public boolean makePortal(Entity entity) {
 		return true;
 	}
 	
 	@Override
-	public void removeStalePortalLocations(long p_85189_1_) {
+	public void removeStalePortalLocations(long time) {
 		// do nothing
 	}
 }

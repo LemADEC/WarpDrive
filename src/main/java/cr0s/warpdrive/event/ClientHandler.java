@@ -18,7 +18,7 @@ public class ClientHandler {
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onTooltipEvent(ItemTooltipEvent event) {
-		if (event.entityPlayer == null || !event.entityPlayer.capabilities.isCreativeMode) {
+		if (event.entityPlayer == null) {
 			return;
 		}
 		if (Dictionary.ITEMS_BREATHING_HELMET.contains(event.itemStack.getItem()) && WarpDriveConfig.isIndustrialCraft2Loaded) {

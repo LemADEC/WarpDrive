@@ -13,6 +13,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 
 public class MessageTargeting implements IMessage, IMessageHandler<MessageTargeting, IMessage> {
+	
 	private int x;
 	private int y;
 	private int z;

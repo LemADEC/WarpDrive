@@ -52,8 +52,9 @@ public class GlobalPosition {
 		return getWorldServerIfLoaded() != null;
 	}
 	
-	public Vector3 getUniversalCoordinates() {
-		return StarMapRegistry.getUniversalCoordinates(dimensionId, x, y, z);
+	public Vector3 getUniversalCoordinates(final boolean isRemote) {
+		CelestialObject celestialObject = CelestialObjectManager.get(isRemote, dimensionId, x, z);
+		return StarMapRegistry.getUniversalCoordinates(celestialObject, x, y, z);
 	}
 	
 	public GlobalPosition(final NBTTagCompound tagCompound) {

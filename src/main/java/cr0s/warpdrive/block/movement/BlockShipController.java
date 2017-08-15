@@ -37,18 +37,18 @@ public class BlockShipController extends BlockAbstractContainer {
 	public void registerBlockIcons(IIconRegister iconRegister) {
 		iconBuffer = new IIcon[11];
 		// Solid textures
-		iconBuffer[ICON_INACTIVE_SIDE] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideInactive");
-		iconBuffer[ICON_BOTTOM       ] = iconRegister.registerIcon("warpdrive:movement/shipControllerBottom");
-		iconBuffer[ICON_TOP          ] = iconRegister.registerIcon("warpdrive:movement/shipControllerTop");
+		iconBuffer[ICON_INACTIVE_SIDE] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_inactive");
+		iconBuffer[ICON_BOTTOM       ] = iconRegister.registerIcon("warpdrive:movement/ship_controller-bottom");
+		iconBuffer[ICON_TOP          ] = iconRegister.registerIcon("warpdrive:movement/ship_controller-top");
 		// Animated textures
-		iconBuffer[ICON_SIDE_ACTIVATED    ] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideActive0");
-		iconBuffer[ICON_SIDE_ACTIVATED + 1] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideActive1");
-		iconBuffer[ICON_SIDE_ACTIVATED + 2] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideActive2");
-		iconBuffer[ICON_SIDE_ACTIVATED + 3] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideActive3");
-		iconBuffer[ICON_SIDE_ACTIVATED + 4] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideActive4");
-		iconBuffer[ICON_SIDE_ACTIVATED + 5] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideActive5");
-		iconBuffer[ICON_SIDE_ACTIVATED + 6] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideActive6");
-		iconBuffer[ICON_SIDE_ACTIVATED + 7] = iconRegister.registerIcon("warpdrive:movement/shipControllerSideActive7");
+		iconBuffer[ICON_SIDE_ACTIVATED    ] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active0");
+		iconBuffer[ICON_SIDE_ACTIVATED + 1] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active1");
+		iconBuffer[ICON_SIDE_ACTIVATED + 2] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active2");
+		iconBuffer[ICON_SIDE_ACTIVATED + 3] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active3");
+		iconBuffer[ICON_SIDE_ACTIVATED + 4] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active4");
+		iconBuffer[ICON_SIDE_ACTIVATED + 5] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active5");
+		iconBuffer[ICON_SIDE_ACTIVATED + 6] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active6");
+		iconBuffer[ICON_SIDE_ACTIVATED + 7] = iconRegister.registerIcon("warpdrive:movement/ship_controller-side_active7");
 	}
 	
 	@SideOnly(Side.CLIENT)

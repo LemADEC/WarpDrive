@@ -42,15 +42,18 @@ public class BreathingManager {
 	private static final HashMap<UUID, Integer> player_airTank = new HashMap<>();
 	
 	public static boolean hasAirBlock(final EntityLivingBase entityLivingBase, final int x, final int y, final int z) {
-		Block block;
 		for (final VectorI vOffset : vAirOffsets) {
 			final VectorI vPosition = new VectorI(x + vOffset.x, y + vOffset.y, z + vOffset.z);
-			block = entityLivingBase.worldObj.getBlock(vPosition.x, vPosition.y, vPosition.z);
-			if (block == WarpDrive.blockAir || block == WarpDrive.blockAirSource || block == WarpDrive.blockAirFlow) {
+			final Block block = entityLivingBase.worldObj.getBlock(vPosition.x, vPosition.y, vPosition.z);
+			if (isAirBlock(block)) {
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	public static boolean isAirBlock(final Block block) {
+		return block == WarpDrive.blockAir || block == WarpDrive.blockAirSource || block == WarpDrive.blockAirFlow;
 	}
 	
 	public static boolean onLivingJoinEvent(final EntityLivingBase entityLivingBase, final int x, final int y, final int z) {
@@ -67,6 +70,11 @@ public class BreathingManager {
 			return true;
 		}
 		
+		if (WarpDriveConfig.LOGGING_BREATHING) {
+			WarpDrive.logger.warn(String.format("Entity spawn denied at DIM%d @ (%d %d %d) entityId '%s'",
+			                                    entityLivingBase.worldObj.provider.dimensionId,
+			                                    x, y, z, idEntity));
+		}
 		return false;
 	}
 	

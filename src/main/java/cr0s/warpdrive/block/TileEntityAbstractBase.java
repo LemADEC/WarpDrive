@@ -26,7 +26,9 @@ import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 public abstract class TileEntityAbstractBase extends TileEntity implements IBlockUpdateDetector {
+	
 	private boolean isFirstTick = true;
+	private boolean isDirty = false;
 	
 	@Override
 	public void updateEntity() {
@@ -34,6 +36,10 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 		if (isFirstTick) {
 			isFirstTick = false;
 			onFirstUpdateTick();
+		}
+		
+		if (isDirty) {
+			markDirty();
 		}
 	}
 	
@@ -53,10 +59,14 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 	
 	@Override
 	public void markDirty() {
-		super.markDirty();
-		if (hasWorldObj()) {
+		if ( hasWorldObj()
+		  && Commons.isSafeThread() ) {
+			super.markDirty();
+			isDirty = false;
 			worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
 			WarpDrive.starMap.onBlockUpdated(worldObj, xCoord, yCoord, zCoord, getBlockType(), getBlockMetadata());
+		} else {
+			isDirty = true;
 		}
 	}
 	

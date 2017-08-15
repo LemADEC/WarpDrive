@@ -8,7 +8,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
@@ -58,19 +57,21 @@ public class CloakManager {
 		}
 	}
 	
-	public void onPlayerEnteringDimension(final EntityPlayer player) {
-		if (WarpDriveConfig.LOGGING_CLOAKING) { WarpDrive.logger.info("onEntityJoinWorld " + player); }
+	public void onPlayerJoinWorld(final EntityPlayerMP entityPlayerMP, final World world) {
+		if (WarpDriveConfig.LOGGING_CLOAKING) {
+			WarpDrive.logger.info(String.format("CloakManager.onPlayerJoinWorld %s", entityPlayerMP));
+		}
 		for (final CloakedArea area : cloaks) {
 			// skip other dimensions
-			if (area.dimensionId != player.worldObj.provider.dimensionId) {
+			if (area.dimensionId != world.provider.dimensionId) {
 				continue;
 			}
 			
 			// force refresh if player is outside the cloak
-			if ( area.minX > player.posX || area.maxX < player.posX
-			  || area.minY > player.posY || area.maxY < player.posY
-			  || area.minZ > player.posZ || area.maxZ < player.posZ ) {
-				PacketHandler.sendCloakPacket(player, area, false);
+			if ( area.minX > entityPlayerMP.posX || area.maxX < entityPlayerMP.posX
+			  || area.minY > entityPlayerMP.posY || area.maxY < entityPlayerMP.posY
+			  || area.minZ > entityPlayerMP.posZ || area.maxZ < entityPlayerMP.posZ ) {
+				PacketHandler.sendCloakPacket(entityPlayerMP, area, false);
 			}
 		}
 	}
@@ -140,9 +141,9 @@ public class CloakManager {
 		return null;
 	}
 	
-	public void updatePlayer(final EntityPlayer player) {
+	public void updatePlayer(final EntityPlayerMP entityPlayerMP) {
 		for (final CloakedArea area : cloaks) {
-			area.updatePlayer(player);
+			area.updatePlayer(entityPlayerMP);
 		}
 	}
 	

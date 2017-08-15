@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.EntityBreakingFX;
+import net.minecraft.client.particle.EntityCloudFX;
 import net.minecraft.client.particle.EntityExplodeFX;
 import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.particle.EntityFireworkSparkFX;
@@ -109,44 +110,48 @@ public class MessageSpawnParticle implements IMessage, IMessageHandler<MessageSp
 	}
 	
 	@SideOnly(Side.CLIENT)
-	private void handle(World worldObj) {
+	private void handle(World world) {
 		// Directly spawn particle as per RenderGlobal.doSpawnParticle, bypassing range check
 		// adjust color as needed
 		EntityFX effect;
 		double noiseLevel = direction.getMagnitude() * 0.35D;
 		for (int i = 0; i < quantity; i++) {
 			Vector3 directionRandomized = new Vector3(
-					direction.x + noiseLevel * (worldObj.rand.nextFloat() - worldObj.rand.nextFloat()),
-					direction.y + noiseLevel * (worldObj.rand.nextFloat() - worldObj.rand.nextFloat()),
-					direction.z + noiseLevel * (worldObj.rand.nextFloat() - worldObj.rand.nextFloat()));
+					direction.x + noiseLevel * (world.rand.nextFloat() - world.rand.nextFloat()),
+					direction.y + noiseLevel * (world.rand.nextFloat() - world.rand.nextFloat()),
+					direction.z + noiseLevel * (world.rand.nextFloat() - world.rand.nextFloat()));
 			switch (type) {
 			default:
 				WarpDrive.logger.error(String.format("Invalid particle type '%s' at %s", type, origin.toString()));
 			case "explode":
-				effect = new EntityExplodeFX(worldObj, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
+				effect = new EntityExplodeFX(world, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
 				break;
 			
 			case "fireworksSpark":
-				EntityFireworkSparkFX entityFireworkSparkFX = new EntityFireworkSparkFX(worldObj, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z,
+				EntityFireworkSparkFX entityFireworkSparkFX = new EntityFireworkSparkFX(world, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z,
 					                                                                       FMLClientHandler.instance().getClient().effectRenderer);
 				entityFireworkSparkFX.setFadeColour(integerFromRGB(fadeRed, fadeGreen, fadeBlue));
 				effect = entityFireworkSparkFX;
 				break;
 			
 			case "flame":
-				effect = new EntityFlameFX(worldObj, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
+				effect = new EntityFlameFX(world, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
 				break;
 			
 			case "snowballpoof":
-				effect = new EntityBreakingFX(worldObj, origin.x, origin.y, origin.z, Items.snowball);
+				effect = new EntityBreakingFX(world, origin.x, origin.y, origin.z, Items.snowball);
 				break;
 			
 			case "snowshovel":
-				effect = new EntitySnowShovelFX(worldObj, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
+				effect = new EntitySnowShovelFX(world, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
 				break;
 			
 			case "mobSpell":
-				effect = new EntitySpellParticleFX(worldObj, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
+				effect = new EntitySpellParticleFX(world, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
+				break;
+			
+			case "cloud":
+				effect = new EntityCloudFX(world, origin.x, origin.y, origin.z, directionRandomized.x, directionRandomized.y, directionRandomized.z);
 				break;
 			} 
 			if (baseRed >= 0.0F && baseGreen >= 0.0F && baseBlue >= 0.0F) {
@@ -161,7 +166,7 @@ public class MessageSpawnParticle implements IMessage, IMessageHandler<MessageSp
 	public IMessage onMessage(MessageSpawnParticle messageSpawnParticle, MessageContext context) {
 		// skip in case player just logged in
 		if (Minecraft.getMinecraft().theWorld == null) {
-			WarpDrive.logger.error("WorldObj is null, ignoring beam packet");
+			WarpDrive.logger.error("WorldObj is null, ignoring particle packet");
 			return null;
 		}
 		

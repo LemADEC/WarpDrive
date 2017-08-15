@@ -36,7 +36,7 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 minecraft {
     version = config.minecraft_version + "-" + config.forge_version
-    runDir = "eclipse"
+    runDir = "run"
     
     // replacing
     replace "@version@", project.version
@@ -104,10 +104,12 @@ jar {
     dependsOn copyOpenComputersCommons1, copyOpenComputersCommons2, copyOpenComputersCommons3, copyOpenComputersCommons4
     
     manifest {
-        attributes 'FMLAT': 'CoFH_at.cfg'
+        attributes 'FMLAT': 'WarpDrive_at.cfg'
         attributes 'FMLCorePlugin': 'cr0s.warpdrive.core.FMLLoadingPlugin',
                         'FMLCorePluginContainsFMLMod': 'true'
     }
+    classifier = ''
+    destinationDir = file 'output'
 }
 
 idea {
@@ -117,9 +119,9 @@ idea {
 }
 
 runClient {
-    jvmArgs "-Xmx1024m", "-Xms1024m"
+    jvmArgs "-Xmx2048m", "-Xms1024m", "-ea"
 }
 
 runServer {
-    jvmArgs "-Xmx1024m", "-Xms1024m"
+    jvmArgs "-Xmx2048m", "-Xms1024m", "-ea"
 }

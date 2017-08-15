@@ -29,7 +29,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 	@Optional.Interface(iface = "ic2.api.energy.tile.IEnergySink", modid = "IC2"),
 	@Optional.Interface(iface = "ic2.api.energy.tile.IEnergySource", modid = "IC2")
 })
-public abstract class TileEntityAbstractEnergy extends TileEntityAbstractInterfaced implements IEnergyHandler, IEnergySink, IEnergySource {
+public abstract class TileEntityAbstractEnergy extends TileEntityAbstractInterfaced implements IEnergyHandler, IEnergySink, IEnergySource, cr0s.warpdrive.api.computer.IEnergy {
 	private boolean addedToEnergyNet = false;
 	private long energyStored_internal = 0;
 	public static final double EU_PER_INTERNAL = 1.0D;
@@ -146,10 +146,6 @@ public abstract class TileEntityAbstractEnergy extends TileEntityAbstractInterfa
 		energyStored_internal -= amount_internal;
 	}
 	
-	public Object[] energy() {
-		return new Object[] { energy_getEnergyStored(), energy_getMaxStorage() };
-	}
-	
 	public String getEnergyStatus() {
 		if (energy_getMaxStorage() == 0) {
 			return "";
@@ -166,6 +162,12 @@ public abstract class TileEntityAbstractEnergy extends TileEntityAbstractInterfa
 		       + (strEnergyStatus.isEmpty() ? "" : "\n" + strEnergyStatus);
 	}
 	
+	// Common OC/CC methods
+	@Override
+	public Object[] energy() {
+		return new Object[] { energy_getEnergyStored(), energy_getMaxStorage() };
+	}
+	
 	// OpenComputer callback methods
 	@Callback
 	@Optional.Method(modid = "OpenComputers")
@@ -173,11 +175,11 @@ public abstract class TileEntityAbstractEnergy extends TileEntityAbstractInterfa
 		return energy();
 	}
 	
-	// ComputerCraft methods
+	// ComputerCraft IPeripheral methods
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		if (methodName.equals("energy")) {
 			return energy();

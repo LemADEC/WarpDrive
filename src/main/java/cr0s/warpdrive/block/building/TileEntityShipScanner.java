@@ -6,11 +6,12 @@ import cr0s.warpdrive.block.TileEntityAbstractEnergy;
 import cr0s.warpdrive.block.movement.TileEntityShipCore;
 import cr0s.warpdrive.config.Dictionary;
 import cr0s.warpdrive.config.WarpDriveConfig;
+import cr0s.warpdrive.data.EnumShipScannerState;
 import cr0s.warpdrive.data.JumpBlock;
 import cr0s.warpdrive.data.JumpShip;
 import cr0s.warpdrive.data.Transformation;
 import cr0s.warpdrive.data.Vector3;
-import cr0s.warpdrive.item.ItemCrystalToken;
+import cr0s.warpdrive.item.ItemShipToken;
 import cr0s.warpdrive.network.PacketHandler;
 import dan200.computercraft.api.lua.ILuaContext;
 import dan200.computercraft.api.peripheral.IComputerAccess;
@@ -33,6 +34,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
@@ -43,25 +47,34 @@ import cpw.mods.fml.common.Optional;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public class TileEntityShipScanner extends TileEntityAbstractEnergy {
-	private boolean isActive = false;
+	
+	private static final int SHIP_TOKEN_MAX_RETRY_COUNT = 5;
+	
+	// persistent properties
+	private String schematicFileName = "";
+	private int targetX, targetY, targetZ;
+	private byte rotationSteps;
+	public Block blockCamouflage;
+	public int metadataCamouflage;
+	protected int colorMultiplierCamouflage;
+	protected int lightCamouflage;
+	
+	// computed properties
+	private EnumShipScannerState enumShipScannerState = EnumShipScannerState.IDLE;
 	private TileEntityShipCore shipCore = null;
 	
 	private int laserTicks = 0;
 	private int scanTicks = 0;
 	private int deployDelayTicks = 0;
+	private int deployRetryCounts = 0;
 	
 	private int searchTicks = 0;
 	
-	private String schematicFileName = "";
 	private String playerName = "";
 	
 	private JumpShip jumpShip;
 	private int currentDeployIndex;
 	private int blocksToDeployCount;
-	private boolean isDeploying = false;
-	
-	private int targetX, targetY, targetZ;
-	private byte rotationSteps;
 	
 	public TileEntityShipScanner() {
 		super();
@@ -89,35 +102,44 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 			shipCore = searchShipCore();
 		}
 		
-		// Trigger deployment by player
-		if (!isActive) {
-			checkPlayerToken();
-		}
-		
-		// Ship core is not found
-		if (!isDeploying && shipCore == null) {
-			setActive(false); // disable scanner
+		// Trigger deployment by player, provided setup is done
+		final boolean isSetupDone = targetX != 0 || targetY != 0 || targetZ != 0;
+		if (isSetupDone) {
+			if (enumShipScannerState == EnumShipScannerState.IDLE) {
+				checkPlayerForShipToken();
+			}
+			if (enumShipScannerState != EnumShipScannerState.DEPLOYING) {
+				setState(EnumShipScannerState.IDLE); // disable scanner
+				return;
+			}
+			
+		} else if (enumShipScannerState != EnumShipScannerState.DEPLOYING && shipCore == null) {// Ship core is not found
 			laserTicks++;
 			if (laserTicks > 20) {
-				PacketHandler.sendBeamPacket(worldObj,
-					new Vector3(this).translate(0.5D),
-					new Vector3(xCoord, yCoord + 5, zCoord).translate(0.5D), 
-					1.0F, 0.2F, 0.0F, 40, 0, 100);
+				PacketHandler.sendBeamPacket(worldObj, 
+				                             new Vector3(this).translate(0.5D), 
+				                             new Vector3(xCoord, yCoord + 5, zCoord).translate(0.5D), 
+				                             1.0F, 0.2F, 0.0F, 40, 0, 100);
 				laserTicks = 0;
 			}
 			return;
 		}
 		
-		if (!isActive) {// inactive
-			laserTicks++;
-			if (laserTicks > 20) {
-				PacketHandler.sendBeamPacket(worldObj,
-					new Vector3(this).translate(0.5D),
-					new Vector3(shipCore.xCoord, shipCore.yCoord, shipCore.zCoord).translate(0.5D),
-					0.0F, 1.0F, 0.2F, 40, 0, 100);
-				laserTicks = 0;
+		switch (enumShipScannerState) {
+		case IDLE:// inactive
+			if (shipCore != null) {// and ship core found
+				laserTicks++;
+				if (laserTicks > 20) {
+					PacketHandler.sendBeamPacket(worldObj,
+					                             new Vector3(this).translate(0.5D),
+					                             new Vector3(shipCore.xCoord, shipCore.yCoord, shipCore.zCoord).translate(0.5D),
+					                             0.0F, 1.0F, 0.2F, 40, 0, 100);
+					laserTicks = 0;
+				}
 			}
-		} else if (!isDeploying) {// active and scanning
+			break;
+			
+		case SCANNING:// active and scanning
 			laserTicks++;
 			if (laserTicks > 5) {
 				laserTicks = 0;
@@ -141,11 +163,12 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 			
 			scanTicks++;
 			if (scanTicks > 20 * (1 + shipCore.shipMass / WarpDriveConfig.SS_SCAN_BLOCKS_PER_SECOND)) {
-				setActive(false); // disable scanner
+				setState(EnumShipScannerState.IDLE); // disable scanner
 				scanTicks = 0;
 			}
+			break;
 			
-		} else {// active and deploying
+		case DEPLOYING:// active and deploying
 			deployDelayTicks++;
 			if (deployDelayTicks > WarpDriveConfig.SS_DEPLOY_INTERVAL_TICKS) {
 				deployDelayTicks = 0;
@@ -165,20 +188,37 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 				
 				// deployment done?
 				if (blocksToDeployCurrentTick == 0) {
-					TileEntity tileEntity = worldObj.getTileEntity(targetX, targetY, targetZ);
-					if (tileEntity instanceof TileEntityShipCore) {
-						((TileEntityShipCore)tileEntity).summonOwnerOnDeploy(playerName);
-						if (entityPlayerMP != null) {
-							Commons.addChatMessage(entityPlayerMP, "§6" + "Welcome aboard captain. Use the computer to get moving...");
+					if (playerName != null && !playerName.isEmpty()) {
+						final TileEntity tileEntity = worldObj.getTileEntity(targetX, targetY, targetZ);
+						if (tileEntity instanceof TileEntityShipCore) {
+							final boolean isSuccess = ((TileEntityShipCore) tileEntity).summonOwnerOnDeploy(entityPlayerMP);
+							if (isSuccess) {
+								if (entityPlayerMP != null) {
+									Commons.addChatMessage(entityPlayerMP, "§6" + "Welcome aboard captain. Use the computer to get moving...");
+								}
+							} else {
+								deployRetryCounts--;
+								WarpDrive.logger.warn(String.format("Ship scanner failed to assign new captain, %d retries left",
+								                                    deployRetryCounts));
+								if (deployRetryCounts > 0) {
+									return;
+								}
+							}
+						} else {
+							WarpDrive.logger.warn(String.format("Ship scanner unable to detect ship core after deployment, found %s",
+							                                    tileEntity));
+							deployRetryCounts--;
+							if (deployRetryCounts > 0) {
+								return;
+							}
 						}
 					}
 					
-					isDeploying = false;
-					setActive(false); // disable scanner
+					setState(EnumShipScannerState.IDLE); // disable scanner
 					if (WarpDriveConfig.LOGGING_BUILDING) {
 						WarpDrive.logger.info(this + " Deployment done");
 					}
-					cooldownPlayerDetection = SS_SEARCH_INTERVAL_TICKS * 3;
+					shipToken_nextUpdate_ticks = SHIP_TOKEN_UPDATE_PERIOD_TICKS * 3;
 					return;
 				}
 				
@@ -250,28 +290,42 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 					}
 				}
 			}
+			break;
+			
+		default:
+			WarpDrive.logger.error("Invalid ship scanner state, forcing to IDLE...");
+			setState(EnumShipScannerState.IDLE);
+			break;
 		}
 	}
 	
-	private void setActive(boolean newState) {
-		isActive = newState;
-		if ((getBlockMetadata() == 1) == newState) {
-			worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, isActive ? 1 : 0, 2);
+	private void setState(final EnumShipScannerState newState) {
+		if (enumShipScannerState == newState) {
+			return;
+		}
+		enumShipScannerState = newState;
+		if (blockCamouflage == null) {
+			if (getBlockMetadata() == newState.getMetadata()) {
+				worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, newState.getMetadata(), 2);
+			}
+		} else {
+			if (getBlockMetadata() != metadataCamouflage) {
+				worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, metadataCamouflage, 2);
+			}
 		}
 	}
 	
 	private TileEntityShipCore searchShipCore() {
 		StringBuilder reason = new StringBuilder();
-		TileEntityShipCore result = null;
+		TileEntityShipCore tileEntityShipCore = null;
 		
 		// Search for ship cores above
 		for (int newY = yCoord + 1; newY <= 255; newY++) {
 			if (worldObj.getBlock(xCoord, newY, zCoord).isAssociatedBlock(WarpDrive.blockShipCore)) { // found ship core above
-				result = (TileEntityShipCore) worldObj.getTileEntity(xCoord, newY, zCoord);
-				
-				if (result != null) {
-					if (!result.validateShipSpatialParameters(reason)) { // If we can't refresh ship's spatial parameters
-						result = null;
+				tileEntityShipCore = (TileEntityShipCore) worldObj.getTileEntity(xCoord, newY, zCoord);
+				if (tileEntityShipCore != null) {
+					if (!tileEntityShipCore.validateShipSpatialParameters(reason)) { // If we can't refresh ship's spatial parameters
+						tileEntityShipCore = null;
 					}
 				}
 				
@@ -279,7 +333,7 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 			}
 		}
 		
-		return result;
+		return tileEntityShipCore;
 	}
 	
 	private int getScanningEnergyCost(int size) {
@@ -335,8 +389,8 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 		ship.coreX = shipCore.xCoord;
 		ship.coreY = shipCore.yCoord;
 		ship.coreZ = shipCore.zCoord;
-		ship.dx = shipCore.dx;
-		ship.dz = shipCore.dz;
+		ship.dx = shipCore.facing.offsetX;
+		ship.dz = shipCore.facing.offsetZ;
 		ship.minX = shipCore.minX;
 		ship.maxX = shipCore.maxX;
 		ship.minY = shipCore.minY;
@@ -415,7 +469,7 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 	// Begins ship scan
 	private boolean scanShip(StringBuilder reason) {
 		// Enable scanner
-		setActive(true);
+		setState(EnumShipScannerState.SCANNING);
 		File file = new File(WarpDriveConfig.G_SCHEMALOCATION);
 		if (!file.exists() || !file.isDirectory()) {
 			if (!file.mkdirs()) {
@@ -439,7 +493,8 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 	}
 	
 	// Returns error code and reason string
-	private int deployShip(final String fileName, final int offsetX, final int offsetY, final int offsetZ, final byte rotationSteps, final boolean isForced, final StringBuilder reason) {
+	private int deployShip(final String fileName, final int offsetX, final int offsetY, final int offsetZ,
+	                       final byte rotationSteps, final boolean isForced, final StringBuilder reason) {
 		targetX = xCoord + offsetX;
 		targetY = yCoord + offsetY;
 		targetZ = zCoord + offsetZ;
@@ -492,9 +547,11 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 				if (!worldObj.isAirBlock(targetX, targetY, targetZ)) {
 					worldObj.newExplosion(null, targetX, targetY, targetZ, 1, false, false);
 					if (WarpDriveConfig.LOGGING_BUILDING) {
-						WarpDrive.logger.info("Deployment collision detected at " + targetX + " " + targetY + " " + targetZ);
+						WarpDrive.logger.info(String.format("Deployment collision detected at %d %d %d",
+						                                    targetX, targetY, targetZ));
 					}
-					reason.append(String.format("Deployment area occupied with existing ship. Can't deploy new ship at " + targetX + " " + targetY + " " + targetZ));
+					reason.append(String.format("Deployment area occupied with existing ship.\nCan't deploy new ship at %d %d %d",
+					                            targetX, targetY, targetZ));
 					return 2;
 				}
 				
@@ -535,32 +592,73 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 		}
 		
 		// initiate deployment sequencer
-		isDeploying = true;
 		currentDeployIndex = 0;
+		deployRetryCounts = SHIP_TOKEN_MAX_RETRY_COUNT;
 		
-		setActive(true);
+		setState(EnumShipScannerState.DEPLOYING);
 		reason.append(String.format("Deploying ship '%s'...", fileName));
 		return 3;
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound tag) {
-		super.readFromNBT(tag);
-		schematicFileName = tag.getString("schematic");
-		targetX = tag.getInteger("targetX");
-		targetY = tag.getInteger("targetY");
-		targetZ = tag.getInteger("targetZ");
-		rotationSteps = tag.getByte("rotationSteps");
+	public void readFromNBT(NBTTagCompound tatagCompound) {
+		super.readFromNBT(tatagCompound);
+		schematicFileName = tatagCompound.getString("schematic");
+		targetX = tatagCompound.getInteger("targetX");
+		targetY = tatagCompound.getInteger("targetY");
+		targetZ = tatagCompound.getInteger("targetZ");
+		rotationSteps = tatagCompound.getByte("rotationSteps");
+		if (tatagCompound.hasKey("camouflageBlock")) {
+			try {
+				blockCamouflage = Block.getBlockFromName(tatagCompound.getString("camouflageBlock"));
+				metadataCamouflage = tatagCompound.getByte("camouflageMeta");
+				colorMultiplierCamouflage = tatagCompound.getInteger("camouflageColorMultiplier");
+				lightCamouflage = tatagCompound.getByte("camouflageLight");
+				if (Dictionary.BLOCKS_NOCAMOUFLAGE.contains(blockCamouflage)) {
+					blockCamouflage = null;
+					metadataCamouflage = 0;
+					colorMultiplierCamouflage = 0;
+					lightCamouflage = 0;
+				}
+			} catch (Exception exception) {
+				exception.printStackTrace();
+			}
+		} else {
+			blockCamouflage = null;
+			metadataCamouflage = 0;
+			colorMultiplierCamouflage = 0;
+			lightCamouflage = 0;
+		}
 	}
 	
 	@Override
-	public void writeToNBT(NBTTagCompound tag) {
-		super.writeToNBT(tag);
-		tag.setString("schematic", schematicFileName);
-		tag.setInteger("targetX", targetX);
-		tag.setInteger("targetY", targetY);
-		tag.setInteger("targetZ", targetZ);
-		tag.setByte("rotationSteps", rotationSteps);
+	public void writeToNBT(NBTTagCompound tagCompound) {
+		super.writeToNBT(tagCompound);
+		tagCompound.setString("schematic", schematicFileName);
+		tagCompound.setInteger("targetX", targetX);
+		tagCompound.setInteger("targetY", targetY);
+		tagCompound.setInteger("targetZ", targetZ);
+		tagCompound.setByte("rotationSteps", rotationSteps);
+		if (blockCamouflage != null) {
+			tagCompound.setString("camouflageBlock", Block.blockRegistry.getNameForObject( blockCamouflage));
+			tagCompound.setByte("camouflageMeta", (byte) metadataCamouflage);
+			tagCompound.setInteger("camouflageColorMultiplier",  colorMultiplierCamouflage);
+			tagCompound.setByte("camouflageLight", (byte) lightCamouflage);
+		}
+	}
+	
+	@Override
+	public Packet getDescriptionPacket() {
+		NBTTagCompound tagCompound = new NBTTagCompound();
+		writeToNBT(tagCompound);
+		
+		return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, -1, tagCompound);
+	}
+	
+	@Override
+	public void onDataPacket(NetworkManager networkManager, S35PacketUpdateTileEntity packet) {
+		NBTTagCompound tagCompound = packet.func_148857_g();
+		readFromNBT(tagCompound);
 	}
 	
 	// OpenComputer callback methods
@@ -590,7 +688,7 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 	
 	private Object[] scan() {
 		// Already scanning?
-		if (isActive) {
+		if (enumShipScannerState != EnumShipScannerState.IDLE) {
 			return new Object[] { false, 0, "Already active" };
 		}
 		
@@ -608,8 +706,8 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 	}
 	
 	private Object[] filename() {
-		if (isActive && !schematicFileName.isEmpty()) {
-			if (isDeploying) {
+		if (enumShipScannerState != EnumShipScannerState.IDLE && !schematicFileName.isEmpty()) {
+			if (enumShipScannerState == EnumShipScannerState.DEPLOYING) {
 				return new Object[] { false, "Deployment in progress. Please wait..." };
 			} else {
 				return new Object[] { false, "Scan in progress. Please wait..." };
@@ -641,11 +739,13 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 	}
 	
 	private Object[] state() {
-		if (!isActive) {
+		switch (enumShipScannerState) {
+		default:
+		case IDLE:
 			return new Object[] { false, "IDLE", 0, 0 };
-		} else if (!isDeploying) {
+		case SCANNING:
 			return new Object[] { true, "Scanning", 0, 0 };
-		} else {
+		case DEPLOYING:
 			return new Object[] { true, "Deploying", currentDeployIndex, blocksToDeployCount };
 		}
 	}
@@ -654,7 +754,7 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 	@Override
 	@Optional.Method(modid = "ComputerCraft")
 	public Object[] callMethod(IComputerAccess computer, ILuaContext context, int method, Object[] arguments) {
-		String methodName = getMethodName(method);
+		final String methodName = getMethodName(method);
 		
 		switch (methodName) {
 			case "scan":
@@ -673,47 +773,45 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 		return super.callMethod(computer, context, method, arguments);
 	}
 	
-	private static final int SS_SEARCH_INTERVAL_TICKS = 20;
-	private int cooldownPlayerDetection = 5;
-	private static final int SS_SEARCH_WARMUP_INTERVALS = 5;
-	private UUID warmupPlayerId = null;
-	private int warmupPlayer = SS_SEARCH_WARMUP_INTERVALS;
-	private String warmupSchematicName = "";
-	private void checkPlayerToken() {
+	private static final int SHIP_TOKEN_UPDATE_PERIOD_TICKS = 20;
+	private static final int SHIP_TOKEN_UPDATE_DELAY_FAILED_PRECONDITION_TICKS = 3 * 20;
+	private static final int SHIP_TOKEN_UPDATE_DELAY_FAILED_DEPLOY_TICKS = 5 * 20;
+	private int shipToken_nextUpdate_ticks = 5;
+	private static final int SHIP_TOKEN_PLAYER_WARMUP_PERIODS = 5;
+	private UUID shipToken_idPlayer = null;
+	private int shipToken_countWarmup = SHIP_TOKEN_PLAYER_WARMUP_PERIODS;
+	private String shipToken_nameSchematic = "";
+	private void checkPlayerForShipToken() {
 		// cooldown to prevent player chat spam and server lag
-		cooldownPlayerDetection--;
-		if (cooldownPlayerDetection > 0) {
+		shipToken_nextUpdate_ticks--;
+		if (shipToken_nextUpdate_ticks > 0) {
 			return;
 		}
-		cooldownPlayerDetection = SS_SEARCH_INTERVAL_TICKS;
-		
-		// skip unless setup is done
-		if (targetX == 0 && targetY == 0 && targetZ == 0) {
-			return;
-		}
+		shipToken_nextUpdate_ticks = SHIP_TOKEN_UPDATE_PERIOD_TICKS;
 		
 		// find a unique player in range
-		AxisAlignedBB axisalignedbb = AxisAlignedBB.getBoundingBox(xCoord - 1.0D, yCoord + 1.0D, zCoord - 1.0D, xCoord + 1.99D, yCoord + 5.0D, zCoord + 1.99D);
-		List list = worldObj.getEntitiesWithinAABBExcludingEntity(null, axisalignedbb);
-		List<EntityPlayer> entityPlayers = new ArrayList<>(10);
+		final AxisAlignedBB axisalignedbb = AxisAlignedBB.getBoundingBox(xCoord - 1.0D, yCoord + 1.0D, zCoord - 1.0D, 
+		                                                                 xCoord + 1.99D, yCoord + 5.0D, zCoord + 1.99D);
+		final List list = worldObj.getEntitiesWithinAABBExcludingEntity(null, axisalignedbb);
+		final List<EntityPlayer> entityPlayers = new ArrayList<>(10);
 		for (Object object : list) {
 			if (object instanceof EntityPlayer) {
 				entityPlayers.add((EntityPlayer) object);
 			}
 		}
 		if (entityPlayers.isEmpty()) {
-			warmupPlayerId = null;
+			shipToken_idPlayer = null;
 			return;
 		}
 		if (entityPlayers.size() > 1) {
 			for (EntityPlayer entityPlayer : entityPlayers) {
 				Commons.addChatMessage(entityPlayer, "§c" + "Too many players detected: please stand in the beam one at a time.");
-				cooldownPlayerDetection = 3 * SS_SEARCH_INTERVAL_TICKS;
+				shipToken_nextUpdate_ticks = SHIP_TOKEN_UPDATE_DELAY_FAILED_PRECONDITION_TICKS;
 			}
-			warmupPlayerId = null;
+			shipToken_idPlayer = null;
 			return;
 		}
-		EntityPlayer entityPlayer = entityPlayers.get(0);
+		final EntityPlayer entityPlayer = entityPlayers.get(0);
 		
 		// check inventory
 		int slotIndex = 0;
@@ -721,40 +819,44 @@ public class TileEntityShipScanner extends TileEntityAbstractEnergy {
 		for (; slotIndex < entityPlayer.inventory.getSizeInventory(); slotIndex++) {
 			itemStack = entityPlayer.inventory.getStackInSlot(slotIndex);
 			if ( itemStack != null
-			  && itemStack.getItem() == WarpDrive.itemCrystalToken
+			  && itemStack.getItem() == WarpDrive.itemShipToken
 			  && itemStack.stackSize >= 1) {
 				break;
 			}
 		}
-		if (itemStack == null || slotIndex >= entityPlayer.inventory.getSizeInventory()) {
-			Commons.addChatMessage(entityPlayer, "Please come back once you've a Crystal token.");
-			cooldownPlayerDetection = 3 * SS_SEARCH_INTERVAL_TICKS;
+		if ( itemStack == null
+		  || slotIndex >= entityPlayer.inventory.getSizeInventory() ) {
+			Commons.addChatMessage(entityPlayer, "Please come back once you've a Ship token.");
+			shipToken_nextUpdate_ticks = SHIP_TOKEN_UPDATE_DELAY_FAILED_PRECONDITION_TICKS;
+			shipToken_idPlayer = null;
 			return;
 		}
 		
 		// short warmup so payer can cancel eventually
-		if (entityPlayer.getUniqueID() != warmupPlayerId || !warmupSchematicName.equals(ItemCrystalToken.getSchematicName(itemStack))) {
-			warmupPlayerId = entityPlayer.getUniqueID();
-			warmupPlayer = SS_SEARCH_WARMUP_INTERVALS + 1;
-			warmupSchematicName = ItemCrystalToken.getSchematicName(itemStack);
-			Commons.addChatMessage(entityPlayer, "§6" + String.format("Token '%1$s' detected!", warmupSchematicName, SS_SEARCH_WARMUP_INTERVALS));
+		if ( entityPlayer.getUniqueID() != shipToken_idPlayer
+		  || !shipToken_nameSchematic.equals(ItemShipToken.getSchematicName(itemStack)) ) {
+			shipToken_idPlayer = entityPlayer.getUniqueID();
+			shipToken_countWarmup = SHIP_TOKEN_PLAYER_WARMUP_PERIODS + 1;
+			shipToken_nameSchematic = ItemShipToken.getSchematicName(itemStack);
+			Commons.addChatMessage(entityPlayer, "§6" + String.format("Ship token '%1$s' detected!", shipToken_nameSchematic));
 		}
-		warmupPlayer--;
-		if (warmupPlayer > 0) {
-			Commons.addChatMessage(entityPlayer, String.format("Stand by for ship materialization in %2$d...", warmupSchematicName, warmupPlayer));
+		shipToken_countWarmup--;
+		if (shipToken_countWarmup > 0) {
+			Commons.addChatMessage(entityPlayer, String.format("Stand by for ship materialization in %2$d...",
+			                                                   shipToken_nameSchematic, shipToken_countWarmup));
 			return;
 		}
 		// warmup done
-		warmupPlayerId = null;
+		shipToken_idPlayer = null;
 		playerName = entityPlayer.getCommandSenderName();
 		
 		// try deploying
-		StringBuilder reason = new StringBuilder();
-		deployShip(ItemCrystalToken.getSchematicName(itemStack), targetX - xCoord, targetY - yCoord, targetZ - zCoord, rotationSteps, true, reason);
-		if (!isActive) {
+		final StringBuilder reason = new StringBuilder();
+		deployShip(ItemShipToken.getSchematicName(itemStack), targetX - xCoord, targetY - yCoord, targetZ - zCoord, rotationSteps, true, reason);
+		if (enumShipScannerState == EnumShipScannerState.IDLE) {
 			// failed
 			Commons.addChatMessage(entityPlayer, "§c" + reason.toString());
-			cooldownPlayerDetection = 5 * SS_SEARCH_INTERVAL_TICKS;
+			shipToken_nextUpdate_ticks = SHIP_TOKEN_UPDATE_DELAY_FAILED_DEPLOY_TICKS;
 			return;
 		}
 		Commons.addChatMessage(entityPlayer, "§6" + reason.toString());

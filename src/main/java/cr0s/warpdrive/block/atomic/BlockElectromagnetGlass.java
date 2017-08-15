@@ -35,10 +35,10 @@ public class BlockElectromagnetGlass extends BlockElectromagnetPlain {
 	@SideOnly(Side.CLIENT)
 	@Override
 	public boolean shouldSideBeRendered(IBlockAccess blockAccess, int x, int y, int z, int side) {
-		if (blockAccess.isAirBlock(x, y, z)) {
+		final Block blockSide = blockAccess.getBlock(x, y, z);
+		if (blockSide.isAir(blockAccess, x, y, z)) {
 			return true;
 		}
-		Block sideBlock = blockAccess.getBlock(x, y, z);
-		return !(sideBlock instanceof BlockElectromagnetGlass);
+		return !(blockSide instanceof BlockElectromagnetGlass);
 	}
 }
