@@ -182,14 +182,13 @@ item.warpdrive.tool.tuning_fork.red.name=红色音叉
 item.warpdrive.tool.tuning_fork.black.name=黑色音叉
 
 item.warpdrive.tool.tuning_fork.tooltip.usage=§b右击方块§7 to tune its crystals\n§bSneak§7 to tune alternate crystals
-item.warpdrive.tool.tuning_fork.tooltip.usage-tbc=§b右键单击一个方块§7 来调整它的水晶\n§b潜行§7来选择替换的水晶
 
 
 tile.warpdrive.decoration.decorative.energized.name-tbc=能量方块
 tile.warpdrive.decoration.decorative.network.name-tbc=网络方块
 tile.warpdrive.decoration.decorative.plain.name-tbc=平坦方块
 tile.warpdrive.decoration.gas.name=气密方块
-tile.warpdrive.decoration.bedrock_glass.name=Bedrock Glass
+tile.warpdrive.decoration.bedrock_glass.name=基岩玻璃
 
 tile.warpdrive.passive.IridiumBlock.name=铱块
 tile.warpdrive.passive.HighlyAdvancedMachine.name=高新机械块
@@ -588,10 +587,10 @@ warpdrive.beam_frequency.statusLine.valid=光线频率%1$d是有效的
 warpdrive.beam_frequency.statusLine.invalid=§c光线频率%1$d是无效的
 warpdrive.beam_frequency.statusLine.undefined=§7未定义的光线频率.\n§b使用一个音叉§r 去设置它
 
-warpdrive.breathing.alarm=Breathing alarm
+warpdrive.breathing.alarm=呼吸警报
 warpdrive.breathing.invalid_setup=No breathing helmet\nor incomplete armor
 warpdrive.breathing.low_reserve=Low air reserve!
-warpdrive.breathing.no_air=No more air!
+warpdrive.breathing.no_air=空气耗尽!
 
 warpdrive.control_channel.tooltip=Control channel is set to %1$d
 warpdrive.control_channel.get=Control channel %2$d has been retrieved from %1$s 
@@ -686,6 +685,5 @@ warpdrive.IC2reactorLaserMonitor.multipleReactors=%1$d反应堆已连接.
 warpdrive.transporter.status=从%1$.0f %2$.0f %3$.0f到 %4$.0f %5$.0f %6$.0f
 
 warpdrive.tooltip.itemTag.breathingHelmet=§b太空中呼吸§r消耗背包中的IC压缩空气
-warpdrive.tooltip.itemTag.breathingHelmet-tbc=§b太空中呼吸§r 从你的背包消耗IC2的压缩空气
 warpdrive.tooltip.itemTag.flyInSpace=§b太空喷气背包§r.
 warpdrive.tooltip.itemTag.noFallDamage=§b减少摔落伤害§r.
