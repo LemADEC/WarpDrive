@@ -50,14 +50,14 @@ item.warpdrive.atomic.electromagnetic_cell.tooltip.empty=使用粒子对撞机�
 item.warpdrive.atomic.electromagnetic_cell.tooltip.filled=存储%1$s Å³总量%2$s
 
 item.warpdrive.breathing.air_tank0.name=空气罐
-item.warpdrive.breathing.air_tank1.name=Basic Air Tank
-item.warpdrive.breathing.air_tank2.name=Advanced Air Tank
-item.warpdrive.breathing.air_tank3.name=Superior Air Tank
+item.warpdrive.breathing.air_tank1.name=基础空气罐
+item.warpdrive.breathing.air_tank2.name=先进空气罐
+item.warpdrive.breathing.air_tank3.name=卓越空气罐
 
 item.warpdrive.energy.IC2reactorLaserFocus.name=IC2反应堆激光焦点
 
 item.warpdrive.forcefield.shape.none.name=无形状
-item.warpdrive.forcefield.shape.none.tooltip=§4无效的项目
+item.warpdrive.forcefield.shape.none.tooltip=§4无效
 item.warpdrive.forcefield.shape.sphere.name=球体
 item.warpdrive.forcefield.shape.sphere.tooltip=
 item.warpdrive.forcefield.shape.cylinder_h.name=圆柱体(水平)
@@ -184,9 +184,9 @@ item.warpdrive.tool.tuning_fork.black.name=黑色音叉
 item.warpdrive.tool.tuning_fork.tooltip.usage=§b右击方块§7 to tune its crystals\n§bSneak§7 to tune alternate crystals
 
 
-tile.warpdrive.decoration.decorative.energized.name-tbc=能量方块
-tile.warpdrive.decoration.decorative.network.name-tbc=网络方块
-tile.warpdrive.decoration.decorative.plain.name-tbc=平坦方块
+tile.warpdrive.decoration.decorative.energized.name=能量方块
+tile.warpdrive.decoration.decorative.network.name=网络方块
+tile.warpdrive.decoration.decorative.plain.name=平坦方块
 tile.warpdrive.decoration.gas.name=气密方块
 tile.warpdrive.decoration.bedrock_glass.name=基岩玻璃
 
