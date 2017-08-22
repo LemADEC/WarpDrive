@@ -4,13 +4,13 @@ death.attack.warpdrive.asphyxia.player=%1$s因%2$s窒息
 death.attack.warpdrive.cold=%1$s冻死了
 death.attack.warpdrive.cold.player=%1$s被%2$s冻成了冰棍 
 death.attack.warpdrive.irradiation=%1$s受到过量辐照
-death.attack.warpdrive.irradiation.player=%1$s被%2$s用辐照击杀 
+death.attack.warpdrive.irradiation.player=%2$s使用大剂量辐射照射了%1$s
 death.attack.warpdrive.laser=激光击穿了%1$s
 death.attack.warpdrive.laser.player=%2$s操纵激光焚化了%1$s
 death.attack.warpdrive.shock=%1$s触电身亡
 death.attack.warpdrive.shock.player=%1$s被%2$s电死
 death.attack.warpdrive.teleportation=%1$s重组失败
-death.attack.warpdrive.teleportation.player=%2$s利用传送整死了%1$s
+death.attack.warpdrive.teleportation.player=%2$s传送%1$s时“失误”了
 death.attack.warpdrive.warm=%1$s死于高温
 death.attack.warpdrive.warm.player=%1$s被%2$s煮熟了
 
@@ -181,7 +181,7 @@ item.warpdrive.tool.tuning_fork.green.name=绿色音叉
 item.warpdrive.tool.tuning_fork.red.name=红色音叉
 item.warpdrive.tool.tuning_fork.black.name=黑色音叉
 
-item.warpdrive.tool.tuning_fork.tooltip.usage=§b右击方块§7 to tune its crystals\n§bSneak§7 to tune alternate crystals
+item.warpdrive.tool.tuning_fork.tooltip.usage=§b右击方块§7调节水晶频率\n§bSneak§7 to tune alternate crystals
 
 
 tile.warpdrive.decoration.decorative.energized.name=能量方块
