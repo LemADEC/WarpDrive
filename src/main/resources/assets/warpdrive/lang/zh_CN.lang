@@ -181,7 +181,7 @@ item.warpdrive.tool.tuning_fork.green.name=绿色音叉
 item.warpdrive.tool.tuning_fork.red.name=红色音叉
 item.warpdrive.tool.tuning_fork.black.name=黑色音叉
 
-item.warpdrive.tool.tuning_fork.tooltip.usage=§b右击方块§7调节水晶频率\n§bSneak§7 to tune alternate crystals
+item.warpdrive.tool.tuning_fork.tooltip.usage=§b右击方块§7调节水晶频率\n§b潜行右击§7轮替水晶
 
 
 tile.warpdrive.decoration.decorative.energized.name=能量方块
@@ -229,12 +229,12 @@ tile.warpdrive.atomic.void_shell_plain.tooltip=Provides 2 empty channels for par
 tile.warpdrive.atomic.void_shell_glass.name=Glass Void Shell
 tile.warpdrive.atomic.void_shell_glass.tooltip=Same as a Plain Void Shell, except you can see particles moving through it.
 
-tile.warpdrive.breathing.air.name-tbc=空气方块
-tile.warpdrive.breathing.air_generator.name-tbc=空气发生器
-tile.warpdrive.breathing.air_generator1.name=Basic Air Generator
-tile.warpdrive.breathing.air_generator2.name=Advanced Air Generator
-tile.warpdrive.breathing.air_generator3.name=Superior Air Generator
-tile.warpdrive.breathing.air_shield.name=Energy Air Shield
+tile.warpdrive.breathing.air.name=可呼吸空气
+tile.warpdrive.breathing.air_generator.name=空气供给机
+tile.warpdrive.breathing.air_generator1.name=基础空气供给机
+tile.warpdrive.breathing.air_generator2.name=先进空气供给机
+tile.warpdrive.breathing.air_generator3.name=卓越空气供给机
+tile.warpdrive.breathing.air_shield.name=能量空气护罩
 
 tile.warpdrive.building.ShipScanner.name=船体扫描仪
 
@@ -250,13 +250,13 @@ tile.warpdrive.detection.WarpIsolation.name=曲率领域隔离方块
 
 tile.warpdrive.detection.Siren.tooltip=红石触发
 tile.warpdrive.detection.Siren0.name=工业警报器
-tile.warpdrive.detection.Siren0.tooltip=工业警报器的声音范围是32米
+tile.warpdrive.detection.Siren0.tooltip=探测半径32米
 tile.warpdrive.detection.Siren4.name=基础空袭警报器
-tile.warpdrive.detection.Siren4.tooltip=空袭警报器的声音范围是32米
+tile.warpdrive.detection.Siren4.tooltip=探测半径32米
 tile.warpdrive.detection.Siren5.name=高级空袭警报器
-tile.warpdrive.detection.Siren5.tooltip=空袭警报器的声音范围是64米
+tile.warpdrive.detection.Siren5.tooltip=探测半径64米
 tile.warpdrive.detection.Siren6.name=卓越空袭警报器
-tile.warpdrive.detection.Siren6.tooltip=空袭警报器的声音范围是128米
+tile.warpdrive.detection.Siren6.tooltip=探测半径128米
 
 tile.warpdrive.energy.EnanReactorCore.name=镜像体反应堆芯
 tile.warpdrive.energy.EnanReactorLaser.name=镜像体反应堆稳定激光
@@ -287,14 +287,14 @@ tile.warpdrive.forcefield.relay2.tooltip=支持一个力场升级在其网络内
 tile.warpdrive.forcefield.relay3.name=卓越力场继电器
 tile.warpdrive.forcefield.relay3.tooltip=支持一个力场升级在其网络内共享
 
-tile.warpdrive.movement.Lift.name-tbc=电梯
-tile.warpdrive.movement.ShipController.name-tbc=飞船控制器
+tile.warpdrive.movement.Lift.name=电梯
+tile.warpdrive.movement.ShipController.name=飞船控制仪
 tile.warpdrive.movement.ShipController.tooltip=Defines your ship front relative to the core. Attach a computer to open the user interface.\nShall be placed horizontally directly next to the Ship core.
-tile.warpdrive.movement.ShipCore.name-tbc=飞船核心
+tile.warpdrive.movement.ShipCore.name=飞船核心
 tile.warpdrive.movement.ShipCore.tooltip=Defines your ship center relative to the controller. Connecting an energy source will charge the core.\nShall be placed horizontally directly next to the Ship controller.
 tile.warpdrive.movement.ShipCore.bounding_box.disabled=Bounding box display have been disabled.
 tile.warpdrive.movement.ShipCore.bounding_box.enabled=Bounding box display is now enabled. Only you can see it.\nSneak right-click the Ship core again to disable it.
-tile.warpdrive.movement.Transporter.name-tbc=传送器
+tile.warpdrive.movement.Transporter.name=传送台
 
 tile.warpdrive.weapon.LaserCamera.name=激光+相机
 tile.warpdrive.weapon.WeaponController.name=武器控制器
@@ -563,8 +563,8 @@ warpdrive.guide.prefix=§6%1$s:§r
 warpdrive.error.badTileEntity=§c需要重放置以更新此方块.
 warpdrive.monitor.viewingCamera=观景相机位于 %2$d, %3$d, %4$d 在视频频道%1$d
 warpdrive.ship.attachedPlayers=所属的玩家: %1$s
-warpdrive.ship.playerAttached=你现在位于飞船 %1$s.\n所属玩家是%2$s
-warpdrive.ship.playerDetached=你已经脱离了飞船 %1$s.\n所属玩家是%2$s
+warpdrive.ship.playerAttached=你在飞船 %1$s上.\n属于%2$s
+warpdrive.ship.playerDetached=你已经脱离了飞船 %1$s.\n属于%2$s
 warpdrive.ship.statusLine.cooling=%1$d s 冷却时间
 warpdrive.ship.statusLine.isolation=%1$d有效的隔离方块提供%2$2.1f%%吸收.
 
@@ -578,13 +578,11 @@ warpdrive.accelerator.guide.lowPower_accelerating=We're running out of power chi
 warpdrive.accelerator.guide.lowPower_noParticles=We need more power to start the accelerator!
 warpdrive.accelerator.guide.noChiller=No chiller could be found for this accelerator!
 
-warpdrive.beam_frequency.tooltip=Beam frequency is set to %1$d
-warpdrive.beam_frequency.tooltip-tbc=光线频率设置为%1$d
+warpdrive.beam_frequency.tooltip=设置光束频率为%1$d
 warpdrive.beam_frequency.get=Beam frequency %2$d has been retrieved from %1$s 
-warpdrive.beam_frequency.set=%1$s is now aligned with Beam frequency %2$d
-warpdrive.beam_frequency.set-tbc=%1$s正在于光线通道 %2$d进行匹配
-warpdrive.beam_frequency.statusLine.valid=光线频率%1$d是有效的
-warpdrive.beam_frequency.statusLine.invalid=§c光线频率%1$d是无效的
+warpdrive.beam_frequency.set=%1$s正在于光线通道 %2$d进行匹配
+warpdrive.beam_frequency.statusLine.valid=光线频率%1$d有效
+warpdrive.beam_frequency.statusLine.invalid=§c光线频率%1$d无效
 warpdrive.beam_frequency.statusLine.undefined=§7未定义的光线频率.\n§b使用一个音叉§r 去设置它
 
 warpdrive.breathing.alarm=呼吸警报
@@ -660,13 +658,11 @@ warpdrive.upgrade.result.shapeMounted=模型加载成功.
 warpdrive.upgrade.statusLine.none=§7没有安装升级
 warpdrive.upgrade.statusLine.valid=用升级%1$s.
 
-warpdrive.video_channel.tooltip=Video channel is set to %1$d
-warpdrive.video_channel.tooltip-tbc=视频通道设置为%1$d
+warpdrive.video_channel.tooltip-tbc=频道设置为%1$d
 warpdrive.video_channel.get=Video channel %2$d has been retrieved from %1$s
-warpdrive.video_channel.set=%1$s is now tuned to Video channel %2$d
-warpdrive.video_channel.set-tbc=%1$s正在调整到视频通道%2$d
-warpdrive.video_channel.statusLine.valid=视频通道%1$d是有效的
-warpdrive.video_channel.statusLine.validCamera=相机的视频通道 %1$d 是有效的，位置是 %2$d, %3$d, %4$d.
+warpdrive.video_channel.set=%1$s正在切换至频道%2$d
+warpdrive.video_channel.statusLine.valid=视频通道%1$d有效
+warpdrive.video_channel.statusLine.validCamera=相机的视频通道 %1$d有效，位于%2$d, %3$d, %4$d.
 warpdrive.video_channel.statusLine.invalid=§c视频通道 %1$d 无效.
 warpdrive.video_channel.statusLine.invalidOrNotLoaded=§c视频通道 %1$d 无效或者是相机的距离太远!
 warpdrive.video_channel.statusLine.undefined=§7未定义的视频通道.\n§b使用一个音叉§r 去设置它.
