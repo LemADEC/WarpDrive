@@ -198,15 +198,15 @@ tile.warpdrive.machines.ChunkLoader.name=区块加载器
 tile.warpdrive.machines.Laser.name=激光
 tile.warpdrive.machines.LaserMedium.name=激光介质(粒子助推器)
 
-tile.warpdrive.atomic.accelerator_controller.name=Accelerator Controller
+tile.warpdrive.atomic.accelerator_controller.name=加速器控制仪
 tile.warpdrive.atomic.accelerator_controller.tooltip=Controls one or more particle accelerators.\nShall be placed next to an electromagnet.
-tile.warpdrive.atomic.accelerator_control_point.name=Accelerator control point
+tile.warpdrive.atomic.accelerator_control_point.name=加速器控制点
 tile.warpdrive.atomic.accelerator_control_point.tooltip=Control accelerator nodes like collider, input and output.\nShall be placed exactly 1 block away from a void shell.\nStore results in any directly connected storage.
-tile.warpdrive.atomic.chiller1.name=Basic Chiller
+tile.warpdrive.atomic.chiller1.name=基础冷却器
 tile.warpdrive.atomic.chiller1.tooltip=Progressively cooldown electromagnets from a connected particle accelerator.\nShall be placed next to an electromagnet.
-tile.warpdrive.atomic.chiller2.name=Advanced Chiller
+tile.warpdrive.atomic.chiller2.name=先进冷却器
 tile.warpdrive.atomic.chiller2.tooltip=Progressively cooldown electromagnets from a connected particle accelerator.\nShall be placed next to an electromagnet.
-tile.warpdrive.atomic.chiller3.name=Superior Chiller
+tile.warpdrive.atomic.chiller3.name=卓越冷却器
 tile.warpdrive.atomic.chiller3.tooltip=Progressively cooldown electromagnets from a connected particle accelerator.\nShall be placed next to an electromagnet.
 tile.warpdrive.atomic.electromagnet1.plain.name=Basic Plain Electromagnet
 tile.warpdrive.atomic.electromagnet1.plain.tooltip=Accelerate, focus and orient particles in the attached Void Shell.
@@ -226,7 +226,7 @@ tile.warpdrive.atomic.particles_injector.name=Particles Injector
 tile.warpdrive.atomic.particles_injector.tooltip=Inject items or particles from a connected storage into a Basic Accelerator.
 tile.warpdrive.atomic.void_shell_plain.name=Plain Void Shell
 tile.warpdrive.atomic.void_shell_plain.tooltip=Provides 2 empty channels for particles to travel inside an accelerator setup.\nConnects only horizontally to other Void Shells.
-tile.warpdrive.atomic.void_shell_glass.name=Glass Void Shell
+tile.warpdrive.atomic.void_shell_glass.name=玻璃真空腔
 tile.warpdrive.atomic.void_shell_glass.tooltip=Same as a Plain Void Shell, except you can see particles moving through it.
 
 tile.warpdrive.breathing.air.name=可呼吸空气
@@ -573,9 +573,9 @@ warpdrive.energy.side.changedToInput=%1$s侧面更改为能量输入模式！
 warpdrive.energy.side.changedToOutput=%1$s侧面更改为能量输出模式！
 warpdrive.energy.side.changedToDisabled=%1$s侧面更改为禁用模式！
 
-warpdrive.accelerator.guide.lowPower_noStorage=Energy storage is too low; we need at least %1$d to continue operation but can only store %2$d
+warpdrive.accelerator.guide.lowPower_noStorage=能量不足;我们需要%1$d的能量储备维持运转  目前仅剩%2$d
 warpdrive.accelerator.guide.lowPower_accelerating=We're running out of power chief, particles are on the loose, prepare for massive irradiation!
-warpdrive.accelerator.guide.lowPower_noParticles=We need more power to start the accelerator!
+warpdrive.accelerator.guide.lowPower_noParticles=需要更多能量以启动加速器!
 warpdrive.accelerator.guide.noChiller=No chiller could be found for this accelerator!
 
 warpdrive.beam_frequency.tooltip=设置光束频率为%1$d
@@ -586,8 +586,8 @@ warpdrive.beam_frequency.statusLine.invalid=§c光线频率%1$d无效
 warpdrive.beam_frequency.statusLine.undefined=§7未定义的光线频率.\n§b使用一个音叉§r 去设置它
 
 warpdrive.breathing.alarm=呼吸警报
-warpdrive.breathing.invalid_setup=No breathing helmet\nor incomplete armor
-warpdrive.breathing.low_reserve=Low air reserve!
+warpdrive.breathing.invalid_setup=无呼吸头盔\未完成盔甲
+warpdrive.breathing.low_reserve=空气储备不足!
 warpdrive.breathing.no_air=空气耗尽!
 
 warpdrive.control_channel.tooltip=Control channel is set to %1$d
@@ -629,13 +629,13 @@ warpdrive.forcefield.upgrade.statusLine.stabilization=稳定
 warpdrive.forcefield.upgrade.statusLine.thickness=厚度
 warpdrive.forcefield.upgrade.statusLine.translation=转化
 
-warpdrive.particle.ion.name=ion
+warpdrive.particle.ion.name=离子
 warpdrive.particle.ion.tooltip=Produced by colliding a particle bunch in a basic accelerator
-warpdrive.particle.proton.name=proton
+warpdrive.particle.proton.name=质子
 warpdrive.particle.proton.tooltip=Produced by colliding a particle bunch in an advanced accelerator
-warpdrive.particle.antimatter.name=antimatter
+warpdrive.particle.antimatter.name=反物质
 warpdrive.particle.antimatter.tooltip=Produced by colliding a particle bunch in a superior accelerator
-warpdrive.particle.strange_matter.name=strange matter
+warpdrive.particle.strange_matter.name=奇异物质
 warpdrive.particle.strange_matter.tooltip=Produced by colliding 2 particle bunches in a superior accelerator
 
 warpdrive.upgrade.result.noUpgradeToDismount=§c没有可卸载的升级
