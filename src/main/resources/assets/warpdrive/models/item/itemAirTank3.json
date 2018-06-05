@@ -1,0 +1,6 @@
+{
+	"parent": "item/generated",
+	"textures": {
+		"layer0": "warpdrive:items/breathing/air_tank3-0"
+	}
+}
