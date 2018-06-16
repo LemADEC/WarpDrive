@@ -1,0 +1,43 @@
+{
+	"forge_marker": 1,
+	"defaults": {
+		"model": "minecraft:normal_torch",
+		"textures": {
+			"torch"  : "warpdrive:blocks/movement/transport_beacon-packed_inactive"
+		},
+		"transform": "forge:default-block"
+	},
+	"variants": {
+		"normal": [{}],
+		"inventory": [{}],
+		"facing": {
+			"up": { "model": "normal_torch" },
+			"east": { "model": "normal_torch_wall" },
+			"south": { "model": "normal_torch_wall", "y": 90 },
+			"west": { "model": "normal_torch_wall", "y": 180 },
+			"north": { "model": "normal_torch_wall", "y": 270 }
+		},
+		"variant": {
+			"packed_inactive": {
+				"textures": {
+					"all" : "warpdrive:blocks/movement/transport_beacon-packed_inactive"
+				}
+			},
+			"packed_active": {
+				"textures": {
+					"all" : "warpdrive:blocks/movement/transport_beacon-packed_active"
+				}
+			},
+			"deployed_inactive": {
+				"textures": {
+					"all" : "warpdrive:blocks/movement/transport_beacon-deployed_inactive"
+				}
+			},
+			"deployed_active": {
+				"textures": {
+					"all" : "warpdrive:blocks/movement/transport_beacon-deployed_active"
+				}
+			}
+		}
+	}
+}

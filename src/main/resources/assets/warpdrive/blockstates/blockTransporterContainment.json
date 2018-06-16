@@ -1,0 +1,16 @@
+{
+	"forge_marker": 1,
+	"defaults": {
+		"model": "minecraft:cube_bottom_top",
+		"textures": {
+			"side"  : "warpdrive:blocks/movement/transporter_containment-side",
+			"bottom": "warpdrive:blocks/movement/transporter_containment-bottom",
+			"top"   : "warpdrive:blocks/movement/transporter_containment-top"
+		},
+		"transform": "forge:default-block"
+	},
+	"variants": {
+		"normal": [{}],
+		"inventory": [{}]
+	}
+}

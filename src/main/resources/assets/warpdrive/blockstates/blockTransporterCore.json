@@ -1,0 +1,53 @@
+{
+	"forge_marker": 1,
+	"defaults": {
+		"model": "minecraft:cube_directional",
+		"textures": {
+			"down"    : "warpdrive:blocks/movement/transporter_core-bottom_top",
+			"up"      : "warpdrive:blocks/movement/transporter_core-bottom_top",
+			"north"   : "warpdrive:blocks/movement/transporter_core-side_invalid",
+			"south"   : "warpdrive:blocks/movement/transporter_core-side_invalid",
+			"west"    : "warpdrive:blocks/movement/transporter_core-side_invalid",
+			"east"    : "warpdrive:blocks/movement/transporter_core-side_invalid"
+		},
+		"transform": "forge:default-block"
+	},
+	"variants": {
+		"normal": [{}],
+		"inventory": [{}],
+		"variant": {
+			"disabled": {
+				"textures": {
+					"north"   : "warpdrive:blocks/movement/transporter_core-side_invalid",
+					"south"   : "warpdrive:blocks/movement/transporter_core-side_invalid",
+					"west"    : "warpdrive:blocks/movement/transporter_core-side_invalid",
+					"east"    : "warpdrive:blocks/movement/transporter_core-side_invalid"
+				}
+			},
+			"idle": {
+				"textures": {
+					"north"   : "warpdrive:blocks/movement/transporter_core-side_offline",
+					"south"   : "warpdrive:blocks/movement/transporter_core-side_offline",
+					"west"    : "warpdrive:blocks/movement/transporter_core-side_offline",
+					"east"    : "warpdrive:blocks/movement/transporter_core-side_offline"
+				}
+			},
+			"acquiring": {
+				"textures": {
+					"north"   : "warpdrive:blocks/movement/transporter_core-side_low_power",
+					"south"   : "warpdrive:blocks/movement/transporter_core-side_low_power",
+					"west"    : "warpdrive:blocks/movement/transporter_core-side_low_power",
+					"east"    : "warpdrive:blocks/movement/transporter_core-side_low_power"
+				}
+			},
+			"energizing": {
+				"textures": {
+					"north"   : "warpdrive:blocks/movement/transporter_core-side_online",
+					"south"   : "warpdrive:blocks/movement/transporter_core-side_online",
+					"west"    : "warpdrive:blocks/movement/transporter_core-side_online",
+					"east"    : "warpdrive:blocks/movement/transporter_core-side_online"
+				}
+			}
+		}
+	}
+}

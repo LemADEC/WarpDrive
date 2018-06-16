@@ -1,0 +1,20 @@
+{
+	"forge_marker": 1,
+	"defaults": {
+		"model": "minecraft:cube_bottom_top",
+		"textures": {
+			"side"  : "warpdrive:blocks/movement/transporter_scanner-side",
+			"bottom": "warpdrive:blocks/movement/transporter_scanner-bottom",
+			"top"   : "warpdrive:blocks/movement/transporter_scanner-top_online"
+		},
+		"transform": "forge:default-block"
+	},
+	"variants": {
+		"normal": [{}],
+		"inventory": [{}],
+		"active": {
+			"true": {},
+			"false": { "textures": { "top"  : "warpdrive:blocks/movement/transporter_scanner-top_offline" } }
+		}
+	}
+}
