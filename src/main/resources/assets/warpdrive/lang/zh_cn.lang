@@ -299,13 +299,13 @@ tile.warpdrive.building.ship_scanner.superior.name=护卫舰飞船扫描仪
 tile.warpdrive.collection.laser_tree_farm.name=激光林场
 tile.warpdrive.collection.mining_laser.name=采矿激光
 
-tile.warpdrive.detection.biometric_scanner.name=Biometric Scanner
-tile.warpdrive.detection.biometric_scanner.tooltip=§bRight click§r to get identified.
+tile.warpdrive.detection.biometric_scanner.name=生物特征扫描仪
+tile.warpdrive.detection.biometric_scanner.tooltip=§b右击§r以被识别。
 tile.warpdrive.detection.camera.name=摄像机
 tile.warpdrive.detection.cloaking_coil.name=隐形线圈
 tile.warpdrive.detection.cloaking_core.name=隐形核心
-tile.warpdrive.detection.environmental_sensor.name=Environmental Sensor
-tile.warpdrive.detection.environmental_sensor.tooltip=Reports local time and weather
+tile.warpdrive.detection.environmental_sensor.name=环境传感器
+tile.warpdrive.detection.environmental_sensor.tooltip=报告本地时间和天气
 tile.warpdrive.detection.monitor.name=监视器
 tile.warpdrive.detection.radar.name=雷达
 tile.warpdrive.detection.warp_isolation.name=曲速场隔离方块
@@ -321,14 +321,14 @@ tile.warpdrive.detection.siren_military.advanced.name=高级空袭警报器
 tile.warpdrive.detection.siren_military.superior.name=卓越空袭警报器
 tile.warpdrive.detection.siren_military.tooltip=红石触发
 tile.warpdrive.detection.siren_military.tooltip.usage=在%1$d米内能听到警报声。
-tile.warpdrive.detection.speaker.basic.name=Basic Speaker
-tile.warpdrive.detection.speaker.advanced.name=Advanced Speaker
-tile.warpdrive.detection.speaker.superior.name=Superior Speaker
-tile.warpdrive.detection.speaker.tooltip.usage=Sends messages to players up to %1$d m away.
-tile.warpdrive.detection.virtual_assistant.basic.name=Basic Virtual Assistant
-tile.warpdrive.detection.virtual_assistant.advanced.name=Advanced Virtual Assistant
-tile.warpdrive.detection.virtual_assistant.superior.name=Superior Virtual Assistant
-tile.warpdrive.detection.virtual_assistant.tooltip.usage=Detects messages from players up to %1$d m away.
+tile.warpdrive.detection.speaker.basic.name=基础扬声器
+tile.warpdrive.detection.speaker.advanced.name=高级扬声器
+tile.warpdrive.detection.speaker.superior.name=卓越扬声器
+tile.warpdrive.detection.speaker.tooltip.usage=向最多%1$d米内的玩家传递消息。
+tile.warpdrive.detection.virtual_assistant.basic.name=基础虚拟助理
+tile.warpdrive.detection.virtual_assistant.advanced.name=高级虚拟助理
+tile.warpdrive.detection.virtual_assistant.superior.name=卓越虚拟助理
+tile.warpdrive.detection.virtual_assistant.tooltip.usage=在最多%1$d米内探测来自玩家的消息。
 
 tile.warpdrive.energy.enan_reactor_core.basic.name=基础对称反应堆核心
 tile.warpdrive.energy.enan_reactor_core.advanced.name=高级对称反应堆核心
@@ -700,8 +700,8 @@ warpdrive.control_channel.status_line.undefined=未定义控制频道。\n§b使
 
 warpdrive.machine.is_enabled.set.enabled=开关打开！
 warpdrive.machine.is_enabled.set.disabled=开关关闭！
-warpdrive.machine.is_enabled.get.disabled=System is off.
-warpdrive.machine.is_enabled.get.enabled=System is ON.
+warpdrive.machine.is_enabled.get.disabled=系统已关闭。
+warpdrive.machine.is_enabled.get.enabled=系统已开启。
 
 # %1 is signature name, %2 is item name, %3 is block name
 warpdrive.core_signature.tooltip=标记已设为 %1$d
@@ -803,11 +803,11 @@ warpdrive.accelerator.status_line.missing_superior_chiller=缺少卓越冷却器
 warpdrive.accelerator.status_line.missing_injector=缺少加速器注入节点。
 warpdrive.accelerator.status_line.missing_collider_node=缺少加速器控制节点。
 
-warpdrive.biometric_scanner.start_scanning.in_progress=Scan already in progress, %1$d s to go...
-warpdrive.biometric_scanner.start_scanning.started=Scanning started, please stay still...
-warpdrive.biometric_scanner.status_line.invalid=Last scan had no result.
-warpdrive.biometric_scanner.status_line.scan_in_progress=Scan is in progress, %1$d s to go...
-warpdrive.biometric_scanner.status_line.valid=Last scan has identified %1$s (%2$s).
+warpdrive.biometric_scanner.start_scanning.in_progress=扫描已经进行中，剩余%1$d秒……
+warpdrive.biometric_scanner.start_scanning.started=扫描开始，请保持静止……
+warpdrive.biometric_scanner.status_line.invalid=上次扫描没有结果。
+warpdrive.biometric_scanner.status_line.scan_in_progress=扫描进行中，剩余%1$d秒……
+warpdrive.biometric_scanner.status_line.valid=上次扫描已识别%1$s（%2$s）。
 
 warpdrive.breathing.alarm=呼吸警报
 warpdrive.breathing.invalid_setup=无呼吸头盔\n或者未穿整套盔甲
@@ -998,8 +998,8 @@ warpdrive.transporter_signature.set_self=传送器室不能以自己为传送目
 warpdrive.transporter_signature.set_same=传送器室已经链接到 %1$s。
 warpdrive.transporter_signature.set=传送器室现在链接到 %1$s 。
 
-warpdrive.virtual_assistant.status_line.none=No pending command to process.
-warpdrive.virtual_assistant.status_line.last_command=Last command received was '%1$s'.
+warpdrive.virtual_assistant.status_line.none=没有待处理的指令。
+warpdrive.virtual_assistant.status_line.last_command=上个接收的指令是“%1$s”。
 
 warpdrive.world_border.in_range=接近警报：离世界边界只有 %1$d 米！
 warpdrive.world_border.outside=你已经超出世界边界 %1$d 米……
