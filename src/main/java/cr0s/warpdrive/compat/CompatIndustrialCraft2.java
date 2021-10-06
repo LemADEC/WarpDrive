@@ -5,13 +5,17 @@ import cr0s.warpdrive.api.ITransformation;
 import cr0s.warpdrive.api.WarpDriveText;
 import cr0s.warpdrive.config.WarpDriveConfig;
 
+import ic2.api.energy.tile.IEnergyTile;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import ic2.api.energy.EnergyNet;
 
 public class CompatIndustrialCraft2 implements IBlockTransformer {
 	
@@ -53,7 +57,14 @@ public class CompatIndustrialCraft2 implements IBlockTransformer {
 	@Override
 	public void removeExternals(final World world, final int x, final int y, final int z,
 	                            final Block block, final int blockMeta, final TileEntity tileEntity) {
-		// nothing to do
+		// We need explicitly remove the tile entity from energy net and notify clients.
+		// Either way jumping to previous coordinates will break rendering and energy grid.
+		// See: https://github.com/LemADEC/WarpDrive/issues/503
+		if (!isExperimental && tileEntity instanceof IEnergyTile) {
+			final BlockPos blockPos = tileEntity.getPos();
+			EnergyNet.instance.removeTile((IEnergyTile) tileEntity);
+			world.setBlockState(blockPos, Blocks.AIR.getDefaultState(), 3);
+		}
 	}
 	
 	private static final short[] mrotFacing    = {  0,  1,  5,  4,  2,  3,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 };
