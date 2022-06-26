@@ -45,8 +45,6 @@ public final class EntityCamera extends LivingEntity {
 	
 	private PlayerEntity player;
 	
-	private final Minecraft mc = Minecraft.getInstance();
-	
 	private int dx = 0, dy = 0, dz = 0;
 	
 	private int closeWaitTicks = 0;
@@ -111,6 +109,7 @@ public final class EntityCamera extends LivingEntity {
 	}
 	
 	@Override
+	@OnlyIn(Dist.CLIENT)
 	public void tick() {
 		if (world.isRemote()) {
 			if ( player == null
@@ -128,6 +127,7 @@ public final class EntityCamera extends LivingEntity {
 			}
 			
 			final Block block = world.getBlockState(new BlockPos(cameraX, cameraY, cameraZ)).getBlock();
+			final Minecraft mc = Minecraft.getMinecraft();
 			if (mc.getRenderViewEntity() != null) {
 				mc.getRenderViewEntity().rotationYaw = player.rotationYaw;
 				// mc.renderViewEntity.rotationYawHead = player.rotationYawHead;

@@ -804,12 +804,8 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 			return false;
 		}
 		doUpdateParameters(false);
-		if (!isAssemblyValid) {
-			Commons.addChatMessage(entityServerPlayer, new WarpDriveText(Commons.getStyleHeader(), !name.isEmpty() ? name : "ShipCore")
-					                                       .appendSibling(textValidityIssues));
-			return false;
-		}
-		
+		// note: ship was just deployed, we assume it's valid instead of delaying while waiting for initial scan
+		// consequently, the security station will probably not be defined yet...
 		final TileEntitySecurityStation tileEntitySecurityStation = getSecurityStation();
 		if ( tileEntitySecurityStation != null
 		  && tileEntitySecurityStation != TileEntitySecurityStation.DUMMY ) {

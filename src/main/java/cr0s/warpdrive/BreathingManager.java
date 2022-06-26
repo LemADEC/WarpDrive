@@ -9,6 +9,7 @@ import cr0s.warpdrive.data.StateAir;
 import cr0s.warpdrive.data.VectorI;
 import cr0s.warpdrive.event.ChunkHandler;
 import cr0s.warpdrive.data.EnergyWrapper;
+import cr0s.warpdrive.render.EntityCamera;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -66,6 +67,14 @@ public class BreathingManager {
 	}
 	
 	public static boolean onLivingJoinEvent(final LivingEntity entityLivingBase, final int x, final int y, final int z) {
+		if ( entityLivingBase instanceof EntityCamera
+		  && !entityLivingBase.getEntityWorld().isRemote ) {
+			WarpDrive.logger.warn(String.format("EntityCamera is client-side only, deny spawning %s entityId '%s'",
+			                                    Commons.format(entityLivingBase.world, x, y, z),
+			                                    Dictionary.getId(entityLivingBase) ));
+			return false;
+		}
+		
 		// skip living entities who don't need air
 		if (Dictionary.isLivingWithoutAir(entityLivingBase)) {
 			return true;

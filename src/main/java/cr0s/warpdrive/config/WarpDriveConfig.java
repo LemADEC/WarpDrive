@@ -540,7 +540,7 @@ public class WarpDriveConfig {
 	public static boolean LOGGING_XML_PREPROCESSOR = false;
 	public static boolean LOGGING_RENDERING = false;
 	public static boolean LOGGING_CHUNK_HANDLER = false;
-	public static boolean LOGGING_CHUNK_RELOADING = true;
+	public static boolean LOGGING_CHUNK_RELOADING = false;
 	public static boolean LOGGING_CHUNK_LOADING = true;
 	public static boolean LOGGING_ENTITY_FX = false;
 	public static boolean LOGGING_CLIENT_SYNCHRONIZATION = false;
@@ -1936,7 +1936,7 @@ public class WarpDriveConfig {
 		logging_enable_chunk_reloading_logs = builder
 				.comment("Report in logs when a chunk is reloaded shortly after being unloaded, usually associated with server lag.")
 				.translation("warpdrive.config.logging.enable_chunk_reloading_logs")
-				.define("enable_chunk_reloading_logs", false);
+				.define("enable_experimental_chunk_reloading_logs", false);
 		logging_enable_collection_logs = builder
 				.comment("Detailed collection logs to help debug the mod, enable it before reporting a bug.")
 				.translation("warpdrive.config.logging.enable_collection_logs")
