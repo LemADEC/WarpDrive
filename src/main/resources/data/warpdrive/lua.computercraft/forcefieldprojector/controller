@@ -1,0 +1,669 @@
+if warpdrive_commons then os.unloadAPI("warpdrive_commons") end
+if not os.loadAPI("warpdrive/warpdrive_commons") then error("missing warpdrive_commons") end
+local w = warpdrive_commons.w
+
+local data
+
+----------- Force field support
+
+local ffield_projectorAddresses = {}
+local ffield_projectors = {}
+local ffield_projector_indexSelected = 1
+local ffield_projector_indexFirstLine = 1
+local ffield_projector_lines = 10
+
+local ffield_relayAddresses = {}
+local ffield_relays = {}
+local ffield_relay_indexSelected = 1
+local ffield_relay_indexFirstLine = 1
+local ffield_relay_lines = 10
+
+function ffield_boot(isDetailed)
+  if #ffield_projectorAddresses == 0 and #ffield_relayAddresses == 0 then
+    return
+  end
+  
+  if isDetailed == nil then
+    isDetailed = true
+  end
+  
+  if isDetailed then
+    w.write("Booting Force field projectors and relays")
+    
+    w.writeLn("...")
+    w.sleep(0.1)
+  end
+  
+  -- getting projectors parameters
+  ffield_projectors = {}
+  for key, address in pairs(ffield_projectorAddresses) do
+    local device = w.device_get(address)
+    local x, y, z = device.getLocalPosition()
+    local name = device.name()
+    if name == "" then name = "-not defined-" end
+    local beamFrequency = device.beamFrequency()
+    -- local isEnabled = device.enable()
+    local status, isEnabled, isConnected, isPowered, shape, energy = device.state()
+    -- @TODO add tier reporting
+    local projector = {
+      address = address,
+      device = device,
+      position = { x = x, y = y, z = z },
+      name = name,
+      beamFrequency = beamFrequency,
+      shape = shape,
+      isEnabled = isEnabled }
+    if isDetailed then
+      w.writeLn(ffield_projector_getDescription(projector))
+    end
+    table.insert(ffield_projectors, projector)
+  end
+  
+  -- getting relays parameters
+  ffield_relays = {}
+  for key, address in pairs(ffield_relayAddresses) do
+    local device = w.device_get(address)
+    local x, y, z = device.getLocalPosition()
+    local name = device.name()
+    if name == "" then name = "-not defined-" end
+    local beamFrequency = device.beamFrequency()
+    local isEnabled = device.enable()
+    local relay = {
+      address = address,
+      device = device,
+      position = { x = x, y = y, z = z },
+      name = name,
+      beamFrequency = beamFrequency,
+      isEnabled = isEnabled }
+    if isDetailed then
+      w.writeLn(ffield_relay_getDescription(relay))
+    end
+    table.insert(ffield_relays, relay)
+  end
+end
+
+function ffield_save()
+  -- nothing
+end
+
+function ffield_read(parData)
+  data = parData
+end
+
+function ffield_projector_getDescription(projector)
+  if projector == nil or projector.device == nil then
+    return "~invalid~"
+  end
+  local description = "#" .. w.format_integer(projector.beamFrequency, 5)
+          .. " @ (" .. w.format_integer(projector.position.x, 7) .. " " .. w.format_integer(projector.position.y, 3) .. " " .. w.format_integer(projector.position.z, 7) .. ") "
+          .. w.format_string(projector.shape, 10)
+          .. " "
+  if projector.isEnabled then
+    description = description .. "Enabled"
+  else
+    description = description .. "Disabled"
+  end
+  return description
+end
+
+function ffield_projector_getIndexes()
+  if ffield_projectors ~= nil then
+    if ffield_projector_indexSelected > #ffield_projectors then
+      ffield_projector_indexSelected = 1
+    elseif ffield_projector_indexSelected < 1 then
+      ffield_projector_indexSelected = #ffield_projectors
+    end
+    if ffield_projector_indexFirstLine > ffield_projector_indexSelected then
+      ffield_projector_indexFirstLine = ffield_projector_indexSelected
+    elseif ffield_projector_indexFirstLine + ffield_projector_lines < ffield_projector_indexSelected then
+      ffield_projector_indexFirstLine = ffield_projector_indexSelected - ffield_projector_lines
+    end
+    return ffield_projector_indexFirstLine, ffield_projector_indexSelected
+  else
+    return 1, 1
+  end
+end
+
+function ffield_projector_get(index)
+  local indexToUse = index
+  local projector
+  
+  if ffield_projectors ~= nil then
+    if indexToUse > #ffield_projectors then
+      indexToUse = 1
+    elseif indexToUse < 1 then
+      indexToUse = #ffield_projectors
+    end
+    projector = ffield_projectors[indexToUse]
+  end
+  
+  if projector == nil then
+    ffield_boot(false)
+    w.status_showWarning("Invalid projector index " .. index)
+    projector = {
+      address = "-",
+      device = nil,
+      position = { x = 0, y = 0, z = 0 },
+      name = "-",
+      beamFrequency = -1,
+      shape = "NONE",
+      isEnabled = false }
+  end
+  
+  return projector
+end
+
+function ffield_projector_getSelected()
+  return ffield_projector_get(ffield_projector_indexSelected)
+end
+
+function ffield_enable(projectorOrRelay, enable)
+  if projectorOrRelay == nil or projectorOrRelay.device == nil then
+    return
+  end
+  local enableToApply = enable
+  if enableToApply == nil then
+    enableToApply = not projectorOrRelay.device.enable()
+  end
+  projectorOrRelay.isEnabled = projectorOrRelay.device.enable(enableToApply)
+  return projectorOrRelay.isEnabled
+end
+
+function ffield_projector_key(character, keycode)
+  if character == 's' or character == 'S' then
+    for key, projector in pairs(ffield_projectors) do
+      ffield_enable(projector, true)
+    end
+    return true
+  elseif character == 'p' or character == 'P' then
+    for key, projector in pairs(ffield_projectors) do
+      ffield_enable(projector, false)
+    end
+    return true
+  elseif character == 'e' or character == 'E' then
+    local projector = ffield_projector_getSelected()
+    if projector ~= nil and projector.device ~= nil then
+      ffield_enable(projector)
+    end
+    return true
+  elseif character == 'c' or character == 'C' then -- C or keycode == 46
+    ffield_projector_config()
+    w.data_save()
+    return true
+  elseif keycode == 200 or keycode == 203 or character == '-' then -- Up or Left or -
+    ffield_projector_indexSelected = ffield_projector_indexSelected - 1
+    return true
+  elseif keycode == 208 or keycode == 205 or character == '+' then -- Down or Right or +
+    ffield_projector_indexSelected = ffield_projector_indexSelected + 1
+    return true
+  end
+  return false
+end
+
+function ffield_projector_page()
+  w.page_begin(w.data_getName() .. " - Force field projectors")
+  
+  -- w.setCursorPos(1, 2)
+  if #ffield_projectors == 0 then
+    w.setColorDisabled()
+    w.writeCentered(2, "No force field projector defined, connect one and reboot!")
+  else
+    w.setColorNormal()
+    local indexFirstLine, indexSelected = ffield_projector_getIndexes()
+    w.writeCentered(2, "Force field projector " .. indexSelected .. " of " .. #ffield_projectors .. " is selected")
+    local indexLastLine = math.min(indexFirstLine + ffield_projector_lines, #ffield_projectors)
+    for indexCurrent = indexFirstLine, indexLastLine do
+      if indexCurrent == indexSelected then
+        w.setColorSelected()
+        w.clearLine()
+        w.write(">")
+      else
+        w.setColorNormal()
+        w.write(" ")
+      end
+      local projector = ffield_projector_get(indexCurrent)
+      local description = ffield_projector_getDescription(projector)
+      w.write(description)
+      w.writeLn("")
+    end
+  end
+  
+  w.setCursorPos(1, 14)
+  w.setColorNormal()
+  w.write("  -----------------------------------------------")
+  
+  w.setCursorPos(1, 15)
+  w.setColorControl()
+  w.writeFullLine(" Start/stoP all force field projectors (S/P)")
+  w.writeFullLine(" Configure (C) or togglE (E) selected projector")
+  w.writeFullLine(" select force field projector (Up, Down)")
+end
+
+function ffield_projector_config()
+  local projector = ffield_projector_getSelected()
+  if projector == nil then
+    return
+  end
+  w.page_begin(w.data_getName() .. " - Projector configuration")
+  
+  w.setCursorPos(1, 2)
+  w.setColorNormal()
+  projector.position.x, projector.position.y, projector.position.z = projector.device.getLocalPosition()
+  w.write("Projector @ " .. w.format_integer(projector.position.x, 7) .. " " .. w.format_integer(projector.position.y, 3) .. " " .. w.format_integer(projector.position.z, 7))
+  
+  -- name
+  w.setCursorPos(1, 16)
+  w.setColorHelp()
+  w.writeFullLine(" Press enter to validate.")
+  w.setCursorPos(1, 3)
+  w.setColorNormal()
+  w.writeLn("Name (" .. projector.name .. "):")
+  local nameOriginal = projector.name
+  projector.name = w.input_readText(projector.name)
+  w.setCursorPos(1, 3)
+  w.setColorNormal()
+  w.clearLine()
+  if nameOriginal ~= projector.name then
+    w.setColorSuccess()
+  else
+    w.setColorNormal()
+  end
+  projector.name = projector.device.name(projector.name)
+  w.writeLn("Name set to " .. projector.name)
+  w.setColorNormal()
+  w.clearLine()
+  
+  -- beam frequency
+  projector.beamFrequency = projector.device.beamFrequency()
+  w.setCursorPos(1, 16)
+  w.setColorHelp()
+  w.writeFullLine(" Enter a number between 0 and 65000.")
+  local frequency
+  repeat
+    w.setCursorPos(1, 5)
+    w.setColorNormal()
+    w.clearLine()
+    w.write("Beam frequency (" .. w.format_integer(projector.beamFrequency, 5) .. "): ")
+    frequency = w.input_readInteger(projector.beamFrequency)
+    if frequency ~= 0 and (frequency < 0 or frequency > 65000) then
+      w.status_showWarning("This is not a valid beam frequency. Try again.")
+    end
+  until frequency > 0 and frequency <= 65000
+  w.setCursorPos(1, 4)
+  w.clearLine()
+  if frequency ~= projector.beamFrequency then
+    w.setColorSuccess()
+  else
+    w.setColorNormal()
+  end
+  projector.beamFrequency = projector.device.beamFrequency(frequency)
+  w.write("Beam frequency set to " .. projector.beamFrequency)
+  w.setColorNormal()
+  w.setCursorPos(1, 5)
+  w.clearLine()
+  w.setCursorPos(1, 16)
+  w.clearLine()
+  
+  -- translation
+  ffield_config_xyz(5, "Translation", "%", "translation where 0 is centered", projector.device.translation, 100)
+  
+  -- rotation
+  ffield_config_xyz(6, "Rotation", "", "rotation in deg where 0 is centered", projector.device.rotation, 1)
+  
+  -- scale
+  ffield_config_xyz(7, "Min scale", "%", "min scale where -100 is full scale", projector.device.min, 100)
+  ffield_config_xyz(8, "Max scale", "%", "max scale where 100 is full scale", projector.device.max, 100)
+  
+  w.sleep(0.5)
+end
+
+function ffield_config_xyz(yCursor, title, unit, help, method, factor)
+  local xOriginal, yOriginal, zOriginal = method()
+  local x = factor * xOriginal
+  local y = factor * yOriginal
+  local z = factor * zOriginal
+  w.setCursorPos(1, yCursor + 1)
+  w.setColorNormal()
+  w.write(title .. " is currently set to " .. w.format_integer(x, 4) .. " "  .. unit .. " " .. w.format_integer(y, 4) .. " "  .. unit .. " " .. w.format_integer(z, 4) .. " "  .. unit)
+  
+  w.setCursorPos(1, 16)
+  w.setColorHelp()
+  w.writeFullLine(" Enter X " .. help)
+  
+  w.setCursorPos(1, yCursor + 3)
+  w.setColorNormal()
+  w.write(title .. " along X axis (" .. w.format_integer(x, 4) .. "): ")
+  x = w.input_readInteger(x)
+  
+  w.setCursorPos(1, 16)
+  w.setColorHelp()
+  w.writeFullLine(" Enter Y " .. help)
+  
+  w.setCursorPos(1, yCursor + 4)
+  w.setColorNormal()
+  w.write(title .. " along Y axis (" .. w.format_integer(y, 4) .. "): ")
+  y = w.input_readInteger(y)
+  
+  w.setCursorPos(1, 16)
+  w.setColorHelp()
+  w.writeFullLine(" Enter Z " .. help)
+  
+  w.setCursorPos(1, yCursor + 5)
+  w.setColorNormal()
+  w.write(title .. " along Z axis (" .. w.format_integer(z, 4) .. "): ")
+  z = w.input_readInteger(z)
+  
+  w.setCursorPos(1, 16)
+  w.clearLine()
+  
+  local xSet = x / factor
+  local ySet = y / factor
+  local zSet = z / factor
+  local message
+  x, y, z, message = method(xSet, ySet, zSet)
+  x = factor * x
+  y = factor * y
+  z = factor * z
+  w.setCursorPos(1, yCursor)
+  if message ~= nil then
+    w.setColorWarning()
+    w.write(title .. " error: " .. message)
+    w.status_showWarning(message)
+  else
+    if xOriginal ~= xSet or yOriginal ~= ySet or zOriginal ~= zSet then
+      w.setColorSuccess()
+    else
+      w.setColorNormal()
+    end
+    w.write(title .. " set to " .. w.format_integer(x, 4) .. " "  .. unit .. " " .. w.format_integer(y, 4) .. " "  .. unit .. " " .. w.format_integer(z, 4) .. " "  .. unit)
+  end
+  w.setColorNormal()
+  w.setCursorPos(1, yCursor + 1)
+  w.clearLine()
+  w.setCursorPos(1, yCursor + 3)
+  w.clearLine()
+  w.setCursorPos(1, yCursor + 4)
+  w.clearLine()
+  w.setCursorPos(1, yCursor + 5)
+  w.clearLine()
+end
+
+function ffield_relay_getDescription(relay)
+  if relay == nil or relay.device == nil then
+    return "~invalid~"
+  end
+  local description = "#" .. w.format_integer(relay.beamFrequency, 5)
+          .. " @ (" .. w.format_integer(relay.position.x, 7) .. " " .. w.format_integer(relay.position.y, 3) .. " " .. w.format_integer(relay.position.z, 7) .. ") "
+  if relay.isEnabled then
+    description = description .. "Enabled"
+  else
+    description = description .. "Disabled"
+  end
+  return description
+end
+
+function ffield_relay_getIndexes()
+  if ffield_relays ~= nil then
+    if ffield_relay_indexSelected > #ffield_relays then
+      ffield_relay_indexSelected = 1
+    elseif ffield_relay_indexSelected < 1 then
+      ffield_relay_indexSelected = #ffield_relays
+    end
+    if ffield_relay_indexFirstLine > ffield_relay_indexSelected then
+      ffield_relay_indexFirstLine = ffield_relay_indexSelected
+    elseif ffield_relay_indexFirstLine + ffield_relay_lines < ffield_relay_indexSelected then
+      ffield_relay_indexFirstLine = ffield_relay_indexSelected - ffield_relay_lines
+    end
+    return ffield_relay_indexFirstLine, ffield_relay_indexSelected
+  else
+    return 1, 1
+  end
+end
+
+function ffield_relay_get(index)
+  local indexToUse = index
+  local relay
+  
+  if ffield_relays ~= nil then
+    if indexToUse > #ffield_relays then
+      indexToUse = 1
+    elseif indexToUse < 1 then
+      indexToUse = #ffield_relays
+    end
+    relay = ffield_relays[indexToUse]
+  end
+  
+  if relay == nil then
+    ffield_boot(false)
+    w.status_showWarning("Invalid relay index " .. index)
+    relay = {
+      address = "-",
+      device = nil,
+      position = { x = 0, y = 0, z = 0 },
+      name = "-",
+      beamFrequency = -1,
+      isEnabled = false }
+  end
+  
+  return relay
+end
+
+function ffield_relay_getSelected()
+  return ffield_relay_get(ffield_relay_indexSelected)
+end
+
+function ffield_relay_key(character, keycode)
+  if character == 's' or character == 'S' then
+    for key, relay in pairs(ffield_relays) do
+      ffield_enable(relay, true)
+    end
+    return true
+  elseif character == 'p' or character == 'P' then
+    for key, relay in pairs(ffield_relays) do
+      ffield_enable(relay, false)
+    end
+    return true
+  elseif character == 'e' or character == 'E' then
+    local relay = ffield_relay_getSelected()
+    ffield_enable(relay)
+    return true
+  elseif character == 'c' or character == 'C' then -- C or keycode == 46
+    ffield_relay_config()
+    w.data_save()
+    return true
+  elseif keycode == 200 or keycode == 203 or character == '-' then -- Up or Left or -
+    ffield_relay_indexSelected = ffield_relay_indexSelected - 1
+    return true
+  elseif keycode == 208 or keycode == 205 or character == '+' then -- Down or Right or +
+    ffield_relay_indexSelected = ffield_relay_indexSelected + 1
+    return true
+  end
+  return false
+end
+
+function ffield_relay_page()
+  w.page_begin(w.data_getName() .. " - Force field relays")
+  
+  -- w.setCursorPos(1, 2)
+  if #ffield_relays == 0 then
+    w.setColorDisabled()
+    w.writeCentered(2, "No force field relay defined, connect one and reboot!")
+  else
+    w.setColorNormal()
+    local indexFirstLine, indexSelected = ffield_relay_getIndexes()
+    w.writeCentered(2, "Force field relay " .. indexSelected .. " of " .. #ffield_relays .. " is selected")
+    local indexLastLine = math.min(indexFirstLine + ffield_relay_lines, #ffield_relays)
+    for indexCurrent = indexFirstLine, indexLastLine do
+      if indexCurrent == indexSelected then
+        w.setColorSelected()
+        w.clearLine()
+        w.write(">")
+      else
+        w.setColorNormal()
+        w.write(" ")
+      end
+      local relay = ffield_relay_get(indexCurrent)
+      local description = ffield_relay_getDescription(relay)
+      w.write(description)
+      w.writeLn("")
+    end
+  end
+  
+  w.setCursorPos(1, 14)
+  w.setColorNormal()
+  w.write("  -----------------------------------------------")
+  
+  w.setCursorPos(1, 15)
+  w.setColorControl()
+  w.writeFullLine(" Start/stoP all force field relays (S/P)")
+  w.writeFullLine(" Configure (C) or togglE (E) selected relay")
+  w.writeFullLine(" select force field relay (Up, Down)")
+end
+
+function ffield_relay_config()
+  local relay = ffield_relay_getSelected()
+  if relay == nil then
+    return
+  end
+  w.page_begin(w.data_getName() .. " - Relay configuration")
+  
+  w.setCursorPos(1, 2)
+  w.setColorNormal()
+  relay.position.x, relay.position.y, relay.position.z = relay.device.getLocalPosition()
+  w.write("Relay @ " .. w.format_integer(relay.position.x, 7) .. " " .. w.format_integer(relay.position.y, 3) .. " " .. w.format_integer(relay.position.z, 7))
+  
+  -- name
+  w.setCursorPos(1, 16)
+  w.setColorHelp()
+  w.writeFullLine(" Press enter to validate.")
+  w.setCursorPos(1, 3)
+  w.setColorNormal()
+  w.writeLn("Name (" .. relay.name .. "):")
+  local nameOriginal = relay.name
+  relay.name = w.input_readText(relay.name)
+  w.setCursorPos(1, 3)
+  w.setColorNormal()
+  w.clearLine()
+  if nameOriginal ~= relay.name then
+    w.setColorSuccess()
+  else
+    w.setColorNormal()
+  end
+  relay.name = relay.device.name(relay.name)
+  w.writeLn("Name set to " .. relay.name)
+  w.setColorNormal()
+  w.clearLine()
+  
+  -- beam frequency
+  relay.beamFrequency = relay.device.beamFrequency()
+  w.setCursorPos(1, 16)
+  w.setColorHelp()
+  w.writeFullLine(" Enter a number between 0 and 65000.")
+  local frequency
+  repeat
+    w.setCursorPos(1, 5)
+    w.setColorNormal()
+    w.clearLine()
+    w.write("Beam frequency (" .. w.format_integer(relay.beamFrequency, 5) .. "): ")
+    frequency = w.input_readInteger(relay.beamFrequency)
+    if frequency ~= 0 and (frequency < 0 or frequency > 65000) then
+      w.status_showWarning("This is not a valid beam frequency. Try again.")
+    end
+  until frequency > 0 and frequency <= 65000
+  w.setCursorPos(1, 4)
+  w.clearLine()
+  if frequency ~= relay.beamFrequency then
+    w.setColorSuccess()
+  else
+    w.setColorNormal()
+  end
+  relay.beamFrequency = relay.device.beamFrequency(frequency)
+  w.write("Beam frequency set to " .. relay.beamFrequency)
+  w.setColorNormal()
+  w.setCursorPos(1, 5)
+  w.clearLine()
+  w.setCursorPos(1, 6)
+  w.clearLine()
+end
+
+function ffield_register()
+  w.device_register("warpdriveForceFieldProjector",
+      function(deviceType, address, wrap) table.insert(ffield_projectorAddresses, address) end,
+      function() end)
+  w.device_register("warpdriveForceFieldRelay",
+      function(deviceType, address, wrap) table.insert(ffield_relayAddresses, address) end,
+      function() end)
+  w.data_register("ffield", ffield_read, ffield_save, nil)
+end
+
+----------- connections status
+
+function connections_page(isBooting)
+  w.page_begin(w.data_getName() .. " - Connections")
+  
+  w.writeLn("")
+  
+  local monitors = w.device_getMonitors()
+  if #monitors == 0 then
+    w.setColorDisabled()
+    w.writeLn("No Monitor detected")
+  elseif #monitors == 1 then
+    w.setColorSuccess()
+    w.writeLn("1 monitor detected")
+  else
+    w.setColorSuccess()
+    w.writeLn(#monitors .. " Monitors detected")
+  end
+  
+  if #ffield_projectorAddresses == 0 then
+    w.setColorDisabled()
+    w.writeLn("No force field projector detected")
+  elseif #ffield_projectorAddresses == 1 then
+    w.setColorSuccess()
+    w.writeLn("1 force field projector detected")
+  else
+    w.setColorSuccess()
+    w.writeLn(#ffield_projectorAddresses .. " force field projectors detected")
+  end
+  
+  if #ffield_relayAddresses == 0 then
+    w.setColorDisabled()
+    w.writeLn("No force field relay detected")
+  elseif #ffield_relayAddresses == 1 then
+    w.setColorSuccess()
+    w.writeLn("1 force field relay detected")
+  else
+    w.setColorSuccess()
+    w.writeLn(#ffield_relayAddresses .. " force field relays detected")
+  end
+  
+  if isBooting then
+    ffield_boot()
+  end
+  
+  w.writeLn("")
+  w.setColorNormal()
+  w.writeLn("This is a keyboard controlled user interface.")
+  w.write("Key controls are written like so: ")
+  w.setColorControl()
+  w.write("Action (key)")
+  w.setColorNormal()
+  w.writeLn(".")
+  w.write("For example, typing ")
+  w.setColorControl()
+  w.write(" 1 ")
+  w.setColorNormal()
+  w.writeLn(" will open Force field projectors.")
+end
+
+----------- Boot sequence
+
+w.page_setEndText(" Home (0), Projectors (1), Relays (2)")
+w.page_register('0', connections_page, nil)
+w.page_register('1', ffield_projector_page, ffield_projector_key)
+w.page_register('2', ffield_relay_page, ffield_relay_key)
+ffield_register()
+
+w.boot()
+w.run()
+w.close()

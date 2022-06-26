@@ -203,6 +203,16 @@ public abstract class BlockAbstractContainer extends ContainerBlock implements I
 	}
 	*/
 	
+	@Override
+	public void breakBlock(@Nonnull final World world, @Nonnull final BlockPos blockPos, @Nonnull final IBlockState blockState) {
+		// cascade to tile entity before it's removed
+		final TileEntity tileEntity = world.getTileEntity(blockPos);
+		if (tileEntity instanceof TileEntityAbstractBase) {
+			((TileEntityAbstractBase) tileEntity).onBlockBroken(world, blockPos, blockState);
+		}
+		super.breakBlock(world, blockPos, blockState);
+	}
+	
 	@Nonnull
 	@Override
 	public ItemStack getPickBlock(@Nonnull final BlockState blockState, @Nullable final RayTraceResult target,

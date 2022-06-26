@@ -1248,7 +1248,15 @@ public class JumpSequencer extends AbstractSequencer {
 						WarpDrive.logger.info(String.format("Removing tile entity at (%d %d %d)",
 						                                    jumpBlock.x, jumpBlock.y, jumpBlock.z));
 					}
-					worldSource.removeTileEntity(blockPos);
+					if (WarpDriveConfig.G_ENABLE_EXPERIMENTAL_UNLOAD) {
+						final TileEntity tileEntity = worldSource.getTileEntity(blockPos);
+						if (tileEntity != null) {
+							tileEntity.onChunkUnload();
+							worldSource.removeTileEntity(blockPos);
+						}
+					} else {
+						worldSource.removeTileEntity(blockPos);
+					}
 				}
 				try {
 					boolean isRemoved = FastSetBlockState.setBlockStateNoLight(worldSource, blockPos, Blocks.AIR.getDefaultState(), 2);
@@ -1271,7 +1279,13 @@ public class JumpSequencer extends AbstractSequencer {
 				}
 			}
 			
-			final BlockPos target = transformation.apply(jumpBlock.x, jumpBlock.y, jumpBlock.z); 
+			final BlockPos target = transformation.apply(jumpBlock.x, jumpBlock.y, jumpBlock.z);
+			
+			// TODO: add a proper tag on 1.15+
+			if (jumpBlock.block instanceof BlockRedstoneWire) {
+				worldTarget.setBlockState(target, jumpBlock.block.getStateFromMeta(jumpBlock.blockMeta));
+			}
+			
 			JumpBlock.refreshBlockStateOnClient(worldTarget, target);
 			
 			actualIndexInShip++;

@@ -191,6 +191,7 @@ public class WarpDriveConfig {
 	private static BooleanValue                     general_enable_fast_set_blockstate;
 	private static BooleanValue                     general_enable_protection_checks;
 	private static BooleanValue                     general_enable_experimental_refresh;
+	private static BooleanValue                     general_enable_experimental_unload;
 	private static DoubleValue                      general_blast_resistance_cap;
 	
 	// Atomic
@@ -471,6 +472,7 @@ public class WarpDriveConfig {
 	public static boolean              G_ENABLE_FAST_SET_BLOCKSTATE = false;
 	public static boolean              G_ENABLE_PROTECTION_CHECKS = true;
 	public static boolean              G_ENABLE_EXPERIMENTAL_REFRESH = false;
+	public static boolean              G_ENABLE_EXPERIMENTAL_UNLOAD = true;
 	
 	public static float                G_BLAST_RESISTANCE_CAP = 60.0F;
 	
@@ -1202,6 +1204,10 @@ public class WarpDriveConfig {
 		        .comment("Enable experimental refresh during jump to prevent duping, use at your own risk")
 		        .translation("warpdrive.config.general.enable_experimental_refresh")
 		        .define("enable_experimental_refresh", false);
+		general_enable_experimental_unload = builder
+		        .comment("Enable experimental tile entity unloading during jump to force a cleanup, required for IC2 Classic, may cause issues with other mods")
+		        .translation("warpdrive.config.general.enable_experimental_unload")
+		        .define("enable_experimental_unload", true);
 		
 		general_blast_resistance_cap = builder
 				.comment("Maximum allowed blast resistance for non-hull, breakable blocks from other mods. Required to fix non-sense scaling in modded fluids, etc. Default is basic hull resistance (60).")
@@ -2273,6 +2279,7 @@ public class WarpDriveConfig {
 		G_ENABLE_FAST_SET_BLOCKSTATE = general_enable_fast_set_blockstate.get();
 		G_ENABLE_PROTECTION_CHECKS = general_enable_protection_checks.get();
 		G_ENABLE_EXPERIMENTAL_REFRESH = general_enable_experimental_refresh.get();
+		G_ENABLE_EXPERIMENTAL_REFRESH = general_enable_experimental_unload.get();
 		G_BLAST_RESISTANCE_CAP = general_blast_resistance_cap.get().floatValue();
 		
 		// Particles accelerator

@@ -225,6 +225,7 @@ public class Dictionary {
 			config.get("block_tags", "minecraft:redstone_torch"                        , "PlaceLatest Mining").getString();
 			config.get("block_tags", "minecraft:torch"                                 , "PlaceLatest Mining").getString();
 			config.get("block_tags", "minecraft:unlit_redstone_torch"                  , "PlaceLatest Mining").getString();
+			config.get("block_tags", "minecraft:redstone_wire"                         , "PlaceLater Mining").getString(); // redstone wire on top of furnace
 			config.get("block_tags", "warpdrive:hull.basic.plain"                      , "PlaceEarliest StopMining").getString();
 			config.get("block_tags", "warpdrive:hull.advanced.plain"                   , "PlaceEarliest StopMining").getString();
 			config.get("block_tags", "warpdrive:hull.superior.plain"                   , "PlaceEarliest StopMining").getString();

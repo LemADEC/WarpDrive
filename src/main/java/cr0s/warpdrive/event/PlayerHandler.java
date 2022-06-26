@@ -169,8 +169,8 @@ public class PlayerHandler {
 			final TileEntity tileEntity = entityPlayer.world.getTileEntity(globalRegion.getBlockPos());
 			if (!(tileEntity instanceof TileEntityShipCore)) {
 				if (Commons.throttleMe("onBreakSpeed-InvalidInstance")) {
-					WarpDrive.logger.error(String.format("Unable to adjust harvest speed due to invalid tile entity for global region, expecting TileEntityShipCore, got %s",
-					                                     tileEntity ));
+					WarpDrive.logger.error(String.format("Unable to adjust harvest speed due to invalid tile entity for global region, expecting TileEntityShipCore, got %s %s. size is %d.",
+					                                     tileEntity, Commons.format(entityPlayer.world, globalRegion.getBlockPos()), globalRegions.size() ));
 				}
 				return false;
 			}

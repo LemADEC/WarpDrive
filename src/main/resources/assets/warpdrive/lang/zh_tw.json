@@ -955,7 +955,7 @@
     "warpdrive.ship.guide.entering_hyperspace": "Entering hyperspace...",
     "warpdrive.ship.guide.leaving_hyperspace": "Leaving hyperspace...",
     "warpdrive.ship.guide.engaging_jumpgate_x": "Engaging jumpgate towards %1$s!",
-    "warpdrive.ship.guide.jumping_xyz": "Jumping of %1$d blocks (XYZ %2$d %3$d %4$d)",
+    "warpdrive.ship.guide.jumping_xyz": "[{\"text\": \"Jumping of %1$d blocks (XYZ %2$d %3$d %4$d). \"}, {\"text\": \"Click to update home.\", \"color\": \"blue\", \"clickEvent\": { \"action\": \"run_command\", \"value\": \"/sethome -o\" }}]",
     "warpdrive.ship.guide.turning_right": "Turning to the right",
     "warpdrive.ship.guide.turning_back": "Turning back",
     "warpdrive.ship.guide.turning_left": "Turning to the left",

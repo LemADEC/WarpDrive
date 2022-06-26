@@ -96,13 +96,19 @@ public class GlobalRegionManager {
 				continue;
 			}
 			
-			if ( registryItem.type.equals(globalRegionProvider.getGlobalRegionType())
-			  && registryItem.uuid.equals(uuidTileEntity) ) {// already registered
-				registryItem.update(globalRegionProvider);    // in-place update only works as long as hashcode remains unchanged
-				setRegistryItems.removeAll(listToRemove);
-				return;
-			} else if (registryItem.sameCoordinates(globalRegionProvider)) {
-				listToRemove.add(registryItem);
+			if (registryItem.sameCoordinates(globalRegionProvider)) {
+				if ( registryItem.type.equals(globalRegionProvider.getGlobalRegionType())
+				  && registryItem.uuid.equals(uuidTileEntity) ) {// already registered
+					// note: in-place update only works as long as hashcode remains unchanged, that means same position, same type, same UUID
+					registryItem.update(globalRegionProvider);
+					setRegistryItems.removeAll(listToRemove);
+					if (WarpDriveConfig.LOGGING_GLOBAL_REGION_REGISTRY) {
+						printRegistry("updated");
+					}
+					return;
+				} else {
+					listToRemove.add(registryItem);
+				}
 			}
 		}
 		setRegistryItems.removeAll(listToRemove);
@@ -291,6 +297,14 @@ public class GlobalRegionManager {
 				continue;
 			}
 			
+			// sanitize tile entity
+			// note: since player is in range, we can safely load the tile entity
+			final TileEntity tileEntity = world.getTileEntity(globalRegion.getBlockPos());
+			if (!(tileEntity instanceof IGlobalRegionProvider)) {
+				cleanup();
+				continue;
+			}
+			
 			listContainers.add(globalRegion);
 		}
 		
@@ -420,8 +434,7 @@ public class GlobalRegionManager {
 	}
 	
 	public static void printRegistry(final String trigger) {
-		WarpDrive.logger.info(String.format("Global region registry (%s entries after %s):",
-		                                    registry.size(), trigger));
+		WarpDrive.logger.info(String.format("Global region registry after %s:", trigger));
 		
 		for (final Map.Entry<ResourceLocation, CopyOnWriteArraySet<GlobalRegion>> entryDimension : registry.entrySet()) {
 			final StringBuilder message = new StringBuilder();
@@ -431,8 +444,8 @@ public class GlobalRegionManager {
 				                             registryItem.dimensionId, registryItem.x, registryItem.y, registryItem.z,
 				                             registryItem.isolationRate));
 			}
-			WarpDrive.logger.info(String.format("- %d entries in dimension %s: %s",
-			                                    entryDimension.getValue().size(), entryDimension.getKey(), message.toString()));
+			WarpDrive.logger.info(String.format("- %d entries in dimension %d: %s",
+			                                    entryDimension.getValue().size(), entryDimension.getKey(), message ));
 		}
 	}
 	

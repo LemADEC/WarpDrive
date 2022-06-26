@@ -5,6 +5,7 @@ import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.config.Dictionary;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.data.CelestialObject;
+import cr0s.warpdrive.data.CloakManager;
 import cr0s.warpdrive.data.CloakedArea;
 import cr0s.warpdrive.data.GlobalPosition;
 import cr0s.warpdrive.data.MovingEntity;
@@ -131,8 +132,29 @@ public class PacketHandler {
 		
 		final MessageBeamEffect messageBeamEffect = new MessageBeamEffect(v3Source, v3Target, red, green, blue, age);
 		
-		// beam are sent from both ends
-		sendToPlayers(messageBeamEffect, world, v3Source, v3Target, radius);
+		// get cloaked area
+		final CloakedArea cloakedArea = CloakManager.getContainingArea(world, v3Source.getBlockPos(), v3Target.getBlockPos());
+		
+		// send beam from both ends
+		assert world.getMinecraftServer() != null;
+		final List<EntityPlayerMP> playerEntityList = world.getMinecraftServer().getPlayerList().getPlayers();
+		final int dimensionId = world.provider.getDimension();
+		final int radius_square = radius * radius;
+		for (final EntityPlayerMP entityPlayerMP : playerEntityList) {
+			// is it out of range?
+			if ( entityPlayerMP.world == null
+			  || entityPlayerMP.world.provider.getDimension() != dimensionId
+			  || ( v3Source.distanceTo_square(entityPlayerMP) > radius_square
+			    && v3Target.distanceTo_square(entityPlayerMP) > radius_square ) ) {
+				continue;
+			}
+			// is it cloaked?
+			if ( cloakedArea != null
+			  && !cloakedArea.isBlockWithinArea(entityPlayerMP.getPosition()) ) {
+				continue;
+			}
+			simpleNetworkManager.sendTo(messageBeamEffect, entityPlayerMP);
+		}
 	}
 	
 	public static void sendBeamPacketToPlayersInArea(@Nonnull final World world, final Vector3 source, final Vector3 target,
@@ -141,6 +163,7 @@ public class PacketHandler {
 		assert !world.isRemote();
 		
 		final MessageBeamEffect messageBeamEffect = new MessageBeamEffect(source, target, red, green, blue, age);
+		
 		// Send packet to all players within cloaked area
 		final MinecraftServer server = LogicalSidedProvider.INSTANCE.get(LogicalSide.SERVER);
 		assert server != null;
@@ -185,8 +208,27 @@ public class PacketHandler {
 		final MessageSpawnParticle messageSpawnParticle = new MessageSpawnParticle(
 			type, quantity, origin, direction, baseRed, baseGreen, baseBlue, fadeRed, fadeGreen, fadeBlue);
 		
-		// send near the particle
-		sendToPlayers(messageSpawnParticle, world, origin, null, radius);
+		// get cloaked area
+		final CloakedArea cloakedArea = CloakManager.getContainingArea(world, origin.getBlockPos(), null);
+		
+		// send particle to players in range and the same cloak
+		assert world.getMinecraftServer() != null;
+		final List<EntityPlayerMP> playerEntityList = world.getMinecraftServer().getPlayerList().getPlayers();
+		final int radius_square = radius * radius;
+		for (final EntityPlayerMP entityPlayerMP : playerEntityList) {
+			// is it out of range?
+			if ( entityPlayerMP.world == null
+			  || entityPlayerMP.world.provider.getDimension() != world.provider.getDimension()
+			  || origin.distanceTo_square(entityPlayerMP) > radius_square ) {
+				continue;
+			}
+			// is it cloaked?
+			if ( cloakedArea != null
+			  && !cloakedArea.isBlockWithinArea(entityPlayerMP.getPosition()) ) {
+				continue;
+			}
+			simpleNetworkManager.sendTo(messageSpawnParticle, entityPlayerMP);
+		}
 		
 		if (WarpDriveConfig.LOGGING_EFFECTS) {
 			WarpDrive.logger.info(String.format("Sent particle effect '%s' x %d from %s toward %s as RGB %.2f %.2f %.2f fading to %.2f %.2f %.2f",

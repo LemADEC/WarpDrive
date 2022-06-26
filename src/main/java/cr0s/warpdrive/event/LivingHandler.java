@@ -195,6 +195,15 @@ public class LivingHandler {
 			if (WarpDriveConfig.OFFLINE_AVATAR_ENABLE) {
 				OfflineAvatarManager.onTick((PlayerEntity) entityLivingBase);
 			}
+			
+			// *** elytra handling
+			// note: flags are pretty slow to access, so we try to filter out the obvious cases first
+			if ( !entityLivingBase.onGround
+			  && !celestialObject.hasAtmosphere()
+			  && entityLivingBase.getItemStackFromSlot(EntityEquipmentSlot.CHEST).getItem() == Items.ELYTRA
+			  && entityLivingBase.isElytraFlying() ) {
+				((EntityPlayerMP) entityLivingBase).clearElytraFlying();
+			}
 		}
 		
 		// gravity handling

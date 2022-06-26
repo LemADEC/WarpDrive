@@ -165,10 +165,6 @@ public class MessageTransporterEffect implements IMessage {
 			if (entity != null) {
 				// check existing particle at position
 				final Vector3 v3Position = v3EntityPositions.get(indexEntity).clone();
-				if ( entity instanceof PlayerEntity
-				  && entity == Minecraft.getInstance().player) {
-					v3Position.translate(Direction.DOWN, entity.getEyeHeight());
-				}
 				AbstractEntityFX effect = EntityFXRegistry.get(v3Position, 0.5D);
 				if (effect == null) {
 					// compute height with a margin
@@ -268,8 +264,10 @@ public class MessageTransporterEffect implements IMessage {
 		
 		final Collection<BlockPos> vContainments = ((TileEntityTransporterCore) tileEntity).getContainments();
 		if (vContainments == null) {
-			WarpDrive.logger.error(String.format("No containments blocks identified for transporter core at %s",
-			                                     blockPosTransporter ));
+			if (Commons.throttleMe("noContainmentsBlock")) {
+				WarpDrive.logger.error(String.format("No containment block identified for transporter core at %s",
+				                                     blockPosTransporter ));
+			}
 			return;
 		}
 		for (final BlockPos vContainment : vContainments) {

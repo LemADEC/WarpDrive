@@ -28,10 +28,20 @@ public class WarpDriveText extends StringTextComponent {
 		super("");
 		
 		final ITextComponent textComponent = new TranslationTextComponent(translationKey, args);
-		if (style != null) {
-			textComponent.setStyle(style);
+		final String textRaw = textComponent.getUnformattedText();
+		if (textRaw.startsWith("[") && textRaw.endsWith("]")) {
+			final ITextComponent textComponentNested = ITextComponent.Serializer.jsonToComponent(textRaw);
+			if (textComponentNested != null) {
+				append(textComponentNested);
+			} else {
+				append(textComponent);
+			}
+		} else {
+			if (style != null) {
+				textComponent.setStyle(style);
+			}
+			append(textComponent);
 		}
-		append(textComponent);
 	}
 	
 	@Nonnull

@@ -141,6 +141,18 @@ public class CloakManager {
 		}
 	}
 	
+	@Nullable
+	public static CloakedArea getContainingArea(@Nonnull final World world, @Nonnull final BlockPos blockPos1, @Nullable final BlockPos blockPos2) {
+		for (final CloakedArea area : cloaks) {
+			if ( area.dimensionId == world.provider.getDimension()
+			  && area.isBlockWithinArea(blockPos1) ) {
+				return blockPos2 == null || area.isBlockWithinArea(blockPos2) ? area : null;
+			}
+		}
+		return null;
+	}
+	
+	@SuppressWarnings("unused") // Core mod
 	@OnlyIn(Dist.CLIENT)
 	public static void WorldClient_invalidateRegionAndSetBlock_setBlockState(@Nonnull final BlockPos blockPos, @Nonnull final BlockState blockState, final int flags) {
 		final World world = Minecraft.getInstance().world;

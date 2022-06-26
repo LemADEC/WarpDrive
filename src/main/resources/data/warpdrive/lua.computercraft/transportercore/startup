@@ -179,13 +179,13 @@ function transporter_page_writeLockStrength(lockStrength)
     else
       w.setColorWarning()
     end
-    w.write(w.format_float(percent) .. " %  ")
+    w.write(w.format_float(percent) .. " %")
   else
     w.setColorDisabled()
-    w.write(w.format_string("-none-", 7))
+    w.write("-none-")
   end
   w.setColorNormal()
-  w.write(".")
+  w.write(".  ")
 end
 
 function transporter_setEnergyFactor()
