@@ -108,8 +108,9 @@ public class CompatAppliedEnergistics2 implements IBlockTransformer {
 		if (rotationSteps == 0) {
 			return blockState;
 		}
-		/*
+		
 		if (classBlockQuartzFixture.isInstance(blockState.getBlock())) {
+		/*
 			switch (rotationSteps) {
 			case 1:
 				return mrotQuartzFixture[metadata];
@@ -120,21 +121,22 @@ public class CompatAppliedEnergistics2 implements IBlockTransformer {
 			default:
 				return blockState;
 			}
-		}
 		*/
-		if (nbtTileEntity.contains("orientation_up") && nbtTileEntity.contains("orientation_forward")) {
-			final String orientation_forward = nbtTileEntity.getString("orientation_forward");
-			final String orientation_up = nbtTileEntity.getString("orientation_up");
+		}
+		
+		if (nbtTileEntity.contains("up") && nbtTileEntity.contains("forward")) {
+			final String orientation_forward = nbtTileEntity.getString("forward");
+			final String orientation_up = nbtTileEntity.getString("up");
 			if (orientation_forward.equals("UP") || orientation_forward.equals("DOWN")) {
 				switch (rotationSteps) {
 				case 1:
-					nbtTileEntity.putString("orientation_up", rotSideNames.get(orientation_up));
+					nbtTileEntity.putString("up", rotSideNames.get(orientation_up));
 					break;
 				case 2:
-					nbtTileEntity.putString("orientation_up", rotSideNames.get(rotSideNames.get(orientation_up)));
+					nbtTileEntity.putString("up", rotSideNames.get(rotSideNames.get(orientation_up)));
 					break;
 				case 3:
-					nbtTileEntity.putString("orientation_up", rotSideNames.get(rotSideNames.get(rotSideNames.get(orientation_up))));
+					nbtTileEntity.putString("up", rotSideNames.get(rotSideNames.get(rotSideNames.get(orientation_up))));
 					break;
 				default:
 					break;
@@ -142,13 +144,13 @@ public class CompatAppliedEnergistics2 implements IBlockTransformer {
 			} else {
 				switch (rotationSteps) {
 				case 1:
-					nbtTileEntity.putString("orientation_forward", rotSideNames.get(orientation_forward));
+					nbtTileEntity.putString("forward", rotSideNames.get(orientation_forward));
 					break;
 				case 2:
-					nbtTileEntity.putString("orientation_forward", rotSideNames.get(rotSideNames.get(orientation_forward)));
+					nbtTileEntity.putString("forward", rotSideNames.get(rotSideNames.get(orientation_forward)));
 					break;
 				case 3:
-					nbtTileEntity.putString("orientation_forward", rotSideNames.get(rotSideNames.get(rotSideNames.get(orientation_forward))));
+					nbtTileEntity.putString("forward", rotSideNames.get(rotSideNames.get(rotSideNames.get(orientation_forward))));
 					break;
 				default:
 					break;
@@ -163,9 +165,8 @@ public class CompatAppliedEnergistics2 implements IBlockTransformer {
 				  || (key.startsWith("extra:") && !key.equals("extra:6"))) {
 					final CompoundNBT tagCompound = nbtTileEntity.getCompound(key).copy();
 					final String[] parts = key.split(":");
-					if (parts.length != 2 || !rotTagSuffix.containsKey(parts[1])) {
-						// skip
-					} else {
+					if ( parts.length == 2
+					  && rotTagSuffix.containsKey(parts[1]) ) {
 						switch (rotationSteps) {
 						case 1:
 							tagsRotated.put(parts[0] + ":" + rotTagSuffix.get(parts[1]), tagCompound);

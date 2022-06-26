@@ -197,7 +197,7 @@ public class CompatRefinedStorage implements IBlockTransformer {
 			return;
 		}
 		final INetworkNodeManager manager = refinedStorageAPI.getNetworkNodeManager(world);
-		if (tagCompound.hasKey(NBT_NODE_ID, NBT.TAG_STRING)) {
+		if (tagCompound.contains(NBT_NODE_ID, NBT.TAG_STRING)) {
 			final INetworkNodeFactory networkNodeFactory = refinedStorageAPI.getNetworkNodeRegistry().get(tagCompound.getString(NBT_NODE_ID));
 			if (networkNodeFactory == null) {
 				WarpDrive.logger.error(String.format("Invalid NodeId in external NBT while restoring externals for RefinedStorage, please report to mod author: %s",
@@ -212,7 +212,7 @@ public class CompatRefinedStorage implements IBlockTransformer {
 		manager.markForSaving();
 		
 		// restore direction
-		if (!tagCompound.hasKey(NBT_DIRECTION, NBT.TAG_ANY_NUMERIC)) {
+		if (!tagCompound.contains(NBT_DIRECTION, NBT.TAG_ANY_NUMERIC)) {
 			WarpDrive.logger.error(String.format("Missing direction in external NBT while restoring externals for RefinedStorage, please report to mod author: %s",
 			                                     nbtBase ));
 		} else {

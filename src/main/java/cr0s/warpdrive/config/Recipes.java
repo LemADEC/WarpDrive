@@ -686,7 +686,7 @@ public class Recipes {
 		                                       ItemComponent.getItemStackNoCache(EnumComponentType.LENS, 2), false, "ggg", "pdp", "ggg",
 		                                       'g', "forge:nuggets/gold",
 		                                       'p', whiteLensOrGlassPane,
-		                                       'd', diamondLensOrGem ));
+		                                       'd', diamondLensOrGem );
 		// in case craftingLens was found, add a secondary more expensive recipe with just glass
 		// note: this is done in the spirit of Gregtech progression while keeping early access to laser tree farm
 		if (!glassPane.equals(whiteLensOrGlassPane)) {
@@ -694,7 +694,7 @@ public class Recipes {
 			                                       ItemComponent.getItemStackNoCache(EnumComponentType.LENS, 1), false, "ggg", "pdp", "ggg",
 			                                       'g', "nuggetGold",
 			                                       'p', glassPane,
-			                                       'd', diamondLensOrGem ));
+			                                       'd', diamondLensOrGem );
 		}
 		
 		// Zoom is 3 Lens, 2 Iron ingot, 2 Dyes, 1 Redstone, 1 Basic motor
@@ -1680,7 +1680,7 @@ public class Recipes {
 		registerShapedRecipe(groupMachines, "_direct",
 		                                       WarpDrive.blockCapacitors[EnumTier.SUPERIOR.getIndex()], false, "psp", "ici", "pgp",
 		                                       'c', ItemComponent.getItem(EnumComponentType.CAPACITIVE_CLUSTER),
-		                                       'p', ItemComponent.getItem(EnumComponentType.CARBON_FIBER),
+		                                       'p', "forge:plate/carbon",
 		                                       'i', ItemComponent.getItem(EnumComponentType.POWER_INTERFACE),
 		                                       'g', "forge:ingots/gold",
 		                                       's', ItemComponent.getItem(EnumComponentType.SUPERCONDUCTOR) );
@@ -1688,7 +1688,7 @@ public class Recipes {
 		registerShapedRecipe(groupMachines, "_upgrade",
 		                                       WarpDrive.blockCapacitors[EnumTier.SUPERIOR.getIndex()], false, "p p", "csc", "p p",
 		                                       'c', new ItemStack(WarpDrive.blockCapacitors[EnumTier.ADVANCED.getIndex()]),
-		                                       'p', ItemComponent.getItem(EnumComponentType.CARBON_FIBER),
+		                                       'p', "forge:plate/carbon",
 		                                       's', ItemComponent.getItem(EnumComponentType.SUPERCONDUCTOR) );
 	}
 	

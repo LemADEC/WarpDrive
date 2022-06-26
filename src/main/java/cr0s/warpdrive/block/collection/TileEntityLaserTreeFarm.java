@@ -55,8 +55,8 @@ public class TileEntityLaserTreeFarm extends TileEntityAbstractMiner {
 	// persistent properties
 	private int radiusX_requested = WarpDriveConfig.TREE_FARM_totalMaxRadius;
 	private int radiusZ_requested = WarpDriveConfig.TREE_FARM_totalMaxRadius;
-	private boolean breakLeaves = false;
-	private boolean tapTrees = false;
+	private boolean breakLeaves = true;
+	private boolean tapTrees = true;
 	
 	private static final int STATE_IDLE = 0;
 	private static final int STATE_WARMING_UP = 1;

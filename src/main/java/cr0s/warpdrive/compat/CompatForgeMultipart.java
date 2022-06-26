@@ -33,7 +33,7 @@ public class CompatForgeMultipart implements IBlockTransformer {
 			=> keep in comments for now
 			
 			final Class<?> forgeMultipart_helper = Class.forName("codechicken.multipart.MultipartHelper");
-			methodMultipartHelper_createTileFromNBT = forgeMultipart_helper.getDeclaredMethod("createTileFromNBT", World.class, NBTTagCompound.class);
+			methodMultipartHelper_createTileFromNBT = forgeMultipart_helper.getDeclaredMethod("createTileFromNBT", World.class, CompoundNBT.class);
 			methodMultipartHelper_sendDescPacket = forgeMultipart_helper.getDeclaredMethod("sendDescPacket", World.class, TileEntity.class);
 			final Class<?> forgeMultipart_tileMultipart = Class.forName("codechicken.multipart.TileMultipart");
 			methodTileMultipart_onChunkLoad = forgeMultipart_tileMultipart.getDeclaredMethod("onChunkLoad");
