@@ -246,7 +246,7 @@ public class TileEntityLift extends TileEntityAbstractEnergyConsumer implements 
 					                             1.0F, 1.0F, 0.0F, 40, 0, 100);
 				}
 				if (!isTransferDone) {
-					world.playSound(null, pos, SoundEvents.LASER_HIGH, SoundCategory.AMBIENT, 4.0F, 1.0F);
+					world.playSound(null, pos, SoundEvents.LASER_HIGH, SoundCategory.AMBIENT, 1.0F, 1.0F);
 				}
 				energy_consume(WarpDriveConfig.LIFT_ENERGY_PER_ENTITY, false);
 				isTransferDone = true;

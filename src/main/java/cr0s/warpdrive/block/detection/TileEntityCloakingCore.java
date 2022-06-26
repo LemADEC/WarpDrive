@@ -174,7 +174,7 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergyCoreOrContro
 					                                                            minX, minY, minZ, maxX, maxY, maxZ);
 					if (!soundPlayed) {
 						soundPlayed = true;
-						world.playSound(null, pos, SoundEvents.CLOAK, SoundCategory.BLOCKS, 4F, 1F);
+						world.playSound(null, pos, SoundEvents.CLOAK, SoundCategory.BLOCKS, 4.0F, 1F);
 					}
 					
 					// start cloaking
@@ -540,7 +540,7 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergyCoreOrContro
 			
 			if (!soundPlayed) {
 				soundPlayed = true;
-				world.playSound(null, pos, SoundEvents.DECLOAK, SoundCategory.BLOCKS, 4F, 1F);
+				world.playSound(null, pos, SoundEvents.DECLOAK, SoundCategory.BLOCKS, 4.0F, 1F);
 			}
 		}
 	}

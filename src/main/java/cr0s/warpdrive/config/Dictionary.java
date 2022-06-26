@@ -41,22 +41,24 @@ public class Dictionary {
 	private static HashMap<String, String> taggedItems = new HashMap<>();
 	
 	// Blocks dictionary
-	public static HashSet<Block> BLOCKS_ORES = new HashSet<>();
-	private static HashSet<Block> BLOCKS_SOILS = new HashSet<>();
-	private static HashSet<Block> BLOCKS_LOGS = new HashSet<>();
-	private static HashSet<Block> BLOCKS_LEAVES = new HashSet<>();
-	public static HashSet<Block> BLOCKS_ANCHOR = new HashSet<>();
-	public static HashSet<Block> BLOCKS_NOMASS = new HashSet<>();
-	public static HashSet<Block> BLOCKS_LEFTBEHIND = new HashSet<>();
-	public static HashSet<Block> BLOCKS_EXPANDABLE = new HashSet<>();
-	public static HashSet<Block> BLOCKS_MINING = new HashSet<>();
-	public static HashSet<Block> BLOCKS_SKIPMINING = new HashSet<>();
-	public static HashSet<Block> BLOCKS_STOPMINING = new HashSet<>();
-	public static HashMap<Block, Integer> BLOCKS_PLACE = new HashMap<>();
-	public static HashSet<Block> BLOCKS_NOCAMOUFLAGE = new HashSet<>();
-	public static HashSet<Block> BLOCKS_NOBLINK = new HashSet<>();
+	public static HashSet<Block> BLOCKS_ORES = null;
+	private static HashSet<Block> BLOCKS_SOILS = null;
+	private static HashSet<Block> BLOCKS_LOGS = null;
+	private static HashSet<Block> BLOCKS_STACKING_PLANTS = null;
+	private static HashSet<Block> BLOCKS_LEAVES = null;
+	public static HashSet<Block> BLOCKS_ANCHOR = null;
+	public static HashSet<Block> BLOCKS_NOMASS = null;
+	public static HashSet<Block> BLOCKS_LEFTBEHIND = null;
+	public static HashSet<Block> BLOCKS_EXPANDABLE = null;
+	public static HashSet<Block> BLOCKS_MINING = null;
+	public static HashSet<Block> BLOCKS_SKIPMINING = null;
+	public static HashSet<Block> BLOCKS_STOPMINING = null;
+	public static HashMap<Block, Integer> BLOCKS_PLACE = null;
+	public static HashSet<Block> BLOCKS_NOCAMOUFLAGE = null;
+	public static HashSet<Block> BLOCKS_NOBLINK = null;
 	
-	private static HashSet<Block> BLOCKS_LOGS_AND_LEAVES = new HashSet<>();
+	private static HashSet<Block> cache_blocks_logsAndStackings = null;
+	private static HashSet<Block> cache_blocks_logsLeavesAndStackings = null;
 	
 	// Entities dictionary
 	private static HashSet<ResourceLocation> ENTITIES_ANCHOR = new HashSet<>();
@@ -85,6 +87,7 @@ public class Dictionary {
 					+ "- Soil: this block is a soil for plants (default: dirt, farmland, grass, sand & soul sand).\n"
 					+ "- Log: this block is harvestable as a wood log (default: all 'log*', '*log' & '*logs' blocks from the ore dictionary).\n"
 					+ "- Leaf: this block is harvestable as a leaf (default: all 'leave*', '*leave' & '*leaves' blocks from the ore dictionary).\n"
+					+ "- StackingPlant: this block is harvestable as a reed or cactus (i.e. base block is kept).\n"
 					+ "- Anchor: ship can't move with this block aboard (default: bedrock and assimilated).\n"
 					+ "- NoMass: this block doesn't count when calculating ship volume/mass (default: leaves, all 'air' blocks).\n"
 					+ "- LeftBehind: this block won't move with your ship (default: RailCraft heat, WarpDrive gases).\n"
@@ -110,6 +113,11 @@ public class Dictionary {
 			config.get("block_tags", "minecraft:mycelium"                                   , "Soil").getString();
 			config.get("block_tags", "minecraft:sand"                                       , "Soil").getString();
 			config.get("block_tags", "minecraft:soul_sand"                                  , "Soil").getString();
+			config.get("block_tags", "minecraft:melon_block"                                , "Log").getString();
+			config.get("block_tags", "minecraft:pumpkin"                                    , "Log").getString();
+			config.get("block_tags", "minecraft:reeds"                                      , "StackingPlant").getString();
+			config.get("block_tags", "minecraft:cactus"                                     , "StackingPlant").getString();
+			
 			config.get("block_tags", "ic2:rubber_wood"                                      , "Log").getString(); // IC2 Experimental
 			config.get("block_tags", "ic2:blockrubwood"                                     , "Log").getString(); // IC2 Classic
 			config.get("block_tags", "tconstruct:slime_congealed"                           , "Log").getString();
@@ -534,6 +542,7 @@ public class Dictionary {
 		}
 		
 		// apply tagged blocks
+		BLOCKS_STACKING_PLANTS = new HashSet<>(taggedBlocks.size());
 		BLOCKS_SOILS = new HashSet<>(taggedBlocks.size());
 		BLOCKS_ANCHOR = new HashSet<>(taggedBlocks.size());
 		BLOCKS_NOMASS = new HashSet<>(taggedBlocks.size() + BLOCKS_LEAVES.size());
@@ -547,7 +556,8 @@ public class Dictionary {
 		BLOCKS_PLACE = new HashMap<>(taggedBlocks.size());
 		BLOCKS_NOCAMOUFLAGE = new HashSet<>(taggedBlocks.size());
 		BLOCKS_NOBLINK = new HashSet<>(taggedBlocks.size());
-		BLOCKS_LOGS_AND_LEAVES = null;
+		cache_blocks_logsAndStackings = null;
+		cache_blocks_logsLeavesAndStackings = null;
 		for (final Entry<String, String> taggedBlock : taggedBlocks.entrySet()) {
 			final Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(taggedBlock.getKey()));
 			if (block == null) {
@@ -559,6 +569,7 @@ public class Dictionary {
 				case "Soil"         : BLOCKS_SOILS.add(block); break;
 				case "Log"          : BLOCKS_LOGS.add(block); break;
 				case "Leaf"         : BLOCKS_LEAVES.add(block); break;
+				case "StackingPlant": BLOCKS_STACKING_PLANTS.add(block); break;
 				case "Anchor"       : BLOCKS_ANCHOR.add(block); break;
 				case "NoMass"       : BLOCKS_NOMASS.add(block); break;
 				case "LeftBehind"   : BLOCKS_LEFTBEHIND.add(block); break;
@@ -645,6 +656,7 @@ public class Dictionary {
 		WarpDrive.logger.info(String.format("- %s ores: %s"                   , BLOCKS_ORES.size(), getHashMessage(BLOCKS_ORES)));
 		WarpDrive.logger.info(String.format("- %s soils: %s"                  , BLOCKS_SOILS.size(), getHashMessage(BLOCKS_SOILS)));
 		WarpDrive.logger.info(String.format("- %s logs: %s"                   , BLOCKS_LOGS.size(), getHashMessage(BLOCKS_LOGS)));
+		WarpDrive.logger.info(String.format("- %s stacking plants: %s"        , BLOCKS_STACKING_PLANTS.size(), getHashMessage(BLOCKS_STACKING_PLANTS)));
 		WarpDrive.logger.info(String.format("- %s leaves: %s"                 , BLOCKS_LEAVES.size(), getHashMessage(BLOCKS_LEAVES)));
 		WarpDrive.logger.info(String.format("- %s anchors: %s"                , BLOCKS_ANCHOR.size(), getHashMessage(BLOCKS_ANCHOR)));
 		WarpDrive.logger.info(String.format("- %s with NoMass tag: %s"        , BLOCKS_NOMASS.size(), getHashMessage(BLOCKS_NOMASS)));
@@ -840,17 +852,22 @@ public class Dictionary {
 		return BLOCKS_SOILS.contains(block);
 	}
 	
-	public static HashSet<Block> getLogs() {
-		return BLOCKS_LOGS;
+	public static HashSet<Block> getLogsAndStackings() {
+		if (cache_blocks_logsAndStackings == null) {
+			cache_blocks_logsAndStackings = (HashSet<Block>) BLOCKS_LOGS.clone();
+			cache_blocks_logsAndStackings.addAll(BLOCKS_STACKING_PLANTS);
+		}
+		return cache_blocks_logsAndStackings;
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static HashSet<Block> getLogsAndLeaves() {
-		if (BLOCKS_LOGS_AND_LEAVES == null) {
-			BLOCKS_LOGS_AND_LEAVES = (HashSet<Block>) BLOCKS_LOGS.clone();
-			BLOCKS_LOGS_AND_LEAVES.addAll(BLOCKS_LEAVES);
+	public static HashSet<Block> getLogsLeavesAndStackings() {
+		if (cache_blocks_logsLeavesAndStackings == null) {
+			cache_blocks_logsLeavesAndStackings = (HashSet<Block>) BLOCKS_LOGS.clone();
+			cache_blocks_logsLeavesAndStackings.addAll(BLOCKS_LEAVES);
+			cache_blocks_logsLeavesAndStackings.addAll(BLOCKS_STACKING_PLANTS);
 		}
-		return BLOCKS_LOGS_AND_LEAVES;
+		return cache_blocks_logsLeavesAndStackings;
 	}
 	
 	public static boolean isLog(final Block block) {
@@ -859,6 +876,10 @@ public class Dictionary {
 	
 	public static boolean isLeaf(final Block block) {
 		return BLOCKS_LEAVES.contains(block);
+	}
+	
+	public static boolean isStackingPlant(final Block block) {
+		return BLOCKS_STACKING_PLANTS.contains(block);
 	}
 	
 	public static boolean isAnchor(final Entity entity) {

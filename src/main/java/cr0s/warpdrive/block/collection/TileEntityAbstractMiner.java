@@ -5,6 +5,7 @@ import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.IBlockBase;
 import cr0s.warpdrive.block.TileEntityAbstractLaser;
+import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.data.FluidWrapper;
 import cr0s.warpdrive.data.InventoryWrapper;
 import cr0s.warpdrive.data.Vector3;
@@ -28,6 +29,8 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
+
+import net.minecraftforge.common.IPlantable;
 
 public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 	
@@ -73,14 +76,50 @@ public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 			net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(itemStackDrops, getWorld(), blockPos, blockState,
 			                                                               0, 1.0f, true, entityPlayer);
 			
-			if (InventoryWrapper.addToConnectedInventories(world, pos, itemStackDrops)) {
-				setIsEnabled(false);
-			}
 			// standard harvest block effect
 			world.playEvent(2001, blockPos, Block.getStateId(blockState));
 			
 			// remove while updating neighbours
-			world.removeBlock(blockPos, false); // setBlockState(blockPos, Blocks.AIR.getDefaultState(), 3);
+			world.setBlockToAir(blockPos); // setBlockState(blockPos, Blocks.AIR.getDefaultState(), 3);
+			
+			// try to replant the crop
+			if ( itemStackDrops != null
+			  && blockState.getBlock() instanceof IGrowable) {
+				for (final ItemStack itemStackPlant : itemStackDrops) {
+					if (itemStackPlant.getItem() instanceof IPlantable) {
+						final IPlantable plantable = (IPlantable) itemStackPlant.getItem();
+						final IBlockState blockStatePlant = plantable.getPlant(world, blockPos);
+						if (WarpDriveConfig.LOGGING_COLLECTION) {
+							WarpDrive.logger.info(String.format("Drop includes %s which is plantable %s as block %s",
+							                                    itemStackPlant, plantable, blockStatePlant ));
+						}
+						final BlockPos blockPosSoil = blockPos.down();
+						final IBlockState blockStateSoil = getWorld().getBlockState(blockPosSoil);
+						if (!blockStateSoil.getBlock().canSustainPlant(blockStateSoil, world, blockPosSoil, EnumFacing.UP, plantable)) {
+							continue;
+						}
+						
+						if (!blockStatePlant.getBlock().canPlaceBlockAt(world, blockPos)) {
+							continue;
+						}
+						
+						// (we're sticking to harvesting effects)
+						world.setBlockState(blockPos, blockStatePlant, 3);
+						
+						// refresh the drops
+						itemStackDrops.remove(itemStackPlant);
+						itemStackPlant.shrink(1);
+						if (!itemStackPlant.isEmpty()) {
+							itemStackDrops.add(itemStackPlant);
+						}
+						break;
+					}
+				}
+			}
+			
+			if (InventoryWrapper.addToConnectedInventories(world, pos, itemStackDrops)) {
+				setIsEnabled(false);
+			}
 		}
 	}
 	

@@ -723,11 +723,11 @@ public class TileEntityLaser extends TileEntityAbstractLaser implements IBeamFre
 	private void playSoundCorrespondsEnergy(final int energy) {
 		assert world != null;
 		if (energy <= 500000) {
-			world.playSound(null, pos, SoundEvents.LASER_LOW, SoundCategory.HOSTILE, 4.0F, 1.0F);
+			world.playSound(null, pos, SoundEvents.LASER_LOW, SoundCategory.HOSTILE, 1.0F, 1.0F);
 		} else if (energy <= 1000000) {
-			world.playSound(null, pos, SoundEvents.LASER_MEDIUM, SoundCategory.HOSTILE, 4.0F, 1.0F);
+			world.playSound(null, pos, SoundEvents.LASER_MEDIUM, SoundCategory.HOSTILE, 1.0F, 1.0F);
 		} else {
-			world.playSound(null, pos, SoundEvents.LASER_HIGH, SoundCategory.HOSTILE, 4.0F, 1.0F);
+			world.playSound(null, pos, SoundEvents.LASER_HIGH, SoundCategory.HOSTILE, 1.0F, 1.0F);
 		}
 	}
 	

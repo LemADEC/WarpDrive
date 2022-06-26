@@ -47,6 +47,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import gregtech.api.items.IToolItem;
+
 public class TooltipHandler {
 	
 	@OnlyIn(Dist.CLIENT)
@@ -351,10 +353,20 @@ public class TooltipHandler {
 		// durability
 		if (WarpDriveConfig.TOOLTIP_ADD_DURABILITY.isEnabled(isSneaking, isCreativeMode)) {
 			try {
-				if (event.getItemStack().isDamageable()) {
+				if (WarpDriveConfig.isGregtechLoaded) {
+					if (itemStack.getItem() instanceof IToolItem) {
+						final IToolItem toolItem = (IToolItem) itemStack.getItem();
+						final int itemDamage = toolItem.getItemDamage(itemStack);
+						final int maxDamage = toolItem.getMaxItemDamage(itemStack);
+						Commons.addTooltip(event.getToolTip(), String.format("Durability: %d / %d",
+						                                                     maxDamage - itemDamage,
+						                                                     maxDamage));
+					}
+				}
+				if (itemStack.isDamageable()) {
 					Commons.addTooltip(event.getToolTip(), String.format("Durability: %d / %d",
-					                                                     event.getItemStack().getMaxDamage() - event.getItemStack().getDamage(),
-					                                                     event.getItemStack().getMaxDamage() ));
+					                                                     itemStack.getMaxDamage() - itemStack.getItemDamage(),
+					                                                     itemStack.getMaxDamage() ));
 				}
 			} catch (final Exception exception) {
 				// no operation

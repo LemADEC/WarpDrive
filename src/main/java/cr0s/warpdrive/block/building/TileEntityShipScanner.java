@@ -167,7 +167,7 @@ public class TileEntityShipScanner extends TileEntityAbstractMachine implements 
 					final int randomY = shipCore.minY + world.rand.nextInt(shipCore.maxY - shipCore.minY + 1);
 					final int randomZ = shipCore.minZ + world.rand.nextInt(shipCore.maxZ - shipCore.minZ + 1);
 					
-					world.playSound(null, pos, SoundEvents.LASER_LOW, SoundCategory.BLOCKS, 4F, 1F);
+					world.playSound(null, pos, SoundEvents.LASER_LOW, SoundCategory.BLOCKS, 1.0F, 1F);
 					final float r = world.rand.nextFloat() - world.rand.nextFloat();
 					final float g = world.rand.nextFloat() - world.rand.nextFloat();
 					final float b = world.rand.nextFloat() - world.rand.nextFloat();

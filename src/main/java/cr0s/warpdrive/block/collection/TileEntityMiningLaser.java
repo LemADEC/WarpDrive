@@ -227,7 +227,7 @@ public class TileEntityMiningLaser extends TileEntityAbstractMiner {
 			// scan
 			scanLayer();
 			if (blockPosValuables.isEmpty()) {
-				world.playSound(null, pos, SoundEvents.LASER_LOW, SoundCategory.BLOCKS, 4.0F, 1.0F);
+				world.playSound(null, pos, SoundEvents.LASER_LOW, SoundCategory.BLOCKS, 1.0F, 0.85F + 0.30F * world.rand.nextFloat());
 				currentLayer--;
 				tickCurrentTask = WarpDriveConfig.MINING_LASER_SCAN_DELAY_TICKS;
 				return;
@@ -247,7 +247,7 @@ public class TileEntityMiningLaser extends TileEntityAbstractMiner {
 				                             0.0F, 0.0F, 1.0F, age, 0, 50);
 				PacketHandler.sendBeamPacket(world, laserOutput, new Vector3(pos.getX() - r, y, pos.getZ() - r + offset).translate(0.3D),
 				                             0.0F, 0.0F, 1.0F, age, 0, 50);
-				world.playSound(null, pos, SoundEvents.LASER_HIGH, SoundCategory.BLOCKS, 4.0F, 1.0F);
+				world.playSound(null, pos, SoundEvents.LASER_HIGH, SoundCategory.BLOCKS, 1.0F, 0.85F + 0.30F * world.rand.nextFloat());
 			}
 			
 			// switch to mining
@@ -299,7 +299,7 @@ public class TileEntityMiningLaser extends TileEntityAbstractMiner {
 				final int age = Math.max(10, Math.round((4 + world.rand.nextFloat()) * WarpDriveConfig.MINING_LASER_MINE_DELAY_TICKS));
 				PacketHandler.sendBeamPacket(world, laserOutput, new Vector3(blockPosValuable).translate(0.5D),
 						1.0F, 1.0F, 0.0F, age, 0, 50);
-				world.playSound(null, pos, SoundEvents.LASER_LOW, SoundCategory.BLOCKS, 4.0F, 1.0F);
+				world.playSound(null, pos, SoundEvents.LASER_LOW, SoundCategory.BLOCKS, 1.0F, 0.85F + 0.30F * world.rand.nextFloat());
 			}
 			harvestBlock(blockPosValuable, blockStateValuable);
 			break;
