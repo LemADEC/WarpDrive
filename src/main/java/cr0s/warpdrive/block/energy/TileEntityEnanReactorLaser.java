@@ -78,14 +78,13 @@ public class TileEntityEnanReactorLaser extends TileEntityAbstractLaser implemen
 		
 		// skip if it's already set to another valid reactor core
 		if ( this.reactorFace != reactorFace
-		  && this.reactorFace != ReactorFace.UNKNOWN ) {
-			if (reactorCoreActual != null) {
-				WarpDrive.logger.warn(String.format("%s Ignoring new reactor %s on %s due to existing reactor %s on %s.",
-				                                    this,
-				                                    reactorCore, reactorFace.name,
-				                                    reactorCoreActual, this.reactorFace.name ));
-				return;
-			}
+		  && this.reactorFace != ReactorFace.UNKNOWN
+		  && reactorCoreActual != null) {
+			WarpDrive.logger.warn(String.format("%s Ignoring new reactor %s on %s due to existing reactor %s on %s.",
+			                                    this,
+				                                reactorCore, reactorFace.name,
+				                                reactorCoreActual, this.reactorFace.name ));
+			return;
 		}
 		
 		// always update cached signature name
