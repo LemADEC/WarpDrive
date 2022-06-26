@@ -305,10 +305,10 @@ public class Recipes {
 			itemStackMachineCasingHV = WarpDriveConfig.getItemStackOrFire("gregtech:machine_casing", 3); // HV machine casing (Stainless Steel)
 			itemStackMachineCasingEV = WarpDriveConfig.getItemStackOrFire("gregtech:machine_casing", 4); // EV machine casing (Titanium)
 			
-			itemStackMotorLV = WarpDriveConfig.getItemStackOrFire("gregtech:meta_item_1", 32600); // LV Motor
-			itemStackMotorMV = WarpDriveConfig.getItemStackOrFire("gregtech:meta_item_1", 32601); // MV Motor
-			itemStackMotorHV = WarpDriveConfig.getItemStackOrFire("gregtech:meta_item_1", 32602); // HV Motor
-			itemStackMotorEV = WarpDriveConfig.getItemStackOrFire("gregtech:meta_item_1", 32603); // EV Motor
+			itemStackMotorLV = WarpDriveConfig.getItemStackOrFire("gregtech:meta_item_1", 127); // LV Motor
+			itemStackMotorMV = WarpDriveConfig.getItemStackOrFire("gregtech:meta_item_1", 128); // MV Motor
+			itemStackMotorHV = WarpDriveConfig.getItemStackOrFire("gregtech:meta_item_1", 129); // HV Motor
+			itemStackMotorEV = WarpDriveConfig.getItemStackOrFire("gregtech:meta_item_1", 130); // EV Motor
 			
 		} else if (WarpDriveConfig.isIndustrialCraft2Loaded) {
 			itemStackMachineCasingLV = (ItemStack) WarpDriveConfig.getOreOrItemStack("ic2:resource", 12,       // IC2 Experimental Basic machine casing

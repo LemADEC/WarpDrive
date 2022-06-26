@@ -158,7 +158,6 @@
 		<import group="overworld_rareOres" name="stone" />
 		<filler blockState="minecraft:obsidian" weight="100" />
 		<filler blockState="minecraft:diamond_ore" weight="5" />
-		<filler blockState="minecraft:bedrock" weight="1" />
 	</fillerSet>
 	
 	<fillerSet group="overworld_rareGems" name="emerald" weight="10">
@@ -230,7 +229,6 @@
 		<filler blockState="minecraft:nether_quartz_ore" ratio="0.07" />
 		<filler blockState="minecraft:glowstone" ratio="0.0075" />
 		<filler blockState="minecraft:lava" ratio="0.01" />
-		<filler blockState="minecraft:bedrock" ratio=".001" />
 		
 		<filler blockState="ars_nouveau:sunstone_ore"                  ratio=".0005" mods="ars_nouveau" /><!-- Sunstone -->
 		<filler blockState="bigreactors:benitoite_ore"                 ratio=".015" mods="bigreactors" /><!-- Benitoite -->
@@ -268,7 +266,7 @@
 	<fillerSet group="end_gems" name="amethyst" weight="10" mods="biomesoplenty">
 		<filler blockState="biomesoplenty:amethyst_ore" ratio=".001" /><!-- Amethyst -->
 	</fillerSet>
-	<fillerSet group="end_gems" name="none" ratio="0.10"><!-- slight change of no gems -->
+	<fillerSet group="end_gems" name="none" ratio="0.10"><!-- slight chance of no gems -->
 		<filler blockState="minecraft:end_stone" ratio=".00000001" /><!-- negligeable ratio -->
 	</fillerSet>
 	

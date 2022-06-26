@@ -200,7 +200,6 @@
                 <import group="undergroundBiomes_rareOres" name="%type%@%metadata%" />
                 <filler blockState="minecraft:obsidian" weight="100" />
                 <filler blockState="undergroundbiomes:%type%_stone_%metadata%_diamond_ore" weight="5" />
-                <filler blockState="minecraft:bedrock" weight="1" />
             </fillerSet>
 
             <!-- assorted overworld surface blocks -->

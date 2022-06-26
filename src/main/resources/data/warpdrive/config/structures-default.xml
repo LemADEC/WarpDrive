@@ -102,18 +102,15 @@
 	<structure group="moon" name="overworld.base" weight="100">
 		<shell name="core" minThickness="4" maxThickness="15">
 			<import group="moon.core" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="mantle" minThickness="3" maxThickness="15">
 			<import group="overworld_uncommon" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="flow" minThickness="0" maxThickness="2">
 			<import group="moon.flow" />
 		</shell>
 		<shell name="crust" minThickness="2" maxThickness="10">
 			<import group="overworld_common" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="surface" minThickness="1" maxThickness="3">
 			<import group="overworld_surface" />
@@ -126,18 +123,15 @@
 		</shell>
 		<shell name="core" minThickness="1" maxThickness="10">
 			<import group="moon.core" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="mantle" minThickness="3" maxThickness="15">
 			<import group="overworld_rare" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="flow" minThickness="1" maxThickness="3">
 			<import group="moon.flow" />
 		</shell>
 		<shell name="crust" minThickness="2" maxThickness="10">
 			<import group="overworld_common" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="surface" minThickness="1" maxThickness="3">
 			<import group="overworld_surface" />
@@ -146,23 +140,20 @@
 
 	<structure group="moon" name="overworld.empty" weight="20">
 		<shell name="core" minThickness="1" maxThickness="1">
-			<filler blockState="minecraft:bedrock" weight="100" />
+			<filler blockState="minecraft:obsidian" weight="100" />
 		</shell>
 		<shell name="empty" minThickness="6" maxThickness="29">
 			<import group="gas" />
 		</shell>
 		<shell name="innerCrust" minThickness="1" maxThickness="1">
 			<filler blockState="minecraft:obsidian" weight="100" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 			<filler blockState="minecraft:glowstone" ratio=".001" />
 		</shell>
 		<shell name="mantle" minThickness="0" maxThickness="2">
 			<filler blockState="minecraft:obsidian" weight="100" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="crust" minThickness="1" maxThickness="5">
 			<import group="overworld_common" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="surface" minThickness="2" maxThickness="3">
 			<import group="overworld_surface" />
@@ -173,11 +164,9 @@
 		<generate group="smallship" />
 		<shell name="core" minThickness="5" maxThickness="16">
 			<import group="gas" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="mantle" minThickness="3" maxThickness="17">
 			<import group="overworld_uncommon" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="flow" minThickness="0" maxThickness="2">
 			<filler blockState="minecraft:obsidian" weight="100" mods="!appliedenergistics2" />
@@ -185,7 +174,6 @@
 		</shell>
 		<shell name="crust" minThickness="2" maxThickness="10">
 			<import group="overworld_common" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="surface" minThickness="1" maxThickness="3">
 			<import group="overworld_surface" />
@@ -198,17 +186,14 @@
 		</shell>
 		<shell name="core" minThickness="5" maxThickness="16">
 			<import group="overworld_rare" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="mantle" minThickness="6" maxThickness="20">
 			<import group="overworld_uncommon" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 			<filler blockState="minecraft:gravel" ratio=".1" />
 			<filler blockState="minecraft:lava" ratio=".05" />
 		</shell>
 		<shell name="crust" minThickness="10" maxThickness="20">
 			<import group="overworld_common" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 			<filler blockState="minecraft:sand" ratio=".1" />
 			<filler blockState="minecraft:air" ratio=".2" />
 		</shell>
@@ -223,21 +208,19 @@
 			<filler blockState="ic2:resource:10" ratio=".1" /><!-- Uranium block -->
 		</shell>
 		<shell name="core" minThickness="1" maxThickness="5">
-			<filler blockState="minecraft:air" weight="1" />
-			<filler blockState="minecraft:bedrock" ratio=".01" />
+			<filler blockState="minecraft:air"      weight="1" />
+			<filler blockState="minecraft:obsidian" ratio=".01" />
 		</shell>
 		<shell name="coreShell" minThickness="1" maxThickness="1">
 			<filler blockState="minecraft:obsidian" weight="100" />
 		</shell>
 		<shell name="mantle" minThickness="6" maxThickness="20">
 			<import group="nether" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 			<filler blockState="minecraft:red_sand" ratio=".2" />
 		</shell>
 		<shell name="crust" minThickness="10" maxThickness="20">
 			<import group="nether" />
 			<filler blockState="minecraft:nether_bricks" ratio=".2" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="surface" minThickness="2" maxThickness="4">
 			<import group="nether_surface" />
@@ -247,7 +230,6 @@
 	<structure group="moon" name="nether.corrupted" ratio="0.1">
 		<shell name="core" minThickness="1" maxThickness="5">
 			<filler blockState="minecraft:air" weight="1" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="coreShell" minThickness="1" maxThickness="1">
 			<filler blockState="minecraft:obsidian" weight="100" mods="!appliedenergistics2" />
@@ -255,12 +237,10 @@
 		</shell>
 		<shell name="mantle" minThickness="6" maxThickness="12">
 			<import group="nether" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 			<filler blockState="minecraft:red_sand" ratio=".2" />
 		</shell>
 		<shell name="crust" minThickness="8" maxThickness="16">
 			<import group="nether" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 			<filler blockState="minecraft:nether_bricks" ratio=".2" />
 			<filler blockState="minecraft:air" ratio=".2" />
 		</shell>
@@ -272,8 +252,8 @@
 
 	<structure group="moon" name="end.hollow" ratio="0.03">
 		<shell name="core" minThickness="5" maxThickness="14">
-			<filler blockState="minecraft:air" weight="100" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
+			<filler blockState="minecraft:air"      weight="100" />
+			<filler blockState="minecraft:obsidian" weight="100" />
 		</shell>
 		<shell name="coreShell" minThickness="1" maxThickness="2">
 			<filler blockState="minecraft:obsidian" weight="100" mods="!appliedenergistics2" />
@@ -283,7 +263,6 @@
 			<import group="end" />
 			<filler blockState="minecraft:obsidian" weight="60" mods="!appliedenergistics2" />
 			<filler blockState="appliedenergistics2:sky_stone_block" weight="60" mods="appliedenergistics2" /><!-- Sky stone block -->
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="surface" minThickness="2" maxThickness="3">
 			<import group="end_surface" />
@@ -296,13 +275,11 @@
 			<filler blockState="minecraft:obsidian" weight="30" mods="!appliedenergistics2" />
 			<filler blockState="appliedenergistics2:sky_stone_block" weight="30" mods="appliedenergistics2" /><!-- Sky stone block -->
 			<filler blockState="warpdrive:hull.iridium_block" weight="1" mods="!netherores" />
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="mantle" minThickness="10" maxThickness="25">
 			<import group="end" />
 			<filler blockState="minecraft:obsidian" weight="60" />
 			<filler blockState="undergroundbiomes:metamorphic_stone_marble" ratio="0.05" mods="undergroundbiomes" /><!-- Marble -->
-			<filler blockState="minecraft:bedrock" ratio=".001" />
 		</shell>
 		<shell name="surface" minThickness="2" maxThickness="3">
 			<import group="end_surface" />

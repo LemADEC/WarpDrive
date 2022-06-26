@@ -84,7 +84,7 @@ minecraft {
             // Export mixin-changed classes
             property 'mixin.debug.export', 'true'
             
-            args "-Xmx2048m", "-Xms1024m", "-ea", "-mixin.config=mixins.warpdrive.json"
+            args "-Xmx3192m", "-Xms1024m", "-ea", "-mixin.config=mixins.warpdrive.json"
             
             mods {
                 warpdrive {
@@ -107,7 +107,7 @@ minecraft {
             // Export mixin-changed classes
             property 'mixin.debug.export', 'true'
             
-            // args "-Xmx2048m", "-Xms1024m", "-ea", "-mixin.config=mixins.warpdrive.json"
+            // args "-Xmx3192m", "-Xms1024m", "-ea", "-mixin.config=mixins.warpdrive.json"
             
             mods {
                 warpdrive {

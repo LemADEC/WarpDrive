@@ -100,8 +100,8 @@ public class RandomCollection<E extends IStringSerializable> {
 		}
 		if (weightMap.containsValue(object)) {
 			if (WarpDriveConfig.LOGGING_WORLD_GENERATION) {
-				WarpDrive.logger.trace(String.format("Object already has a weight defined, skipping %s with weight %s",
-				                                     object, weight));
+				WarpDrive.logger.warn(String.format("Object already has a weight defined, skipping %s with weight %s",
+				                                    object, weight));
 			}
 			return;
 		}

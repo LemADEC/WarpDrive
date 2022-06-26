@@ -760,16 +760,19 @@ public class TileEntityShipScanner extends TileEntityAbstractMachine implements 
 			return new Object[] { false, String.format("Invalid state, expecting IDLE, found %s", enumShipScannerState.toString()) };
 		}
 		
+		final EntityPlayer entityPlayer = world.getClosestPlayer(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 8.0D, false);
+		if (entityPlayer == null) {
+			return new Object[] { false, "Invalid context, no player in range" };
+		}
+		if (!entityPlayer.capabilities.isCreativeMode) {
+			return new Object[] { false, "Only a creative player can use this command" };
+		}
+		
 		final WarpDriveText reason = new WarpDriveText();
 		final boolean isSuccess = deployShip(fileName, x, y, z, rotationSteps, false, reason);
 		
-		// don't force captain when deploying from LUA
-		final PlayerEntity entityPlayer = world.getClosestPlayer(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 8.0D, false);
-		if (entityPlayer != null) {
-			playerName = entityPlayer.getName().getString();
-		} else {
-			playerName = "";
-		}
+		// update player name since we're deploying from LUA
+		playerName = entityPlayer.getName();
 		
 		return new Object[] { isSuccess, Commons.removeFormatting( reason.getString() ) };
 	}

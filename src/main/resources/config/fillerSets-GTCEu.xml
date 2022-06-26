@@ -1,0 +1,639 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<worldGeneration version="3"
+				 xmlns="http://warpdrive.lemadec.org"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 xsi:schemaLocation="http://warpdrive.lemadec.org WarpDrive.xsd"
+				 mods="gregtech">
+	
+	<!-- notes:
+	Gregtech comes with many stone variation but different metadata between stone and ore, so we have duplicate definitions
+	-->
+	
+	<!-- *** Vanilla stone -->
+	<!-- apatite vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="apatite" weight="40">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_apatite_0"               metadata="0" ratio="0.1750" />
+		<filler block="gregtech:ore_tricalcium_phosphate_0"  metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_pyrochlore_0"            metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- cassiterite vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="cassiterite" weight="50">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_tin_0"                   metadata="0" ratio="0.1500" />
+		<filler block="gregtech:ore_cassiterite_0"           metadata="0" ratio="0.0500" />
+	</fillerSet>
+	
+	<!-- coal vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="cassiterite" weight="80">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_coal_0"                  metadata="0" ratio="0.2500" />
+	</fillerSet>
+	
+	<!-- copper_tin vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="copper_tin" weight="80">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_chalcopyrite_0"          metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_zeolite_0"               metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_cassiterite_0"           metadata="0" ratio="0.0500" />
+		<filler block="gregtech:ore_realgar_0"               metadata="0" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- copper vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="copper" weight="80">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_chalcopyrite_0"          metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_iron_0"                  metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_pyrite_0"                metadata="0" ratio="0.0500" />
+		<filler block="gregtech:ore_copper_0"                metadata="0" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- diamond vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="diamond" weight="40">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_graphite_0"              metadata="0" ratio="0.1750" />
+		<filler block="gregtech:ore_diamond_0"               metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_coal_0"                  metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- galena vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="galena" weight="40">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_galena_0"                metadata="0" ratio="0.1750" />
+		<filler block="gregtech:ore_silver_0"                metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_lead_0"                  metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- garnet_tin vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="garnet_tin" weight="80">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_cassiterite_sand_0"      metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_garnet_sand_0"           metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_asbestos_0"              metadata="0" ratio="0.0500" />
+		<filler block="gregtech:ore_diatomite_0"             metadata="0" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- garnet vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="garnet" weight="10">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_garnet_red_0"            metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_garnet_yellow_0"         metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_amethyst_0"              metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_opal_0"                  metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- iron vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="garnet_tin" weight="120">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_brown_limonite_0"        metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_yellow_limonite_0"       metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_banded_iron_0"           metadata="0" ratio="0.0500" />
+		<filler block="gregtech:ore_malachite_0"             metadata="0" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- lapis vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="lapis" weight="40">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_lazurite_0"              metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_sodalite_0"              metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_lapis_0"                 metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_calcite_0"               metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- lubricant vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="lubricant" weight="40">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_soapstone_0"             metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_talc_0"                  metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_glauconite_sand_0"       metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_pentlandite_0"           metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- magnetite vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="magnetite" weight="80">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_magnetite_0"             metadata="0" ratio="0.1050" />
+		<filler block="gregtech:ore_vanadium_magnetite_0"    metadata="0" ratio="0.0375" />
+		<filler block="gregtech:ore_gold_0"                  metadata="0" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- manganese vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="manganese" weight="20">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_grossular_0"             metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_spessartine_0"           metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_pyrolusite_0"            metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_tantalite_0"             metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- mica vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="mica" weight="20">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_kyanite_0"               metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_mica_0"                  metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_bauxite_0"               metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_pollucite_0"             metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- mineral_sand vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="mineral_sand" weight="80">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_basaltic_mineral_sand_0" metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_granitic_mineral_sand_0" metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_fullers_earth_0"         metadata="0" ratio="0.0500" />
+		<filler block="gregtech:ore_gypsum_0"                metadata="0" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- nickel vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="nickel" weight="40">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_garnierite_0"            metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_nickel_0"                metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_cobaltite_0"             metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_pentlandite_0"           metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- oilsands vein: density 0.3 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="oilsands" weight="40">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_oilsands_0"              metadata="0" ratio="0.3000" />
+	</fillerSet>
+	
+	<!-- olivine vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="olivine" weight="20">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_bentonite_0"             metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_magnesite_0"             metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_olivine_0"               metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_glauconite_sand_0"       metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- redstone vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="redstone" weight="60">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_redstone_0"              metadata="0" ratio="0.1400" />
+		<filler block="gregtech:ore_ruby_0"                  metadata="0" ratio="0.0500" />
+		<filler block="gregtech:ore_cinnabar_0"              metadata="0" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- salts vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="salts" weight="50">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_rock_salt_0"             metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_salt_0"                  metadata="0" ratio="0.0700" />
+		<filler block="gregtech:ore_lepidolite_0"            metadata="0" ratio="0.0500" />
+		<filler block="gregtech:ore_spodumene_0"             metadata="0" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- sapphire vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_common" name="sapphire" weight="60">
+		<filler block="minecraft:stone"                      metadata="0" weight="1" />
+		<filler block="gregtech:ore_almandine_0"             metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_pyrope_0"                metadata="0" ratio="0.0875" />
+		<filler block="gregtech:ore_sapphire_0"              metadata="0" ratio="0.0625" />
+		<filler block="gregtech:ore_green_sapphire_0"        metadata="0" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- overworld without ores, a rare sight -->
+	<fillerSet group="overworld_common" name="black_granite" weight="1">
+		<filler block="gregtech:stone_smooth"    metadata="0" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_common" name="red_granite" weight="1">
+		<filler block="gregtech:stone_smooth"    metadata="1" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_common" name="marble" weight="1">
+		<filler block="gregtech:stone_smooth"    metadata="2" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_common" name="basalt" weight="1">
+		<filler block="gregtech:stone_smooth"    metadata="3" weight="100" />
+	</fillerSet>
+	
+    <!-- overworld variations -->
+	<for variable="vein" in="apatite,cassiterite,coal,copper_tin,copper,diamond,galena,garnet_tin,garnet,iron,lapis,lubricant,magnetite,manganese,mica,mineral_sand,nickel,oilsands,olivine,redstone,salts,sapphire">
+		
+		<!-- common overworld ores with various base blocks -->
+		<fillerSet group="overworld_common" name="%vein%-standstone" weight="2">
+			<import group="overworld_common" name="%vein%" /><!-- import the smooth version -->
+			<filler block="minecraft:sandstone"      metadata="0" weight="100" />
+			<filler block="minecraft:clay"           metadata="0" weight="100" />
+		</fillerSet>
+		<fillerSet group="overworld_common" name="%vein%-cobbleLight" weight="2">
+			<import group="overworld_common" name="%vein%" /><!-- import the smooth version -->
+			<filler block="minecraft:cobblestone"    metadata="0" weight="2" />
+		</fillerSet>
+		<fillerSet group="overworld_common" name="%vein%-cobbleHeavy" weight="2">
+			<import group="overworld_common" name="%vein%" /><!-- import the smooth version -->
+			<filler block="minecraft:cobblestone"    metadata="0" weight="10" />
+		</fillerSet>
+		
+		<!-- uncommon overworld veins are just a flat distribution of common veins -->
+		<fillerSet group="overworld_uncommon" name="%vein%" weight="10">
+			<import group="overworld_common" name="%vein%" /><!-- import the common version -->
+		</fillerSet>
+	</for>
+	
+	
+	
+	<!-- *** Nether -->
+	<!-- banded_iron vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="banded_iron" weight="30">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_brown_limonite_0"        metadata="1" ratio="0.0700" />
+		<filler block="gregtech:ore_yellow_limonite_0"       metadata="1" ratio="0.0700" />
+		<filler block="gregtech:ore_banded_iron_0"           metadata="1" ratio="0.0500" />
+		<filler block="gregtech:ore_gold_0"                  metadata="1" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- beryllium vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="beryllium" weight="30">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_beryllium_0"             metadata="1" ratio="0.1750" />
+		<filler block="gregtech:ore_emerald_0"               metadata="1" ratio="0.0625" />
+		<filler block="gregtech:ore_thorium_0"               metadata="1" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- certus_quartz vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="certus_quartz" weight="40">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_beryllium_0"             metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_certus_quartz_0"         metadata="1" ratio="0.1500" />
+		<filler block="gregtech:ore_barite_0"                metadata="1" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- manganese vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="manganese" weight="20">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_grossular_0"             metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_pyrolusite_0"            metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_pyrochlore_0"            metadata="1" ratio="0.0625" />
+		<filler block="gregtech:ore_tantalite_0"             metadata="1" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- molybdenum vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="molybdenum" weight="10">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_wulfenite_0"             metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_molybdenite_0"           metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_molybdenum_0"            metadata="1" ratio="0.0625" />
+		<filler block="gregtech:ore_powellite_0"             metadata="1" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- monazite vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="monazite" weight="30">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_bastnasite_0"            metadata="1" ratio="0.1750" />
+		<filler block="gregtech:ore_monazite_0"              metadata="1" ratio="0.0625" />
+		<filler block="gregtech:ore_neodymium_0"             metadata="1" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- nether_quartz vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="nether_quartz" weight="80">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_nether_quartz_0"         metadata="1" ratio="0.1900" />
+		<filler block="gregtech:ore_quartzite_0"             metadata="1" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- redstone vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="redstone" weight="60">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_redstone_0"              metadata="1" ratio="0.1400" />
+		<filler block="gregtech:ore_ruby_0"                  metadata="1" ratio="0.0500" />
+		<filler block="gregtech:ore_cinnabar_0"              metadata="1" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- saltpeter vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="saltpeter" weight="40">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_saltpeter_0"             metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_diatomite_0"             metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_electrotine_0"           metadata="1" ratio="0.0625" />
+		<filler block="gregtech:ore_alunite_0"               metadata="1" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- sulfur vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="sulfur" weight="50">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_sulfur_0"                metadata="1" ratio="0.1400" />
+		<filler block="gregtech:ore_pyrite_0"                metadata="1" ratio="0.0500" />
+		<filler block="gregtech:ore_sphalerite_0"            metadata="1" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- tetrahedrite vein: density 0.2 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="tetrahedrite" weight="70">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_tetrahedrite_0"          metadata="1" ratio="0.1400" />
+		<filler block="gregtech:ore_copper_0"                metadata="1" ratio="0.0500" />
+		<filler block="gregtech:ore_stibnite_0"              metadata="1" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- topaz vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="nether" name="topaz" weight="100">
+		<filler block="minecraft:netherrack"                              weight="100" />
+		<filler block="minecraft:lava"                                    weight="5" />
+		<filler block="gregtech:ore_blue_topaz_0"            metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_topaz_0"                 metadata="1" ratio="0.0875" />
+		<filler block="gregtech:ore_chalcocite_0"            metadata="1" ratio="0.0625" />
+		<filler block="gregtech:ore_bornite_0"               metadata="1" ratio="0.0125" />
+	</fillerSet>
+	
+	<!-- nether without ores, a rare sight -->
+	<fillerSet group="nether" name="stone" weight="1">
+		<filler block="minecraft:netherrack" weight="100" />
+		<filler block="minecraft:lava" weight="5" />
+	</fillerSet>
+	
+	
+	<!-- *** End -->
+	<!-- bauxite vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="end" name="bauxite" weight="40">
+		<filler block="minecraft:end_stone"                               weight="100" />
+		<filler block="gregtech:ore_bauxite_0"               metadata="2" ratio="0.0875" />
+		<filler block="gregtech:ore_ilmenite_0"              metadata="2" ratio="0.1000" />
+		<filler block="gregtech:ore_aluminium_0"             metadata="2" ratio="0.0625" />
+	</fillerSet>
+	
+	<!-- magnetite vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="end" name="magnetite" weight="30">
+		<filler block="minecraft:end_stone"                               weight="100" />
+		<filler block="gregtech:ore_magnetite_0"             metadata="2" ratio="0.0525" />
+		<filler block="gregtech:ore_vanadium_magnetite_0"    metadata="2" ratio="0.0525" />
+		<filler block="gregtech:ore_chromite_0"              metadata="2" ratio="0.0375" />
+		<filler block="gregtech:ore_gold_0"                  metadata="2" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- naquadah vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="end" name="naquadah" weight="30">
+		<filler block="minecraft:end_stone"                               weight="100" />
+		<filler block="gregtech:ore_naquadah_0"              metadata="2" ratio="0.1425" />
+		<filler block="gregtech:ore_plutonium_0"             metadata="2" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- pitchblende vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="end" name="pitchblende" weight="20">
+		<filler block="minecraft:end_stone"                               weight="100" />
+		<filler block="gregtech:ore_pitchblende_0"           metadata="2" ratio="0.1750" />
+		<filler block="gregtech:ore_uraninite_0"             metadata="2" ratio="0.0750" />
+	</fillerSet>
+	
+	<!-- scheelite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="end" name="scheelite" weight="20">
+		<filler block="minecraft:end_stone"                               weight="100" />
+		<filler block="gregtech:ore_scheelite_0"             metadata="2" ratio="0.1400" />
+		<filler block="gregtech:ore_tungstate_0"             metadata="2" ratio="0.0500" />
+		<filler block="gregtech:ore_lithium_0"               metadata="2" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- sheldonite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="end" name="sheldonite" weight="10">
+		<filler block="minecraft:end_stone"                               weight="100" />
+		<filler block="gregtech:ore_bornite_0"               metadata="2" ratio="0.0700" />
+		<filler block="gregtech:ore_cooperite_0"             metadata="2" ratio="0.0700" />
+		<filler block="gregtech:ore_platinum_0"              metadata="2" ratio="0.0500" />
+		<filler block="gregtech:ore_palladium_0"             metadata="2" ratio="0.0100" />
+	</fillerSet>
+	
+	
+	<!-- *** Overworld rare uses ores from the end in granites, marble & basalt -->
+	
+	<!-- bauxite vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="bauxite-black_granite" weight="40">
+		<filler block="gregtech:stone_smooth"                metadata="0" weight="100" />
+		<filler block="gregtech:ore_bauxite_0"               metadata="8" ratio="0.0875" />
+		<filler block="gregtech:ore_ilmenite_0"              metadata="8" ratio="0.1000" />
+		<filler block="gregtech:ore_aluminium_0"             metadata="8" ratio="0.0625" />
+	</fillerSet>
+	
+	<!-- magnetite vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="magnetite-black_granite" weight="30">
+		<filler block="gregtech:stone_smooth"                metadata="0" weight="100" />
+		<filler block="gregtech:ore_magnetite_0"             metadata="8" ratio="0.0525" />
+		<filler block="gregtech:ore_vanadium_magnetite_0"    metadata="8" ratio="0.0525" />
+		<filler block="gregtech:ore_chromite_0"              metadata="8" ratio="0.0375" />
+		<filler block="gregtech:ore_gold_0"                  metadata="8" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- naquadah vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="naquadah-black_granite" weight="30">
+		<filler block="gregtech:stone_smooth"                metadata="0" weight="100" />
+		<filler block="gregtech:ore_naquadah_0"              metadata="8" ratio="0.1425" />
+		<filler block="gregtech:ore_plutonium_0"             metadata="8" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- pitchblende vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="pitchblende-black_granite" weight="20">
+		<filler block="gregtech:stone_smooth"                metadata="0" weight="100" />
+		<filler block="gregtech:ore_pitchblende_0"           metadata="8" ratio="0.1750" />
+		<filler block="gregtech:ore_uraninite_0"             metadata="8" ratio="0.0750" />
+	</fillerSet>
+	
+	<!-- scheelite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="scheelite-black_granite" weight="20">
+		<filler block="gregtech:stone_smooth"                metadata="0" weight="100" />
+		<filler block="gregtech:ore_scheelite_0"             metadata="8" ratio="0.1400" />
+		<filler block="gregtech:ore_tungstate_0"             metadata="8" ratio="0.0500" />
+		<filler block="gregtech:ore_lithium_0"               metadata="8" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- sheldonite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="sheldonite-black_granite" weight="10">
+		<filler block="gregtech:stone_smooth"                metadata="0" weight="100" />
+		<filler block="gregtech:ore_bornite_0"               metadata="8" ratio="0.0700" />
+		<filler block="gregtech:ore_cooperite_0"             metadata="8" ratio="0.0700" />
+		<filler block="gregtech:ore_platinum_0"              metadata="8" ratio="0.0500" />
+		<filler block="gregtech:ore_palladium_0"             metadata="8" ratio="0.0100" />
+	</fillerSet>
+	
+	
+	
+	<!-- bauxite vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="bauxite-red_granite" weight="40">
+		<filler block="gregtech:stone_smooth"                metadata="1" weight="100" />
+		<filler block="gregtech:ore_bauxite_0"               metadata="9" ratio="0.0875" />
+		<filler block="gregtech:ore_ilmenite_0"              metadata="9" ratio="0.1000" />
+		<filler block="gregtech:ore_aluminium_0"             metadata="9" ratio="0.0625" />
+	</fillerSet>
+	
+	<!-- magnetite vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="magnetite-red_granite" weight="30">
+		<filler block="gregtech:stone_smooth"                metadata="1" weight="100" />
+		<filler block="gregtech:ore_magnetite_0"             metadata="9" ratio="0.0525" />
+		<filler block="gregtech:ore_vanadium_magnetite_0"    metadata="9" ratio="0.0525" />
+		<filler block="gregtech:ore_chromite_0"              metadata="9" ratio="0.0375" />
+		<filler block="gregtech:ore_gold_0"                  metadata="9" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- naquadah vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="naquadah-red_granite" weight="30">
+		<filler block="gregtech:stone_smooth"                metadata="1" weight="100" />
+		<filler block="gregtech:ore_naquadah_0"              metadata="9" ratio="0.1425" />
+		<filler block="gregtech:ore_plutonium_0"             metadata="9" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- pitchblende vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="pitchblende-red_granite" weight="20">
+		<filler block="gregtech:stone_smooth"                metadata="1" weight="100" />
+		<filler block="gregtech:ore_pitchblende_0"           metadata="9" ratio="0.1750" />
+		<filler block="gregtech:ore_uraninite_0"             metadata="9" ratio="0.0750" />
+	</fillerSet>
+	
+	<!-- scheelite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="scheelite-red_granite" weight="20">
+		<filler block="gregtech:stone_smooth"                metadata="1" weight="100" />
+		<filler block="gregtech:ore_scheelite_0"             metadata="9" ratio="0.1400" />
+		<filler block="gregtech:ore_tungstate_0"             metadata="9" ratio="0.0500" />
+		<filler block="gregtech:ore_lithium_0"               metadata="9" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- sheldonite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="sheldonite-red_granite" weight="10">
+		<filler block="gregtech:stone_smooth"                metadata="1" weight="100" />
+		<filler block="gregtech:ore_bornite_0"               metadata="9" ratio="0.0700" />
+		<filler block="gregtech:ore_cooperite_0"             metadata="9" ratio="0.0700" />
+		<filler block="gregtech:ore_platinum_0"              metadata="9" ratio="0.0500" />
+		<filler block="gregtech:ore_palladium_0"             metadata="9" ratio="0.0100" />
+	</fillerSet>
+	
+	
+	
+	<!-- bauxite vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="bauxite-marble" weight="40">
+		<filler block="gregtech:stone_smooth"                metadata="2"  weight="100" />
+		<filler block="gregtech:ore_bauxite_0"               metadata="10" ratio="0.0875" />
+		<filler block="gregtech:ore_ilmenite_0"              metadata="10" ratio="0.1000" />
+		<filler block="gregtech:ore_aluminium_0"             metadata="10" ratio="0.0625" />
+	</fillerSet>
+	
+	<!-- magnetite vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="magnetite-marble" weight="30">
+		<filler block="gregtech:stone_smooth"                metadata="2"  weight="100" />
+		<filler block="gregtech:ore_magnetite_0"             metadata="10" ratio="0.0525" />
+		<filler block="gregtech:ore_vanadium_magnetite_0"    metadata="10" ratio="0.0525" />
+		<filler block="gregtech:ore_chromite_0"              metadata="10" ratio="0.0375" />
+		<filler block="gregtech:ore_gold_0"                  metadata="10" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- naquadah vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="naquadah-marble" weight="30">
+		<filler block="gregtech:stone_smooth"                metadata="2"  weight="100" />
+		<filler block="gregtech:ore_naquadah_0"              metadata="10" ratio="0.1425" />
+		<filler block="gregtech:ore_plutonium_0"             metadata="10" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- pitchblende vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="pitchblende-marble" weight="20">
+		<filler block="gregtech:stone_smooth"                metadata="2"  weight="100" />
+		<filler block="gregtech:ore_pitchblende_0"           metadata="10" ratio="0.1750" />
+		<filler block="gregtech:ore_uraninite_0"             metadata="10" ratio="0.0750" />
+	</fillerSet>
+	
+	<!-- scheelite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="scheelite-marble" weight="20">
+		<filler block="gregtech:stone_smooth"                metadata="2"  weight="100" />
+		<filler block="gregtech:ore_scheelite_0"             metadata="10" ratio="0.1400" />
+		<filler block="gregtech:ore_tungstate_0"             metadata="10" ratio="0.0500" />
+		<filler block="gregtech:ore_lithium_0"               metadata="10" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- sheldonite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="sheldonite-marble" weight="10">
+		<filler block="gregtech:stone_smooth"                metadata="2"  weight="100" />
+		<filler block="gregtech:ore_bornite_0"               metadata="10" ratio="0.0700" />
+		<filler block="gregtech:ore_cooperite_0"             metadata="10" ratio="0.0700" />
+		<filler block="gregtech:ore_platinum_0"              metadata="10" ratio="0.0500" />
+		<filler block="gregtech:ore_palladium_0"             metadata="10" ratio="0.0100" />
+	</fillerSet>
+	
+	
+	
+	<!-- bauxite vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="bauxite-basalt" weight="40">
+		<filler block="gregtech:stone_smooth"                metadata="3"  weight="100" />
+		<filler block="gregtech:ore_bauxite_0"               metadata="11" ratio="0.0875" />
+		<filler block="gregtech:ore_ilmenite_0"              metadata="11" ratio="0.1000" />
+		<filler block="gregtech:ore_aluminium_0"             metadata="11" ratio="0.0625" />
+	</fillerSet>
+	
+	<!-- magnetite vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="magnetite-basalt" weight="30">
+		<filler block="gregtech:stone_smooth"                metadata="3"  weight="100" />
+		<filler block="gregtech:ore_magnetite_0"             metadata="11" ratio="0.0525" />
+		<filler block="gregtech:ore_vanadium_magnetite_0"    metadata="11" ratio="0.0525" />
+		<filler block="gregtech:ore_chromite_0"              metadata="11" ratio="0.0375" />
+		<filler block="gregtech:ore_gold_0"                  metadata="11" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- naquadah vein: density 0.15 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="naquadah-basalt" weight="30">
+		<filler block="gregtech:stone_smooth"                metadata="3"  weight="100" />
+		<filler block="gregtech:ore_naquadah_0"              metadata="11" ratio="0.1425" />
+		<filler block="gregtech:ore_plutonium_0"             metadata="11" ratio="0.0075" />
+	</fillerSet>
+	
+	<!-- pitchblende vein: density 0.25 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="pitchblende-basalt" weight="20">
+		<filler block="gregtech:stone_smooth"                metadata="3"  weight="100" />
+		<filler block="gregtech:ore_pitchblende_0"           metadata="11" ratio="0.1750" />
+		<filler block="gregtech:ore_uraninite_0"             metadata="11" ratio="0.0750" />
+	</fillerSet>
+	
+	<!-- scheelite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="scheelite-basalt" weight="20">
+		<filler block="gregtech:stone_smooth"                metadata="3"  weight="100" />
+		<filler block="gregtech:ore_scheelite_0"             metadata="11" ratio="0.1400" />
+		<filler block="gregtech:ore_tungstate_0"             metadata="11" ratio="0.0500" />
+		<filler block="gregtech:ore_lithium_0"               metadata="11" ratio="0.0100" />
+	</fillerSet>
+	
+	<!-- sheldonite vein: density 0.20 * {0.35 0.35 0.25 0.05} -->
+	<fillerSet group="overworld_rare" name="sheldonite-basalt" weight="10">
+		<filler block="gregtech:stone_smooth"                metadata="3"  weight="100" />
+		<filler block="gregtech:ore_bornite_0"               metadata="11" ratio="0.0700" />
+		<filler block="gregtech:ore_cooperite_0"             metadata="11" ratio="0.0700" />
+		<filler block="gregtech:ore_platinum_0"              metadata="11" ratio="0.0500" />
+		<filler block="gregtech:ore_palladium_0"             metadata="11" ratio="0.0100" />
+	</fillerSet>
+	
+	
+	
+	
+	
+	
+	<!-- assorted overworld surface blocks -->
+	<fillerSet group="overworld_surface" name="black_granite" weight="35">
+		<filler block="gregtech:stone_smooth"    metadata="0" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_surface" name="red_granite" weight="35">
+		<filler block="gregtech:stone_smooth"    metadata="1" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_surface" name="marble" weight="35">
+		<filler block="gregtech:stone_smooth"    metadata="2" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_surface" name="basalt" weight="35">
+		<filler block="gregtech:stone_smooth"    metadata="3" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_surface" name="black_granite.cobble" weight="15">
+		<filler block="gregtech:stone_cobble"    metadata="0" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_surface" name="red_granite.cobble" weight="15">
+		<filler block="gregtech:stone_cobble"    metadata="1" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_surface" name="marble.cobble" weight="15">
+		<filler block="gregtech:stone_cobble"    metadata="2" weight="100" />
+	</fillerSet>
+	<fillerSet group="overworld_surface" name="basalt.cobble" weight="15">
+		<filler block="gregtech:stone_cobble"    metadata="3" weight="100" />
+	</fillerSet>
+	
+</worldGeneration>
