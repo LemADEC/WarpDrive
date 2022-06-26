@@ -72,7 +72,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
@@ -2955,6 +2954,14 @@ public class WarpDriveConfig {
 			WarpDrive.logger.error("Error loading IndustrialCraft2 blocks and items");
 			exception.printStackTrace(WarpDrive.printStreamError);
 		}
+	}
+	
+	public static boolean isIC2CompressedAir(@Nonnull final ItemStack itemStack) {
+		final CompoundNBT nbtCompressedAir = WarpDriveConfig.IC2_compressedAir.getTag();
+		return !itemStack.isEmpty()
+		    && itemStack.isItemEqual(WarpDriveConfig.IC2_compressedAir)
+		    && ( (nbtCompressedAir == null)
+		      || (itemStack.getTag() != null && nbtCompressedAir.equals(itemStack.getTag())) );
 	}
 	
 	public static DocumentBuilder getXmlDocumentBuilder() {

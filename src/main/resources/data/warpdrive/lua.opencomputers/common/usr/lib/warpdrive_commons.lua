@@ -872,7 +872,9 @@ end
 -- returns isSupported, needRedraw
 local function event_handler(eventName, param)
   local needRedraw = false
-  if eventName == "redstone" then
+  if event_handlers[eventName] ~= nil then
+    needRedraw = event_handlers[eventName](eventName, param)
+  elseif eventName == "redstone" then
     -- w.event_redstone(param)
   elseif eventName == "key_up" then
   elseif eventName == "touch" then
@@ -891,8 +893,6 @@ local function event_handler(eventName, param)
   elseif eventName == "term_unavailable" then
     needRedraw = true
   -- not supported: task_complete, rednet_message, modem_message
-  elseif event_handlers[eventName] ~= nil then
-    needRedraw = event_handlers[eventName](eventName, param)
   else
     return false, needRedraw
   end

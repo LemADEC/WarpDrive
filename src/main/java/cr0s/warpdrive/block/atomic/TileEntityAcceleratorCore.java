@@ -240,7 +240,11 @@ public class TileEntityAcceleratorCore extends TileEntityAbstractEnergyCoreOrCon
 				injectionTicks = injectionPeriodTicks;
 				final int countInjectors = acceleratorSetup.keyInjectors.length;
 				if (indexNextInjector < countInjectors) {
-					onInject(acceleratorSetup.mapInjectors.get(acceleratorSetup.keyInjectors[indexNextInjector]));
+					final Integer controlChannel = acceleratorSetup.keyInjectors[indexNextInjector];
+					final AcceleratorControlParameter acceleratorControlParameter = mapControlParameters.get(controlChannel);
+					if (acceleratorControlParameter == null || acceleratorControlParameter.isEnabled) {
+						onInject(acceleratorSetup.mapInjectors.get(controlChannel));
+					}
 				} else {
 					// invalid setup => force a reset
 					rebootAccelerator(acceleratorSetup,false, true);
