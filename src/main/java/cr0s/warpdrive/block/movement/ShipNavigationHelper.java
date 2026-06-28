@@ -14,8 +14,6 @@ import cr0s.warpdrive.WarpDrive;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -368,6 +366,7 @@ public final class ShipNavigationHelper {
 	}
 
 	@Nonnull
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static NBTTagCompound writeCelestialObject(@Nonnull final CelestialObject celestialObject) {
 		final NBTTagCompound tagCompound = new NBTTagCompound();
 		tagCompound.setString("id", celestialObject.id);
@@ -411,6 +410,7 @@ public final class ShipNavigationHelper {
 	}
 
 	@Nonnull
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static NBTTagCompound buildRoute(@Nonnull final TileEntityShipCore shipCore,
 	                                         @Nullable final CelestialObject celestialObjectCurrent,
 	                                         @Nullable final CelestialObject celestialObjectTarget) {
@@ -519,6 +519,7 @@ public final class ShipNavigationHelper {
 	// ----- destinations overview (jumps / energy / eta to every reachable body) -----
 
 	@Nonnull
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static NBTTagList buildDestinations(@Nonnull final TileEntityShipCore shipCore,
 	                                            @Nullable final CelestialObject celestialObjectCurrent) {
 		final NBTTagList tagList = new NBTTagList();
@@ -562,6 +563,7 @@ public final class ShipNavigationHelper {
 	}
 
 	@Nullable
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static DestinationEstimate estimateDestination(@Nonnull final TileEntityShipCore shipCore,
 	                                                       @Nonnull final CelestialObject celestialObjectCurrent,
 	                                                       @Nonnull final CelestialObject celestialObjectTarget) {
@@ -640,7 +642,7 @@ public final class ShipNavigationHelper {
 		final EnumShipMovementType movementType = movementTypeForEstimate(legType);
 		final ShipMovementCosts costs = new ShipMovementCosts(shipCore.getWorld(), shipCore.getPos(), shipCore,
 		                                                      movementType, shipCore.shipMass, Math.max(1, distance));
-		estimate.addLeg(legType, Math.max(1, distance), costs);
+		estimate.addLeg(Math.max(1, distance), costs);
 	}
 
 	private static void addCruiseEstimate(@Nonnull final TileEntityShipCore shipCore,
@@ -663,17 +665,11 @@ public final class ShipNavigationHelper {
 			final int stepDistance = Math.max(1, (int) Math.ceil(Math.sqrt(step.getMagnitudeSquaredLong())));
 			final ShipMovementCosts stepCosts = new ShipMovementCosts(shipCore.getWorld(), shipCore.getPos(), shipCore,
 			                                                          movementType, shipCore.shipMass, stepDistance);
-			estimate.addLeg(legType, stepDistance, stepCosts);
+			estimate.addLeg(stepDistance, stepCosts);
 			remaining.x -= step.x;
 			remaining.y -= step.y;
 			remaining.z -= step.z;
 		}
-	}
-
-	private static int distance(final int x1, final int z1, final int x2, final int z2) {
-		final long dx = x2 - (long) x1;
-		final long dz = z2 - (long) z1;
-		return (int) Math.min(Integer.MAX_VALUE, Math.ceil(Math.sqrt(dx * (double) dx + dz * (double) dz)));
 	}
 
 	private static final class DestinationEstimate {
@@ -684,11 +680,11 @@ public final class ShipNavigationHelper {
 		private int maxRange;
 		private int distance;
 
-		private void addLeg(@Nonnull final EnumShipNavigationLegType legType, final int distance, @Nonnull final ShipMovementCosts costs) {
-			addLegs(legType, 1, distance, costs);
+		private void addLeg(final int distance, @Nonnull final ShipMovementCosts costs) {
+			addLegs(1, distance, costs);
 		}
 
-		private void addLegs(@Nonnull final EnumShipNavigationLegType legType, final int count, final long distance, @Nonnull final ShipMovementCosts costs) {
+		private void addLegs(final int count, final long distance, @Nonnull final ShipMovementCosts costs) {
 			legs += count;
 			jumps += count;
 			energy += (long) count * costs.energyRequired;
@@ -710,49 +706,6 @@ public final class ShipNavigationHelper {
 		case HYPERSPACE_CRUISE: return EnumShipMovementType.HYPERSPACE_MOVING;
 		default:                return EnumShipMovementType.SPACE_MOVING;
 		}
-	}
-
-	/** Coarse, position-independent leg-type plan from current to target, used for the destinations overview. */
-	@Nullable
-	private static List<EnumShipNavigationLegType> planLegTypes(@Nonnull final CelestialObject celestialObjectCurrent,
-	                                                            @Nonnull final CelestialObject celestialObjectTarget) {
-		if (celestialObjectTarget.isVirtual() || celestialObjectCurrent.id.equals(celestialObjectTarget.id)) {
-			return null;
-		}
-		final List<EnumShipNavigationLegType> legs = new ArrayList<>();
-		CelestialObject currentSpace;
-		if (!celestialObjectCurrent.isSpace() && !celestialObjectCurrent.isHyperspace()) {
-			if (celestialObjectCurrent.parent == null) {
-				return null;
-			}
-			legs.add(EnumShipNavigationLegType.TAKEOFF);
-			currentSpace = getSpaceFor(celestialObjectCurrent);
-		} else if (celestialObjectCurrent.isHyperspace()) {
-			currentSpace = null;
-		} else {
-			currentSpace = celestialObjectCurrent;
-		}
-
-		if (celestialObjectTarget.isHyperspace()) {
-			legs.add(EnumShipNavigationLegType.HYPERSPACE_ENTER);
-			return legs;
-		}
-		final CelestialObject targetSpace = getSpaceFor(celestialObjectTarget);
-		if (targetSpace == null) {
-			return null;
-		}
-		if (currentSpace == null) {
-			// already in hyperspace
-			legs.add(EnumShipNavigationLegType.HYPERSPACE_EXIT);
-		} else if (currentSpace != targetSpace) {
-			legs.add(EnumShipNavigationLegType.HYPERSPACE_ENTER);
-			legs.add(EnumShipNavigationLegType.HYPERSPACE_EXIT);
-		}
-		if (!celestialObjectTarget.isSpace()) {
-			legs.add(EnumShipNavigationLegType.ORBITAL_APPROACH);
-			legs.add(EnumShipNavigationLegType.LANDING);
-		}
-		return legs.isEmpty() ? null : legs;
 	}
 
 	// ----- destination planning / engagement -----
@@ -784,6 +737,7 @@ public final class ShipNavigationHelper {
 		return true;
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean engage(@Nonnull final EntityPlayerMP entityPlayerMP,
 	                             @Nonnull final TileEntityShipCore shipCore) {
 		if (!shipCore.isCrewMember(entityPlayerMP)) {
@@ -911,6 +865,7 @@ public final class ShipNavigationHelper {
 	}
 
 	@Nullable
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static Leg computeNextLeg(@Nonnull final TileEntityShipCore shipCore,
 	                                  @Nonnull final CelestialObject celestialObjectCurrent,
 	                                  @Nonnull final CelestialObject celestialObjectTarget) {

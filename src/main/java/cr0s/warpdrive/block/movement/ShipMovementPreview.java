@@ -26,6 +26,7 @@ public class ShipMovementPreview {
 	public final String blockerKey;
 	public final String blockerMessage;
 	
+	@SuppressWarnings("PMD.ExcessiveParameterList")
 	public ShipMovementPreview(@Nonnull final EnumShipCommand command,
 	                           @Nullable final EnumShipMovementType movementType,
 	                           @Nonnull final VectorI requestedMovement,

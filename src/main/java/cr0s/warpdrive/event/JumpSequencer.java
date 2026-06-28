@@ -95,7 +95,6 @@ public class JumpSequencer extends AbstractSequencer {
 	private int chunkSourceReleaseIndex = 0;
 	private ArrayList<ChunkPos> chunksTargetToForce;
 	private int chunkTargetForceIndex = 0;
-	private int chunkTargetReleaseIndex = 0;
 	
 	private boolean collisionDetected = false;
 	private ArrayList<Vector3> collisionAtSource;
@@ -584,7 +583,6 @@ public class JumpSequencer extends AbstractSequencer {
 		}
 		chunksTargetToForce = null;
 		chunkTargetForceIndex = 0;
-		chunkTargetReleaseIndex = 0;
 	}
 
 	private boolean releaseChunksBatched() {
@@ -805,6 +803,7 @@ public class JumpSequencer extends AbstractSequencer {
 		LocalProfiler.stop();
 	}
 	
+	@SuppressWarnings("PMD.NPathComplexity")
 	protected boolean state_adjustJumpVector() {
 		LocalProfiler.start("Jump.adjustJumpVector");
 		if (WarpDriveConfig.LOGGING_JUMP) {

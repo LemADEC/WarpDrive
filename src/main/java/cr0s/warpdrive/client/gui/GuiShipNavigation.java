@@ -103,7 +103,6 @@ public class GuiShipNavigation extends GuiScreen {
 	private String selectedId = "";
 	private String currentId = "";
 	private String targetId = "";
-	private String previousTargetId = "";
 	private String routeStatusKey = "";
 	private String routeWarningKey = "";
 	private int routeWarningStep;
@@ -111,7 +110,6 @@ public class GuiShipNavigation extends GuiScreen {
 	private String routeBlockerKey = "";
 	private int routeEffectiveDistance;
 	private int routeMaximumDistance;
-	private int routeEnergyRequired;
 	private String notice = "";
 	private boolean allowed;
 	private boolean canEngage;
@@ -125,7 +123,6 @@ public class GuiShipNavigation extends GuiScreen {
 	private long openedAtMs;
 
 	// live drive status (with client-side interpolation between server snapshots)
-	private String driveStateName = "";
 	private String driveMovementType = "";
 	private int warmupTicks;
 	private int warmupTotal = 1;
@@ -135,7 +132,6 @@ public class GuiShipNavigation extends GuiScreen {
 	private boolean cooling;
 	private String autopilotMode = "off";
 	private String autopilotStatus = "idle";
-	private String autopilotErrorKey = "";
 	private int autopilotLegs;
 	private int clientTick;
 	private int snapshotClientTick;
@@ -222,6 +218,7 @@ public class GuiShipNavigation extends GuiScreen {
 		}
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private void update(final NBTTagCompound snapshot) {
 		this.snapshot = snapshot == null ? new NBTTagCompound() : snapshot;
 		dimensionId = this.snapshot.getInteger("dimensionId");
@@ -235,7 +232,7 @@ public class GuiShipNavigation extends GuiScreen {
 		                              this.snapshot.getInteger("accessY"),
 		                              this.snapshot.getInteger("accessZ"));
 		currentId = this.snapshot.getString("currentCelestialId");
-		previousTargetId = targetId;
+		final String previousTargetId = targetId;
 		targetId = this.snapshot.getString("navigationTargetId");
 		notice = this.snapshot.getString("notice");
 		allowed = this.snapshot.getBoolean("allowed");
@@ -264,7 +261,6 @@ public class GuiShipNavigation extends GuiScreen {
 		rotationStepsInput = movement.getInteger("rotationSteps");
 
 		final NBTTagCompound driveStatus = this.snapshot.getCompoundTag("driveStatus");
-		driveStateName = driveStatus.getString("stateName");
 		driveMovementType = driveStatus.getString("movementType");
 		warmupTicks = driveStatus.getInteger("warmupTicks");
 		warmupTotal = Math.max(1, driveStatus.getInteger("warmupTotal"));
@@ -274,7 +270,6 @@ public class GuiShipNavigation extends GuiScreen {
 		cooling = driveStatus.getBoolean("cooling");
 		autopilotMode = driveStatus.getString("autopilotMode");
 		autopilotStatus = driveStatus.getString("autopilotStatus");
-		autopilotErrorKey = driveStatus.getString("autopilotErrorKey");
 		autopilotLegs = driveStatus.getInteger("autopilotLegs");
 		snapshotClientTick = clientTick;
 
@@ -290,7 +285,6 @@ public class GuiShipNavigation extends GuiScreen {
 		final NBTTagCompound routeValidation = route.getCompoundTag("validation");
 		routeEffectiveDistance = routeValidation.getInteger("effectiveDistance");
 		routeMaximumDistance = routeValidation.getInteger("maximumDistance");
-		routeEnergyRequired = routeValidation.getInteger("energyRequired");
 		canEngage = isStaticMapReady
 		         && route.getBoolean("canEngage")
 		         && allowed
@@ -410,6 +404,7 @@ public class GuiShipNavigation extends GuiScreen {
 		}
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private void computeBounds() {
 		minX = -1000.0D;
 		maxX = 1000.0D;
@@ -901,7 +896,7 @@ public class GuiShipNavigation extends GuiScreen {
 	@Override
 	protected void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) throws IOException {
 		if (selectedTab == Tab.DESTINATIONS && mouseButton == 0 && isInsidePanelList(mouseX, mouseY)) {
-			selectDestination(mouseX, mouseY);
+			selectDestination(mouseY);
 			return;
 		}
 		if (mouseButton == 0 && isInsideMap(mouseX, mouseY) && !isOverMapButton(mouseX, mouseY)) {
@@ -1000,7 +995,7 @@ public class GuiShipNavigation extends GuiScreen {
 		}
 	}
 
-	private void selectDestination(final int mouseX, final int mouseY) {
+	private void selectDestination(final int mouseY) {
 		if (!allowed) {
 			return;
 		}
@@ -1078,6 +1073,7 @@ public class GuiShipNavigation extends GuiScreen {
 
 	// ----- always-on live status header -----
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private void drawHeader() {
 		drawRect(0, 0, width, HEADER_HEIGHT, COLOR_PANEL);
 		drawRect(0, HEADER_HEIGHT - 1, width, HEADER_HEIGHT, COLOR_CYAN_DIM);
@@ -1158,6 +1154,7 @@ public class GuiShipNavigation extends GuiScreen {
 
 	// ----- starmap -----
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private void drawMap(final int mouseX, final int mouseY) {
 		drawRect(mapX, mapY, mapX + mapWidth, mapY + mapHeight, 0xDD040810);
 		drawRect(mapX, mapY, mapX + mapWidth, mapY + 1, COLOR_CYAN_DIM);
@@ -1238,6 +1235,7 @@ public class GuiShipNavigation extends GuiScreen {
 		fontRenderer.drawString(trimToWidth(spaceRegion.name, mapWidth - 110), mapX + mapWidth - 86, mapY + 8, COLOR_TEXT_DIM);
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private void drawObject(final MapObject mapObject, final int mouseX, final int mouseY, final long time) {
 		final int x = toScreenX(mapObject.displayMapX);
 		final int y = toScreenY(mapObject.displayMapZ);
@@ -1326,6 +1324,7 @@ public class GuiShipNavigation extends GuiScreen {
 		}
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private void drawMapTab() {
 		int y = panelContentY();
 		// autopilot status line
@@ -1385,6 +1384,7 @@ public class GuiShipNavigation extends GuiScreen {
 		}
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private void drawDestinationsTab(final int mouseX, final int mouseY) {
 		fontRenderer.drawString(I18n.format("warpdrive.navigation.gui.destinations_hint"), panelX + 10, panelContentY(), COLOR_TEXT_DIM);
 		final int rowHeight = 22;

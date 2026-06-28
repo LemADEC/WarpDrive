@@ -815,6 +815,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	}
 
 	// runs once per server tick from update(); commits the next leg of a running route when the core is free
+	@SuppressWarnings("PMD.NPathComplexity")
 	private void autopilotTick() {
 		if ( autopilotMode == EnumShipAutopilotMode.OFF
 		  || !autopilotStatus.isActive() ) {
@@ -1365,6 +1366,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	}
 	
 	@Nonnull
+	@SuppressWarnings("PMD.NPathComplexity")
 	public ShipMovementPreview previewMovement(@Nonnull final EnumShipCommand command,
 	                                           final int moveFront, final int moveUp, final int moveRight,
 	                                           final byte rotationSteps) {

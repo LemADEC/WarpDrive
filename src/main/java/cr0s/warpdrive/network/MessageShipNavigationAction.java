@@ -115,6 +115,7 @@ public class MessageShipNavigationAction implements IMessage, IMessageHandler<Me
 		return null;
 	}
 	
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static void handle(final MessageShipNavigationAction message, final EntityPlayerMP entityPlayerMP) {
 		if ( message.action < ACTION_REFRESH
 		  || message.action > ACTION_STEP ) {
@@ -234,6 +235,11 @@ public class MessageShipNavigationAction implements IMessage, IMessageHandler<Me
 				}
 			}
 			break;
+
+		default:
+			WarpDrive.logger.warn(String.format("Ignoring unknown ship navigation action %d from %s",
+			                                    message.action, entityPlayerMP));
+			return;
 		}
 		
 		// the static celestial map only changes when the celestial config reloads, so only rebuild/resend it
