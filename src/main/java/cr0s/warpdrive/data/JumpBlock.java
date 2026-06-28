@@ -182,8 +182,11 @@ public class JumpBlock {
 	
 	@Nullable
 	private NBTTagCompound getBlockNBT(@Nonnull final World worldSource) {
+		if (blockNBT != null) {
+			return blockNBT.copy();
+		}
 		if (!hasTileEntity) {
-			return blockNBT == null ? null : blockNBT.copy();
+			return null;
 		}
 		final TileEntity tileEntity = getTileEntity(worldSource);
 		if (tileEntity == null) {

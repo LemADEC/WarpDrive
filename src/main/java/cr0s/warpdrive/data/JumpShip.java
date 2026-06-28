@@ -512,9 +512,12 @@ public class JumpShip {
 	public boolean save(final WarpDriveText reason) {
 		BlockPos blockPos = new BlockPos(0, -1, 0);
 		try {
-			final int estimatedVolume = (maxX - minX + 1) * (maxY - minY + 1) * (maxZ - minZ + 1);
-			final JumpBlock[][] placeTimeJumpBlocks = { new JumpBlock[estimatedVolume], new JumpBlock[estimatedVolume], new JumpBlock[estimatedVolume], new JumpBlock[estimatedVolume], new JumpBlock[estimatedVolume] };
-			final int[] placeTimeIndexes = { 0, 0, 0, 0, 0 };
+			final MutableBlockPos mutableBlockPos = new MutableBlockPos();
+			@SuppressWarnings("unchecked")
+			final ArrayList<JumpBlock>[] placeTimeJumpBlocks = new ArrayList[5];
+			for (int placeTime = 0; placeTime < placeTimeJumpBlocks.length; placeTime++) {
+				placeTimeJumpBlocks[placeTime] = new ArrayList<>();
+			}
 			
 			int actualVolume = 0;
 			int newMass = 0;
@@ -534,28 +537,30 @@ public class JumpShip {
 					for (int y = minY; y <= maxY; y++) {
 						for (int x = x1; x <= x2; x++) {
 							for (int z = z1; z <= z2; z++) {
-								blockPos = new BlockPos(x, y, z);
+								mutableBlockPos.setPos(x, y, z);
+								blockPos = mutableBlockPos;
 								final IBlockState blockState = world.getBlockState(blockPos);
+								final Block block = blockState.getBlock();
 								
 								// Skipping vanilla air & ignored blocks
-								if (blockState.getBlock() == Blocks.AIR || Dictionary.BLOCKS_LEFTBEHIND.contains(blockState.getBlock())) {
+								if (block == Blocks.AIR || Dictionary.BLOCKS_LEFTBEHIND.contains(block)) {
 									continue;
 								}
 								actualVolume++;
 								
 								if (WarpDriveConfig.LOGGING_JUMPBLOCKS) {
 									WarpDrive.logger.info(String.format("Checking for save from (%d %d %d) of %s (%d)",
-									                                    x, y, z, blockState, blockState.getBlock().getMetaFromState(blockState)));
+								                                    x, y, z, blockState, blockState.getBlock().getMetaFromState(blockState)));
 								}
 								
-								if (!Dictionary.BLOCKS_NOMASS.contains(blockState.getBlock())) {
+								if (!Dictionary.BLOCKS_NOMASS.contains(block)) {
 									newMass++;
 								}
 								
 								// Stop on non-movable blocks
-								if (Dictionary.BLOCKS_ANCHOR.contains(blockState.getBlock())) {
+								if (Dictionary.BLOCKS_ANCHOR.contains(block)) {
 									reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.anchor_block_detected",
-									              blockState.getBlock().getLocalizedName(),
+									              block.getLocalizedName(),
 									              x, y, z);
 									return false;
 								}
@@ -578,7 +583,7 @@ public class JumpShip {
 								}
 								
 								// default priority is 2 for block, 3 for tile entities
-								Integer placeTime = Dictionary.BLOCKS_PLACE.get(blockState.getBlock());
+								Integer placeTime = Dictionary.BLOCKS_PLACE.get(block);
 								if (placeTime == null) {
 									if (tileEntity == null) {
 										placeTime = 2;
@@ -587,8 +592,7 @@ public class JumpShip {
 									}
 								}
 								
-								placeTimeJumpBlocks[placeTime][placeTimeIndexes[placeTime]] = jumpBlock;
-								placeTimeIndexes[placeTime]++;
+								placeTimeJumpBlocks[placeTime].add(jumpBlock);
 							}
 						}
 					}
@@ -598,8 +602,8 @@ public class JumpShip {
 			jumpBlocks = new JumpBlock[actualVolume];
 			int indexShip = 0;
 			for (int placeTime = 0; placeTime < 5; placeTime++) {
-				for (int placeTimeIndex = 0; placeTimeIndex < placeTimeIndexes[placeTime]; placeTimeIndex++) {
-					jumpBlocks[indexShip] = placeTimeJumpBlocks[placeTime][placeTimeIndex];
+				for (final JumpBlock jumpBlock : placeTimeJumpBlocks[placeTime]) {
+					jumpBlocks[indexShip] = jumpBlock;
 					indexShip++;
 				}
 			}

@@ -488,6 +488,14 @@ public class CelestialObject implements Cloneable, IStringSerializable, ICelesti
 		return tagCompound;
 	}
 	
+	public int getParentCenterX() {
+		return parentCenterX;
+	}
+	
+	public int getParentCenterZ() {
+		return parentCenterZ;
+	}
+	
 	@Override
 	public boolean isVirtual() {
 		return isVirtual;

@@ -55,6 +55,9 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ChunkProviderServer;
 
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
@@ -71,6 +74,7 @@ public class JumpSequencer extends AbstractSequencer {
 	private int moveX, moveY, moveZ;
 	private final byte rotationSteps;
 	private final String nameTarget;
+	private final String navigationEngagedTargetId;
 	protected final int destX;
 	protected final int destY;
 	protected final int destZ;
@@ -85,8 +89,13 @@ public class JumpSequencer extends AbstractSequencer {
 	private Ticket ticketSourcePosition;
 	private GlobalRegion globalRegionLock;
 	protected World worldTarget;
-	private Ticket ticketTargetAnchor;
 	private Ticket ticketTargetPosition;
+	private ArrayList<ChunkPos> chunksSourceToForce;
+	private int chunkSourceForceIndex = 0;
+	private int chunkSourceReleaseIndex = 0;
+	private ArrayList<ChunkPos> chunksTargetToForce;
+	private int chunkTargetForceIndex = 0;
+	private int chunkTargetReleaseIndex = 0;
 	
 	private boolean collisionDetected = false;
 	private ArrayList<Vector3> collisionAtSource;
@@ -100,14 +109,27 @@ public class JumpSequencer extends AbstractSequencer {
 	protected final JumpShip ship;
 	private boolean betweenWorlds;
 	private boolean isPluginCheckDone = false;
+	private boolean isFinalTargetCheckDone = false;
 	private WarpDriveText firstAdjustmentReason = null;
 	
 	private long msCounter = 0;
 	private int ticks = 0;
-	
+
+	private enum ChunkLoadingResult {
+		FAILED,
+		IN_PROGRESS,
+		DONE
+	}
+
 	public JumpSequencer(@Nonnull final TileEntityShipCore shipCore, final EnumShipMovementType shipMovementType, final String nameTarget,
 	                     final int moveX, final int moveY, final int moveZ, final byte rotationSteps,
 	                     final int destX, final int destY, final int destZ) {
+		this(shipCore, shipMovementType, nameTarget, moveX, moveY, moveZ, rotationSteps, destX, destY, destZ, "");
+	}
+
+	public JumpSequencer(@Nonnull final TileEntityShipCore shipCore, final EnumShipMovementType shipMovementType, final String nameTarget,
+	                     final int moveX, final int moveY, final int moveZ, final byte rotationSteps,
+	                     final int destX, final int destY, final int destZ, final String navigationEngagedTargetId) {
 		this.worldSource = shipCore.getWorld();
 		this.ship = new JumpShip();
 		this.ship.world = worldSource;
@@ -127,6 +149,7 @@ public class JumpSequencer extends AbstractSequencer {
 		this.moveZ = moveZ;
 		this.rotationSteps = rotationSteps;
 		this.nameTarget = nameTarget;
+		this.navigationEngagedTargetId = navigationEngagedTargetId == null ? "" : navigationEngagedTargetId;
 		this.destX = destX;
 		this.destY = destY;
 		this.destZ = destZ;
@@ -150,6 +173,7 @@ public class JumpSequencer extends AbstractSequencer {
 		this.shipMovementType = enumShipMovementType;
 		this.rotationSteps = rotationSteps;
 		this.nameTarget = null;
+		this.navigationEngagedTargetId = "";
 		this.destX = destX;
 		this.destY = destY;
 		this.destZ = destZ;
@@ -215,12 +239,19 @@ public class JumpSequencer extends AbstractSequencer {
 		
 		final JumpResult jumpResult;
 		if (!isSuccessful) {
+			// the ship never moved, so the source core is still valid: let an autopilot route retry or abort
+			if (ship.shipCore != null) {
+				ship.shipCore.onNavigationMovementAborted(navigationEngagedTargetId);
+			}
 			jumpResult = new JumpResult(worldSource, ship.core,
 			                            ship.shipCore, shipMovementType.getName(), false, reason);
 		} else {
 			final BlockPos blockPosCoreTarget = transformation.apply(ship.core);
 			final TileEntity tileEntity = worldTarget.getTileEntity(blockPosCoreTarget);
 			final IShipController shipController = tileEntity instanceof TileEntityShipCore ? ((TileEntityShipCore) tileEntity) : null;
+			if (shipController instanceof TileEntityShipCore) {
+				((TileEntityShipCore) shipController).onNavigationMovementCompleted(navigationEngagedTargetId);
+			}
 			jumpResult = new JumpResult(worldTarget, blockPosCoreTarget,
 			                            shipController, shipMovementType.getName(), true, reason);
 		}
@@ -265,11 +296,10 @@ public class JumpSequencer extends AbstractSequencer {
 			break;
 			
 		case LOAD_SOURCE_CHUNKS:
-			state_chunkLoadingSource();
-			if (ship.shipCore != null) {
-				globalRegionLock = addLock(ship.shipCore);
-			}
-			if (isEnabled) {
+			if (state_chunkLoadingSource() && isEnabled) {
+				if (ship.shipCore != null) {
+					globalRegionLock = addLock(ship.shipCore);
+				}
 				actualIndexInShip = 0;
 				enumJumpSequencerState = EnumJumpSequencerState.SAVE_TO_MEMORY;
 			}
@@ -305,15 +335,13 @@ public class JumpSequencer extends AbstractSequencer {
 			break;
 			
 		case ADJUST_JUMP_VECTOR:
-			state_adjustJumpVector();
-			if (isEnabled) {
+			if (state_adjustJumpVector() && isEnabled) {
 				enumJumpSequencerState = EnumJumpSequencerState.LOAD_TARGET_CHUNKS;
 			}
 			break;
 			
 		case LOAD_TARGET_CHUNKS:
-			state_loadTargetChunks();
-			if (isEnabled) {
+			if (state_loadTargetChunks() && isEnabled) {
 				enumJumpSequencerState = EnumJumpSequencerState.SAVE_ENTITIES;
 			}
 			break;
@@ -359,8 +387,9 @@ public class JumpSequencer extends AbstractSequencer {
 			break;
 			
 		case CHUNK_UNLOADING:
-			state_chunkReleasing();
-			enumJumpSequencerState = EnumJumpSequencerState.FINISHING;
+			if (state_chunkReleasing()) {
+				enumJumpSequencerState = EnumJumpSequencerState.FINISHING;
+			}
 			break;
 			
 		case FINISHING:
@@ -375,151 +404,225 @@ public class JumpSequencer extends AbstractSequencer {
 		return true;
 	}
 	
-	private boolean forceSourceChunks(final WarpDriveText reason) {
+	private ArrayList<ChunkPos> getSortedChunks(final int minX, final int maxX, final int minZ, final int maxZ,
+	                                            final int anchorX, final int anchorZ) {
+		final ArrayList<ChunkPos> chunks = new ArrayList<>((maxX - minX + 1) * (maxZ - minZ + 1));
+		for (int x = minX; x <= maxX; x++) {
+			for (int z = minZ; z <= maxZ; z++) {
+				chunks.add(new ChunkPos(x, z));
+			}
+		}
+		chunks.sort(Comparator.comparingInt(chunkPos -> {
+			final int deltaX = chunkPos.x - anchorX;
+			final int deltaZ = chunkPos.z - anchorZ;
+			return deltaX * deltaX + deltaZ * deltaZ;
+		}));
+		return chunks;
+	}
+
+	private int forceChunkBatch(final Ticket ticket, final ArrayList<ChunkPos> chunks, final int chunkIndexStart) {
+		final int chunkIndexEnd = Math.min(chunks.size(), chunkIndexStart + WarpDriveConfig.G_CHUNKS_PER_TICK);
+		for (int chunkIndex = chunkIndexStart; chunkIndex < chunkIndexEnd; chunkIndex++) {
+			ForgeChunkManager.forceChunk(ticket, chunks.get(chunkIndex));
+		}
+		return chunkIndexEnd;
+	}
+
+	private int releaseChunkBatch(final World world, final Ticket ticket, final ArrayList<ChunkPos> chunks,
+	                              final int chunkIndexStart, final int chunkIndexLimit) {
+		final int chunkIndexEnd = Math.min(chunkIndexLimit, chunkIndexStart + WarpDriveConfig.G_CHUNKS_PER_TICK);
+		for (int chunkIndex = chunkIndexStart; chunkIndex < chunkIndexEnd; chunkIndex++) {
+			final ChunkPos chunkPos = chunks.get(chunkIndex);
+			generateSkylightMapIfLoaded(world, chunkPos);
+			ForgeChunkManager.unforceChunk(ticket, chunkPos);
+		}
+		return chunkIndexEnd;
+	}
+
+	private void generateSkylightMapIfLoaded(final World world, final ChunkPos chunkPos) {
+		if (!(world instanceof WorldServer)) {
+			return;
+		}
+		final ChunkProviderServer chunkProviderServer = ((WorldServer) world).getChunkProvider();
+		final Chunk chunk = chunkProviderServer.getLoadedChunk(chunkPos.x, chunkPos.z);
+		if (chunk != null) {
+			chunk.generateSkylightMap();
+		}
+	}
+
+	private ChunkLoadingResult forceSourceChunks(final WarpDriveText reason) {
 		if (WarpDriveConfig.LOGGING_JUMP) {
 			WarpDrive.logger.info(String.format("%s Forcing source chunks in %s",
 			                                    this, Commons.format(worldSource)));
 		}
-		ticketSourcePosition = ForgeChunkManager.requestTicket(WarpDrive.instance, worldSource, Type.NORMAL);
 		if (ticketSourcePosition == null) {
-			reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.chunkloading_rejected_in_source_world",
-			              Commons.format(worldSource));
-			return false;
-		}
-		
-		final int minX = ship.minX >> 4;
-		final int maxX = ship.maxX >> 4;
-		final int minZ = ship.minZ >> 4;
-		final int maxZ = ship.maxZ >> 4;
-		int chunkCount = 0;
-		for (int x = minX; x <= maxX; x++) {
-			for (int z = minZ; z <= maxZ; z++) {
-				chunkCount++;
-				if (chunkCount > ticketSourcePosition.getMaxChunkListDepth()) {
-					reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.too_many_chunks_to_load",
-					              (maxX - minX + 1) * (maxZ - minZ + 1),
-					              ticketSourcePosition.getMaxChunkListDepth());
-					reason.append(Commons.getStyleCommand(), "warpdrive.ship.guide.max_chunkloading");
-					return false;
-				}
-				ForgeChunkManager.forceChunk(ticketSourcePosition, new ChunkPos(x, z));
+			ticketSourcePosition = ForgeChunkManager.requestTicket(WarpDrive.instance, worldSource, Type.NORMAL);
+			if (ticketSourcePosition == null) {
+				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.chunkloading_rejected_in_source_world",
+				              Commons.format(worldSource));
+				return ChunkLoadingResult.FAILED;
 			}
 		}
-		return true;
-	}
-	
-	private boolean forceTargetAnchor(final WarpDriveText reason) {
-		LocalProfiler.start("Jump.forceTargetAnchor");
-		if (WarpDriveConfig.LOGGING_JUMP) {
-			WarpDrive.logger.info(String.format("%s Forcing target world %s",
-			                                    this, Commons.format(worldTarget)));
+
+		if (chunksSourceToForce == null) {
+			final int minX = ship.minX >> 4;
+			final int maxX = ship.maxX >> 4;
+			final int minZ = ship.minZ >> 4;
+			final int maxZ = ship.maxZ >> 4;
+			chunksSourceToForce = getSortedChunks(minX, maxX, minZ, maxZ, ship.core.getX() >> 4, ship.core.getZ() >> 4);
+			if (chunksSourceToForce.size() > ticketSourcePosition.getMaxChunkListDepth()) {
+				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.too_many_chunks_to_load",
+				              chunksSourceToForce.size(),
+				              ticketSourcePosition.getMaxChunkListDepth());
+				reason.append(Commons.getStyleCommand(), "warpdrive.ship.guide.max_chunkloading");
+				return ChunkLoadingResult.FAILED;
+			}
 		}
-		ticketTargetAnchor = ForgeChunkManager.requestTicket(WarpDrive.instance, worldTarget, Type.NORMAL);
-		if (ticketTargetAnchor == null) {
-			reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.chunkloading_rejected_in_target_world",
-			              Commons.format(worldTarget));
-			return false;
-		}
-		
-		ForgeChunkManager.forceChunk(ticketTargetAnchor, new ChunkPos(0, 0));
-		LocalProfiler.stop();
-		return true;
+
+		chunkSourceForceIndex = forceChunkBatch(ticketSourcePosition, chunksSourceToForce, chunkSourceForceIndex);
+		return chunkSourceForceIndex >= chunksSourceToForce.size() ? ChunkLoadingResult.DONE : ChunkLoadingResult.IN_PROGRESS;
 	}
-	
-	private boolean forceTargetChunks(final WarpDriveText reason) {
+
+	private ChunkLoadingResult forceTargetChunks(final WarpDriveText reason) {
 		LocalProfiler.start("Jump.forceTargetChunks");
 		if (WarpDriveConfig.LOGGING_JUMP) {
 			WarpDrive.logger.info(String.format("%s Forcing target chunks in %s",
 			                                    this, Commons.format(worldTarget)));
 		}
-		ticketTargetPosition = ForgeChunkManager.requestTicket(WarpDrive.instance, worldTarget, Type.NORMAL);
-		if (ticketTargetPosition == null) {
-			reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.chunkloading_rejected_in_target_world",
-			              Commons.format(worldTarget));
-			return false;
+		if (chunksTargetToForce == null) {
+			final BlockPos targetMin = transformation.apply(ship.minX, ship.minY, ship.minZ);
+			final BlockPos targetMax = transformation.apply(ship.maxX, ship.maxY, ship.maxZ);
+			int minBlockX = Math.min(targetMin.getX(), targetMax.getX());
+			int maxBlockX = Math.max(targetMin.getX(), targetMax.getX());
+			int minBlockZ = Math.min(targetMin.getZ(), targetMax.getZ());
+			int maxBlockZ = Math.max(targetMin.getZ(), targetMax.getZ());
+			final int minX = minBlockX >> 4;
+			final int maxX = maxBlockX >> 4;
+			final int minZ = minBlockZ >> 4;
+			final int maxZ = maxBlockZ >> 4;
+			final BlockPos targetCore = transformation.apply(ship.core);
+			chunksTargetToForce = getSortedChunks(minX, maxX, minZ, maxZ, targetCore.getX() >> 4, targetCore.getZ() >> 4);
 		}
-		
-		final BlockPos targetMin = transformation.apply(ship.minX, ship.minY, ship.minZ);
-		final BlockPos targetMax = transformation.apply(ship.maxX, ship.maxY, ship.maxZ);
-		final int minX = Math.min(targetMin.getX(), targetMax.getX()) >> 4;
-		final int maxX = Math.max(targetMin.getX(), targetMax.getX()) >> 4;
-		final int minZ = Math.min(targetMin.getZ(), targetMax.getZ()) >> 4;
-		final int maxZ = Math.max(targetMin.getZ(), targetMax.getZ()) >> 4;
-		int chunkCount = 0;
-		for (int x = minX; x <= maxX; x++) {
-			for (int z = minZ; z <= maxZ; z++) {
-				chunkCount++;
-				if (chunkCount > ticketTargetPosition.getMaxChunkListDepth()) {
-					reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.too_many_chunks_to_load",
-					              (maxX - minX + 1) * (maxZ - minZ + 1),
-					              ticketTargetPosition.getMaxChunkListDepth());
-					reason.append(Commons.getStyleCommand(), "warpdrive.ship.guide.max_chunkloading");
-					return false;
-				}
-				ForgeChunkManager.forceChunk(ticketTargetPosition, new ChunkPos(x, z));
+
+		if (ticketTargetPosition == null) {
+			ticketTargetPosition = ForgeChunkManager.requestTicket(WarpDrive.instance, worldTarget, Type.NORMAL);
+			if (ticketTargetPosition == null) {
+				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.chunkloading_rejected_in_target_world",
+				              Commons.format(worldTarget));
+				LocalProfiler.stop();
+				return ChunkLoadingResult.FAILED;
+			}
+			if (chunksTargetToForce.size() > ticketTargetPosition.getMaxChunkListDepth()) {
+				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.too_many_chunks_to_load",
+				              chunksTargetToForce.size(),
+				              ticketTargetPosition.getMaxChunkListDepth());
+				reason.append(Commons.getStyleCommand(), "warpdrive.ship.guide.max_chunkloading");
+				ForgeChunkManager.releaseTicket(ticketTargetPosition);
+				ticketTargetPosition = null;
+				chunksTargetToForce = null;
+				LocalProfiler.stop();
+				return ChunkLoadingResult.FAILED;
 			}
 		}
+
+		chunkTargetForceIndex = forceChunkBatch(ticketTargetPosition, chunksTargetToForce, chunkTargetForceIndex);
 		LocalProfiler.stop();
-		return true;
+		return chunkTargetForceIndex >= chunksTargetToForce.size() && areTargetChunksLoaded()
+		     ? ChunkLoadingResult.DONE
+		     : ChunkLoadingResult.IN_PROGRESS;
 	}
-	
+
 	private void releaseChunks() {
 		if (WarpDriveConfig.LOGGING_JUMP) {
 			WarpDrive.logger.info(this + " Releasing chunks");
 		}
-		
-		int minX, maxX, minZ, maxZ;
+
 		if (ticketSourcePosition != null) {
-			minX = ship.minX >> 4;
-			maxX = ship.maxX >> 4;
-			minZ = ship.minZ >> 4;
-			maxZ = ship.maxZ >> 4;
-			for (int x = minX; x <= maxX; x++) {
-				for (int z = minZ; z <= maxZ; z++) {
-					worldSource.getChunk(x, z).generateSkylightMap();
-					ForgeChunkManager.unforceChunk(ticketSourcePosition, new ChunkPos(x, z));
-				}
+			if (chunksSourceToForce == null) {
+				chunksSourceToForce = getSortedChunks(ship.minX >> 4, ship.maxX >> 4, ship.minZ >> 4, ship.maxZ >> 4,
+				                                      ship.core.getX() >> 4, ship.core.getZ() >> 4);
+			}
+			for (int chunkIndex = 0; chunkIndex < chunkSourceForceIndex && chunkIndex < chunksSourceToForce.size(); chunkIndex++) {
+				final ChunkPos chunkPos = chunksSourceToForce.get(chunkIndex);
+				generateSkylightMapIfLoaded(worldSource, chunkPos);
+				ForgeChunkManager.unforceChunk(ticketSourcePosition, chunkPos);
 			}
 			ForgeChunkManager.releaseTicket(ticketSourcePosition);
 			ticketSourcePosition = null;
 		}
-		
-		if (ticketTargetAnchor != null) {
-			ForgeChunkManager.unforceChunk(ticketTargetAnchor, new ChunkPos(0, 0));
-			ForgeChunkManager.releaseTicket(ticketTargetAnchor);
-			ticketTargetAnchor = null;
-		}
-		
+
 		if (ticketTargetPosition != null) {
-			final BlockPos targetMin = transformation.apply(ship.minX, ship.minY, ship.minZ);
-			final BlockPos targetMax = transformation.apply(ship.maxX, ship.maxY, ship.maxZ);
-			minX = Math.min(targetMin.getX(), targetMax.getX()) >> 4;
-			maxX = Math.max(targetMin.getX(), targetMax.getX()) >> 4;
-			minZ = Math.min(targetMin.getZ(), targetMax.getZ()) >> 4;
-			maxZ = Math.max(targetMin.getZ(), targetMax.getZ()) >> 4;
-			for (int x = minX; x <= maxX; x++) {
-				for (int z = minZ; z <= maxZ; z++) {
-					worldTarget.getChunk(x, z).generateSkylightMap();
-					ForgeChunkManager.unforceChunk(ticketTargetPosition, new ChunkPos(x, z));
-				}
+			if (chunksTargetToForce == null) {
+				final BlockPos targetMin = transformation.apply(ship.minX, ship.minY, ship.minZ);
+				final BlockPos targetMax = transformation.apply(ship.maxX, ship.maxY, ship.maxZ);
+				final int minX = Math.min(targetMin.getX(), targetMax.getX()) >> 4;
+				final int maxX = Math.max(targetMin.getX(), targetMax.getX()) >> 4;
+				final int minZ = Math.min(targetMin.getZ(), targetMax.getZ()) >> 4;
+				final int maxZ = Math.max(targetMin.getZ(), targetMax.getZ()) >> 4;
+				final BlockPos targetCore = transformation.apply(ship.core);
+				chunksTargetToForce = getSortedChunks(minX, maxX, minZ, maxZ, targetCore.getX() >> 4, targetCore.getZ() >> 4);
+			}
+			for (int chunkIndex = 0; chunkIndex < chunkTargetForceIndex && chunkIndex < chunksTargetToForce.size(); chunkIndex++) {
+				final ChunkPos chunkPos = chunksTargetToForce.get(chunkIndex);
+				generateSkylightMapIfLoaded(worldTarget, chunkPos);
+				ForgeChunkManager.unforceChunk(ticketTargetPosition, chunkPos);
 			}
 			ForgeChunkManager.releaseTicket(ticketTargetPosition);
 			ticketTargetPosition = null;
 		}
 	}
-	
-	protected void state_chunkLoadingSource() {
+
+	private void resetTargetChunkLoading() {
+		if (ticketTargetPosition != null) {
+			if (chunksTargetToForce != null) {
+				for (int chunkIndex = 0; chunkIndex < chunkTargetForceIndex && chunkIndex < chunksTargetToForce.size(); chunkIndex++) {
+					ForgeChunkManager.unforceChunk(ticketTargetPosition, chunksTargetToForce.get(chunkIndex));
+				}
+			}
+			ForgeChunkManager.releaseTicket(ticketTargetPosition);
+			ticketTargetPosition = null;
+		}
+		chunksTargetToForce = null;
+		chunkTargetForceIndex = 0;
+		chunkTargetReleaseIndex = 0;
+	}
+
+	private boolean releaseChunksBatched() {
+		if (WarpDriveConfig.LOGGING_JUMP) {
+			WarpDrive.logger.info(this + " Releasing chunks");
+		}
+
+		if (ticketSourcePosition != null) {
+			if (chunksSourceToForce == null) {
+				chunksSourceToForce = getSortedChunks(ship.minX >> 4, ship.maxX >> 4, ship.minZ >> 4, ship.maxZ >> 4,
+				                                      ship.core.getX() >> 4, ship.core.getZ() >> 4);
+			}
+			chunkSourceReleaseIndex = releaseChunkBatch(worldSource, ticketSourcePosition, chunksSourceToForce,
+			                                            chunkSourceReleaseIndex, chunkSourceForceIndex);
+			if (chunkSourceReleaseIndex < chunkSourceForceIndex) {
+				return false;
+			}
+			ForgeChunkManager.releaseTicket(ticketSourcePosition);
+			ticketSourcePosition = null;
+		}
+
+		return true;
+	}
+
+	protected boolean state_chunkLoadingSource() {
 		LocalProfiler.start("Jump.chunkLoadingSource");
 		
 		final WarpDriveText reason = new WarpDriveText();
 		
-		if (!forceSourceChunks(reason)) {
+		final ChunkLoadingResult chunkLoadingResult = forceSourceChunks(reason);
+		if (chunkLoadingResult == ChunkLoadingResult.FAILED) {
 			disableAndMessage(false, reason);
 			LocalProfiler.stop();
-			return;
+			return false;
 		}
 		
 		LocalProfiler.stop();
+		return chunkLoadingResult == ChunkLoadingResult.DONE;
 	}
 	
 	protected void state_saveToMemory() {
@@ -649,12 +752,6 @@ public class JumpSequencer extends AbstractSequencer {
 		isPluginCheckDone = false;
 		firstAdjustmentReason = null;
 		switch (shipMovementType) {
-		case GATE_ACTIVATING:
-			moveX = destX - ship.core.getX();
-			moveY = destY - ship.core.getY();
-			moveZ = destZ - ship.core.getZ();
-			break;
-			
 		case INSTANTIATE:
 		case RESTORE:
 			moveX = destX - ship.core.getX();
@@ -688,7 +785,8 @@ public class JumpSequencer extends AbstractSequencer {
 			final int rangeX = Math.abs(moveX) - (ship.maxX - ship.minX);
 			final int rangeZ = Math.abs(moveZ) - (ship.maxZ - ship.minZ);
 			if (Math.max(rangeX, rangeZ) < 256) {
-				firstAdjustmentReason = getPossibleJumpDistance();
+				isPluginCheckDone = false;
+			} else {
 				isPluginCheckDone = true;
 			}
 			break;
@@ -702,16 +800,17 @@ public class JumpSequencer extends AbstractSequencer {
 			break;
 		}
 		transformation = new Transformation(ship, worldTarget, moveX, moveY, moveZ, rotationSteps);
+		isFinalTargetCheckDone = isPluginCheckDone || betweenWorlds;
 		
 		LocalProfiler.stop();
 	}
 	
-	protected void state_adjustJumpVector() {
+	protected boolean state_adjustJumpVector() {
 		LocalProfiler.start("Jump.adjustJumpVector");
 		if (WarpDriveConfig.LOGGING_JUMP) {
 			WarpDrive.logger.info(this + " Adjusting jump vector...");
 		}
-		
+
 		{
 			final BlockPos blockPosMinAtTarget = transformation.apply(ship.minX, ship.minY, ship.minZ);
 			final BlockPos blockPosMaxAtTarget = transformation.apply(ship.maxX, ship.maxY, ship.maxZ);
@@ -733,7 +832,7 @@ public class JumpSequencer extends AbstractSequencer {
 				// cancel jump
 				final WarpDriveText textOverlapping = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.overlapping_source_and_target");
 				final WarpDriveText textComponent;
-				if (firstAdjustmentReason.isEmpty()) {
+				if (firstAdjustmentReason == null || firstAdjustmentReason.isEmpty()) {
 					textComponent = textOverlapping;
 				} else if (firstAdjustmentReason.getUnformattedText().equals(textOverlapping.getUnformattedText())) {
 					textComponent = firstAdjustmentReason;
@@ -742,7 +841,7 @@ public class JumpSequencer extends AbstractSequencer {
 				}
 				disableAndMessage(false, textComponent);
 				LocalProfiler.stop();
-				return;
+				return false;
 			}
 			
 			// Check world border
@@ -762,24 +861,47 @@ public class JumpSequencer extends AbstractSequencer {
 					                                                (int) axisAlignedBB.maxX, (int) axisAlignedBB.maxY, (int) axisAlignedBB.maxZ );
 					LocalProfiler.stop();
 					disableAndMessage(false, message);
-					return;
+					return false;
 				}
 			}
 		}
-		if (!isPluginCheckDone) {
+		final WarpDriveText reason = new WarpDriveText();
+		final ChunkLoadingResult chunkLoadingResult = forceTargetChunks(reason);
+		if (chunkLoadingResult == ChunkLoadingResult.FAILED) {
+			disableAndMessage(false, reason);
+			LocalProfiler.stop();
+			return false;
+		}
+		if (chunkLoadingResult == ChunkLoadingResult.IN_PROGRESS) {
+			LocalProfiler.stop();
+			return false;
+		}
+
+		if (!isPluginCheckDone && !betweenWorlds) {
+			firstAdjustmentReason = getPossibleJumpDistance();
+			isPluginCheckDone = true;
+			transformation = new Transformation(ship, worldTarget, moveX, moveY, moveZ, rotationSteps);
+			isFinalTargetCheckDone = false;
+			resetTargetChunkLoading();
+			LocalProfiler.stop();
+			return false;
+		}
+		if (!isFinalTargetCheckDone) {
 			final CheckMovementResult checkMovementResult = checkCollisionAndProtection(transformation, true,
 			                                                                            "target", new VectorI(0, 0, 0));
 			if (checkMovementResult != null) {
 				disableAndMessage(false, checkMovementResult.reason);
 				LocalProfiler.stop();
-				return;
+				return false;
 			}
+			isFinalTargetCheckDone = true;
 		}
 		
 		LocalProfiler.stop();
+		return true;
 	}
 	
-	protected void state_loadTargetChunks() {
+	protected boolean state_loadTargetChunks() {
 		LocalProfiler.start("Jump.loadTargetChunks");
 		if (WarpDriveConfig.LOGGING_JUMP) {
 			WarpDrive.logger.info(this + " Loading chunks at target...");
@@ -787,13 +909,15 @@ public class JumpSequencer extends AbstractSequencer {
 		
 		final WarpDriveText reason = new WarpDriveText();
 		
-		if (!forceTargetChunks(reason)) {
+		final ChunkLoadingResult chunkLoadingResult = forceTargetChunks(reason);
+		if (chunkLoadingResult == ChunkLoadingResult.FAILED) {
 			disableAndMessage(false, reason);
 			LocalProfiler.stop();
-			return;
+			return false;
 		}
 		
 		LocalProfiler.stop();
+		return chunkLoadingResult == ChunkLoadingResult.DONE;
 	}
 	
 	protected void state_saveEntitiesAndInformPlayers() {
@@ -825,11 +949,6 @@ public class JumpSequencer extends AbstractSequencer {
 			
 		case HYPERSPACE_EXITING:
 			ship.messageToAllPlayersOnShip(new WarpDriveText(null, "warpdrive.ship.guide.leaving_hyperspace"));
-			break;
-			
-		case GATE_ACTIVATING:
-			ship.messageToAllPlayersOnShip(new WarpDriveText(null, "warpdrive.ship.guide.engaging_jumpgate_x",
-			                                                 nameTarget));
 			break;
 			
 		case INSTANTIATE:
@@ -868,6 +987,106 @@ public class JumpSequencer extends AbstractSequencer {
 		}
 	}
 	
+	private CelestialObject getStrictNavigationTarget(final WarpDriveText reason) {
+		if (navigationEngagedTargetId.isEmpty()) {
+			return null;
+		}
+		final CelestialObject celestialObject = CelestialObjectManager.get(false, navigationEngagedTargetId);
+		if (celestialObject == null) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.invalid_target");
+			return null;
+		}
+		if (celestialObject.isVirtual()) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.virtual_target",
+			              celestialObject.getDisplayName());
+			return null;
+		}
+		return celestialObject;
+	}
+
+	private CelestialObject getSpaceFor(final CelestialObject celestialObject) {
+		if (celestialObject == null) {
+			return null;
+		}
+		if (celestialObject.isSpace()) {
+			return celestialObject;
+		}
+		CelestialObject celestialObjectParent = celestialObject.parent;
+		while (celestialObjectParent != null) {
+			if (celestialObjectParent.isSpace()) {
+				return celestialObjectParent;
+			}
+			celestialObjectParent = celestialObjectParent.parent;
+		}
+		return null;
+	}
+
+	private CelestialObject getStrictHyperspaceExitTarget(final WarpDriveText reason) {
+		final CelestialObject celestialObjectTarget = getStrictNavigationTarget(reason);
+		if (celestialObjectTarget == null) {
+			return null;
+		}
+		final CelestialObject celestialObjectSpace = getSpaceFor(celestialObjectTarget);
+		if (celestialObjectSpace == null) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.target_not_space_reachable",
+			              celestialObjectTarget.getDisplayName());
+			return null;
+		}
+		return celestialObjectSpace;
+	}
+
+	private CelestialObject getStrictLandingTarget(final WarpDriveText reason) {
+		final CelestialObject celestialObjectTarget = getStrictNavigationTarget(reason);
+		if (celestialObjectTarget == null) {
+			return null;
+		}
+		if ( celestialObjectTarget.isSpace()
+		  || celestialObjectTarget.isHyperspace() ) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.target_not_landable",
+			              celestialObjectTarget.getDisplayName());
+			return null;
+		}
+		return celestialObjectTarget;
+	}
+
+	private boolean isStrictHyperspaceEnteringAllowed(final CelestialObject celestialObjectSource, final WarpDriveText reason) {
+		if (navigationEngagedTargetId.isEmpty()) {
+			return true;
+		}
+		final CelestialObject celestialObjectTarget = getStrictNavigationTarget(reason);
+		if (celestialObjectTarget == null) {
+			return false;
+		}
+		if (celestialObjectTarget.isHyperspace()) {
+			return true;
+		}
+		final CelestialObject celestialObjectTargetSpace = getSpaceFor(celestialObjectTarget);
+		if ( celestialObjectTargetSpace == null
+		  || celestialObjectSource == null
+		  || celestialObjectTargetSpace == celestialObjectSource ) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.target_not_hyperspace_reachable",
+			              celestialObjectTarget.getDisplayName());
+			return false;
+		}
+		return true;
+	}
+
+	private boolean isStrictPlanetTakeoffAllowed(final CelestialObject celestialObjectSource, final WarpDriveText reason) {
+		if (navigationEngagedTargetId.isEmpty()) {
+			return true;
+		}
+		final CelestialObject celestialObjectTarget = getStrictNavigationTarget(reason);
+		if (celestialObjectTarget == null) {
+			return false;
+		}
+		if (celestialObjectSource == null || celestialObjectTarget == celestialObjectSource) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.target_not_takeoff_reachable",
+			              celestialObjectTarget.getDisplayName());
+			return false;
+		}
+		return true;
+	}
+
 	protected boolean computeTargetWorld(final CelestialObject celestialObjectSource, @Nonnull final EnumShipMovementType shipMovementType, final WarpDriveText reason) {
 		switch (shipMovementType) {
 		case INSTANTIATE:
@@ -876,18 +1095,24 @@ public class JumpSequencer extends AbstractSequencer {
 			break;
 			
 		case HYPERSPACE_EXITING: {
-			final CelestialObject celestialObject = CelestialObjectManager.getClosestChild(worldSource, ship.core.getX(), ship.core.getZ());
+			final CelestialObject celestialObject = getStrictHyperspaceExitTarget(reason);
+			if (celestialObject == null && !navigationEngagedTargetId.isEmpty()) {
+				return false;
+			}
+			final CelestialObject celestialObjectEffective = celestialObject == null
+			                                              ? CelestialObjectManager.getClosestChild(worldSource, ship.core.getX(), ship.core.getZ())
+			                                              : celestialObject;
 			// anything defined?
-			if (celestialObject == null) {
+			if (celestialObjectEffective == null) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.no_celestial_object_in_hyperspace",
 				              Commons.format(worldSource), worldSource.provider.getDimension());
 				return false;
 			}
 			
 			// are we clear for transit?
-			final double distanceSquared = celestialObject.getSquareDistanceInParent(worldSource.provider.getDimension(), ship.core.getX(), ship.core.getZ());
+			final double distanceSquared = celestialObjectEffective.getSquareDistanceInParent(worldSource.provider.getDimension(), ship.core.getX(), ship.core.getZ());
 			if (distanceSquared > 0.0D) {
-				final AxisAlignedBB axisAlignedBB = celestialObject.getAreaInParent();
+				final AxisAlignedBB axisAlignedBB = celestialObjectEffective.getAreaInParent();
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.no_star_system_in_range",
 				              (int) Math.sqrt(distanceSquared),
 				              (int) axisAlignedBB.minX, (int) axisAlignedBB.minY, (int) axisAlignedBB.minZ,
@@ -896,7 +1121,7 @@ public class JumpSequencer extends AbstractSequencer {
 			}
 			
 			// is world available?
-			final int dimensionIdSpace = celestialObject.dimensionId;
+			final int dimensionIdSpace = celestialObjectEffective.dimensionId;
 			worldTarget = Commons.getOrCreateWorldServer(dimensionIdSpace);
 			if (worldTarget == null) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.exception_loading_dimension",
@@ -905,13 +1130,16 @@ public class JumpSequencer extends AbstractSequencer {
 			}
 			
 			// update movement vector
-			final VectorI vEntry = celestialObject.getEntryOffset();
+			final VectorI vEntry = celestialObjectEffective.getEntryOffset();
 			moveX = vEntry.x;
 			moveZ = vEntry.z;
 		}
 		break;
 		
 		case HYPERSPACE_ENTERING: {
+			if (!isStrictHyperspaceEnteringAllowed(celestialObjectSource, reason)) {
+				return false;
+			}
 			// anything defined?
 			if ( celestialObjectSource == null
 			  || celestialObjectSource.parent == null ) {
@@ -938,6 +1166,9 @@ public class JumpSequencer extends AbstractSequencer {
 		break;
 		
 		case PLANET_TAKEOFF: {
+			if (!isStrictPlanetTakeoffAllowed(celestialObjectSource, reason)) {
+				return false;
+			}
 			// anything defined?
 			if ( celestialObjectSource == null
 			  || celestialObjectSource.parent == null ) {
@@ -974,18 +1205,24 @@ public class JumpSequencer extends AbstractSequencer {
 		break;
 		
 		case PLANET_LANDING: {
-			final CelestialObject celestialObject = CelestialObjectManager.getClosestChild(worldSource, ship.core.getX(), ship.core.getZ());
+			final CelestialObject celestialObject = getStrictLandingTarget(reason);
+			if (celestialObject == null && !navigationEngagedTargetId.isEmpty()) {
+				return false;
+			}
+			final CelestialObject celestialObjectEffective = celestialObject == null
+			                                              ? CelestialObjectManager.getClosestChild(worldSource, ship.core.getX(), ship.core.getZ())
+			                                              : celestialObject;
 			// anything defined?
-			if (celestialObject == null) {
+			if (celestialObjectEffective == null) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.no_celestial_object_in_space",
 				              Commons.format(worldSource), worldSource.provider.getDimension());
 				return false;
 			}
 			
 			// are we in orbit?
-			final double distanceSquared = celestialObject.getSquareDistanceInParent(worldSource.provider.getDimension(), ship.core.getX(), ship.core.getZ());
+			final double distanceSquared = celestialObjectEffective.getSquareDistanceInParent(worldSource.provider.getDimension(), ship.core.getX(), ship.core.getZ());
 			if (distanceSquared > 0.0D) {
-				final AxisAlignedBB axisAlignedBB = celestialObject.getAreaInParent();
+				final AxisAlignedBB axisAlignedBB = celestialObjectEffective.getAreaInParent();
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.unable_to_land_outside_orbit",
 				              (int) Math.sqrt(distanceSquared),
 				              (int) axisAlignedBB.minX, (int) axisAlignedBB.minY, (int) axisAlignedBB.minZ,
@@ -994,22 +1231,22 @@ public class JumpSequencer extends AbstractSequencer {
 			}
 			
 			// is it defined?
-			if (celestialObject.isVirtual()) {
+			if (celestialObjectEffective.isVirtual()) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.unable_to_land_virtual_planet",
-				              celestialObject.getDisplayName());
+				              celestialObjectEffective.getDisplayName());
 				return false;
 			}
 			
 			// validate world availability
-			worldTarget = Commons.getOrCreateWorldServer(celestialObject.dimensionId);
+			worldTarget = Commons.getOrCreateWorldServer(celestialObjectEffective.dimensionId);
 			if (worldTarget == null) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.exception_loading_dimension",
-				              celestialObject.getDisplayName(), celestialObject.dimensionId);
+				              celestialObjectEffective.getDisplayName(), celestialObjectEffective.dimensionId);
 				return false;
 			}
 			
 			// update movement vector
-			final VectorI vEntry = celestialObject.getEntryOffset();
+			final VectorI vEntry = celestialObjectEffective.getEntryOffset();
 			moveX = vEntry.x;
 			moveZ = vEntry.z;
 		}
@@ -1021,18 +1258,11 @@ public class JumpSequencer extends AbstractSequencer {
 			worldTarget = worldSource;
 			break;
 			
-		case GATE_ACTIVATING:
-			// @TODO Jumpgate reimplementation
 		default:
 			WarpDrive.logger.error(String.format("Invalid movement type %s",
 			                                     shipMovementType));
 			reason.append(Commons.getStyleWarning(), "warpdrive.error.internal_check_console");
 			return false;
-		}
-		
-		// add a chunk loader to target world so it's not unloaded prematurely
-		if (worldTarget != worldSource) {
-			return forceTargetAnchor(reason);
 		}
 		
 		return true;
@@ -1123,9 +1353,6 @@ public class JumpSequencer extends AbstractSequencer {
 			                             new Vector3(jumpBlock.x + 0.5D, jumpBlock.y + 0.5D, jumpBlock.z + 0.5D),
 			                             new Vector3(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D),
 			                             0.6F, 0.1F, 0.7F, 30, 0, 100);
-			break;
-			
-		case GATE_ACTIVATING:
 			break;
 			
 		case INSTANTIATE:
@@ -1341,21 +1568,24 @@ public class JumpSequencer extends AbstractSequencer {
 			actualIndexInShip++;
 		}
 		
-		// remove item drops and such
-		final WarpDriveText reason = new WarpDriveText();
-		if (!ship.removeEntities(reason)) {
-			WarpDrive.logger.error(reason.getUnformattedText());
+		if (actualIndexInShip >= ship.jumpBlocks.length) {
+			// remove item drops and such
+			final WarpDriveText reason = new WarpDriveText();
+			if (!ship.removeEntities(reason)) {
+				WarpDrive.logger.error(reason.getUnformattedText());
+			}
 		}
 		
 		LocalProfiler.stop();
 	}
 	
-	protected void state_chunkReleasing() {
+	protected boolean state_chunkReleasing() {
 		LocalProfiler.start("Jump.chunkReleasing");
 		
-		releaseChunks();
+		final boolean isDone = releaseChunksBatched();
 		
 		LocalProfiler.stop();
+		return isDone;
 	}
 	
 	/**
@@ -1608,7 +1838,6 @@ public class JumpSequencer extends AbstractSequencer {
 		final AxisAlignedBB aabbTarget = new AxisAlignedBB(
 				blockPosMinAtTarget.getX(), blockPosMinAtTarget.getY(), blockPosMinAtTarget.getZ(),
 				blockPosMaxAtTarget.getX(), blockPosMaxAtTarget.getY(), blockPosMaxAtTarget.getZ() );
-		
 		if ( shipMovementType != EnumShipMovementType.INSTANTIATE
 		  && shipMovementType != EnumShipMovementType.RESTORE
 		  && !betweenWorlds
@@ -1703,6 +1932,18 @@ public class JumpSequencer extends AbstractSequencer {
 		} else {
 			return null;
 		}
+	}
+
+	private boolean areTargetChunksLoaded() {
+		if (chunksTargetToForce == null) {
+			return false;
+		}
+		for (final ChunkPos chunkPos : chunksTargetToForce) {
+			if (!worldTarget.isBlockLoaded(new BlockPos((chunkPos.x << 4) + 8, 128, (chunkPos.z << 4) + 8), false)) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	private CheckMovementResult checkMovement(final double ratio, final boolean fullCollisionDetails) {

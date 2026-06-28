@@ -78,6 +78,10 @@ public class CelestialObjectManager extends XmlFileManager {
 		return (isRemote ? CLIENT : SERVER).registry.byId.get(id);
 	}
 	
+	public static CelestialObject[] getRegistrySnapshot(final boolean isRemote) {
+		return (isRemote ? CLIENT : SERVER).registry.byId.values().toArray(new CelestialObject[0]);
+	}
+	
 	public static CelestialObject get(final World world, final int x, final int z) {
 		if (world == null) {
 			return null;

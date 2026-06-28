@@ -189,6 +189,7 @@ public class WarpDriveConfig {
 	public static int                  G_REGISTRY_UPDATE_INTERVAL_TICKS = 20 * WarpDriveConfig.G_REGISTRY_UPDATE_INTERVAL_SECONDS;
 	public static boolean              G_ENFORCE_VALID_CELESTIAL_OBJECTS = true;
 	public static int                  G_BLOCKS_PER_TICK = 3500;
+	public static int                  G_CHUNKS_PER_TICK = 4;
 	public static boolean              G_ENABLE_FAST_SET_BLOCKSTATE = false;
 	public static boolean              G_ENABLE_PROTECTION_CHECKS = true;
 	public static boolean              G_ENABLE_EXPERIMENTAL_REFRESH = false;
@@ -302,9 +303,6 @@ public class WarpDriveConfig {
 	public static int              SHIP_VOLUME_SCAN_BLOCKS_PER_TICK = 1000;
 	public static int              SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS = 120;
 	public static String[]         SHIP_MASS_UNLIMITED_PLAYER_NAMES = { "notch", "someone" };
-	
-	// Jump gate
-	public static int[]            JUMP_GATE_SIZE_MAX_PER_SIDE_BY_TIER = { 127, 32, 64, 127 };
 	
 	// Biometric scanner
 	public static int              BIOMETRIC_SCANNER_DURATION_TICKS = 100;
@@ -861,6 +859,9 @@ public class WarpDriveConfig {
 		G_BLOCKS_PER_TICK = Commons.clamp(100, 100000,
 				config.get("general", "blocks_per_tick", G_BLOCKS_PER_TICK,
 				           "Number of blocks to move per ticks, too high will cause lag spikes on ship jumping or deployment, too low may break the ship wirings").getInt());
+		G_CHUNKS_PER_TICK = Commons.clamp(1, 1000,
+				config.get("general", "chunks_per_tick", G_CHUNKS_PER_TICK,
+				           "Number of source/target chunks to load per tick during ship jumps. Higher values make pregenerated jumps faster; lower values reduce watchdog risk in ungenerated modded terrain.").getInt());
 		G_ENABLE_FAST_SET_BLOCKSTATE = config.get("general", "enable_fast_set_blockstate", G_ENABLE_FAST_SET_BLOCKSTATE,
 		                                          "Enable fast blockstate placement, skipping light computation. Disable if you have world implementations conflicts").getBoolean(G_ENABLE_FAST_SET_BLOCKSTATE);
 		G_ENABLE_PROTECTION_CHECKS = config.get("general", "enable_protection_checks", G_ENABLE_PROTECTION_CHECKS,
@@ -1053,7 +1054,7 @@ public class WarpDriveConfig {
 		SHIP_MASS_MAX_ON_PLANET_SURFACE = Commons.clamp(0, 10000000,
 		        config.get("ship", "volume_max_on_planet_surface", SHIP_MASS_MAX_ON_PLANET_SURFACE, "Maximum ship mass (in blocks) to jump on a planet").getInt());
 		SHIP_MASS_MIN_FOR_HYPERSPACE = Commons.clamp(0, 10000000,
-		        config.get("ship", "volume_min_for_hyperspace", SHIP_MASS_MIN_FOR_HYPERSPACE, "Minimum ship mass (in blocks) to enter or exit hyperspace without a jumpgate").getInt());
+		        config.get("ship", "volume_min_for_hyperspace", SHIP_MASS_MIN_FOR_HYPERSPACE, "Minimum ship mass (in blocks) to enter or exit hyperspace").getInt());
 		SHIP_MASS_UNLIMITED_PLAYER_NAMES = config.get("ship", "mass_unlimited_player_names", SHIP_MASS_UNLIMITED_PLAYER_NAMES,
 				"List of player names which have unlimited block counts to their ship").getStringList();
 		
@@ -1071,11 +1072,6 @@ public class WarpDriveConfig {
 		        config.get("ship", "volume_scan_blocks_per_tick", SHIP_VOLUME_SCAN_BLOCKS_PER_TICK, "Number of blocks to scan per tick when getting ship bounds, too high will cause lag spikes when resizing a ship").getInt());
 		SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS = Commons.clamp(0, 300,
                 config.get("ship", "volume_scan_age_tolerance", SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS, "Ship volume won't be refreshed unless it's older than that many seconds").getInt());
-		
-		// Jump gate
-		JUMP_GATE_SIZE_MAX_PER_SIDE_BY_TIER =
-				config.get("jump_gate", "size_max_per_side_by_tier", JUMP_GATE_SIZE_MAX_PER_SIDE_BY_TIER, "Maximum jump gate size on each axis in blocks, for a given tier").getIntList();
-		clampByTier(1, Integer.MAX_VALUE, JUMP_GATE_SIZE_MAX_PER_SIDE_BY_TIER);
 		
 		// Offline avatar
 		OFFLINE_AVATAR_ENABLE =

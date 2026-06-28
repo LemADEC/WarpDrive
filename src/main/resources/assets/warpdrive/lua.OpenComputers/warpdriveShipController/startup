@@ -370,63 +370,6 @@ function ship_page_setDimensions()
   ship_back, ship_left, ship_down = ship.dim_negative(ship_back, ship_left, ship_down)
 end
 
-function ship_page_summon() -- no longer used
-  w.page_begin("<==== Summon players ====>")
-  local stringPlayers, arrayPlayers = ship.getAttachedPlayers()
-  if stringPlayers == nil or #arrayPlayers == 0 then
-    w.writeLn("~ no players registered ~")
-    w.writeLn("")
-    w.setColorHelp()
-    w.writeFullLine(" Press enter to exit.")
-    w.setColorNormal()
-    w.input_readInteger("")
-    return
-  end
-  for i = 1, #arrayPlayers do
-    w.writeLn(i .. ". " .. arrayPlayers[i])
-  end
-  w.setColorHelp()
-  w.writeFullLine(" Enter player number")
-  w.writeFullLine(" or press enter to summon everyone.")
-  w.setColorNormal()
-  
-  w.write(":")
-  ship.command("SUMMON", false)
-  local input = w.input_readInteger("")
-  if input == "" then
-    ship.targetName("")
-  else
-    input = tonumber(input)
-    ship.targetName(arrayPlayers[input - 1])
-  end
-  ship.command("SUMMON", true)
-end
-
-function ship_page_jumpToGate()
-  w.page_begin("<==== Jump through Jumpgate ====>")
-  w.writeLn("")
-  w.writeLn("Your ship should be already inside a jumpgate")
-  
-  w.setCursorPos(1, 20)
-  w.setColorHelp()
-  w.writeFullLine(" Enter target jumpgate name (a-z, 0-9).")
-  w.writeFullLine(" Press enter to save jumpgate name.")
-  
-  w.setCursorPos(1, 5)
-  w.setColorNormal()
-  w.write("Target jumpgate name: ")
-  local targetName = w.input_readText("")
-  -- rs.setOutput(alarm_side, true)
-  if w.input_readConfirmation("Engage gate jumping? (Y/n)") then
-    -- rs.setOutput(alarm_side, false)
-    ship.command("GATE", false)
-    ship.targetName(targetName)
-    ship.command("GATE", true)
-    -- ship = nil
-  end
-  -- rs.setOutput(alarm_side, false)
-end
-
 function ship_page_controls()
   w.page_begin(w.data_getName() .. " - Ship controls")
   if ship == nil or ship.isInterfaced() == nil then
@@ -583,24 +526,11 @@ function ship_page_crew()
   
   w.setCursorPos(1, 20)
   w.setColorControl()
-  w.writeFullLine(" Summon all crew (S)")
-  w.writeFullLine(" select crew (Up, Down), summon selected crew (enter)")
+  w.writeFullLine(" select crew (Up, Down)")
 end
 
 function ship_key_crew(character, keycode)
-  if character == 's' or character == 'S' then -- S
-    ship.command("SUMMON", false)
-    ship.targetName("")
-    ship.command("SUMMON", true)
-    return true
-  elseif keycode == 28 then -- Enter
-    local namePlayer = ship_arrayPlayers[ship_indexPlayer + 1]
-    ship.command("SUMMON", false)
-    ship.targetName(namePlayer)
-    ship.command("SUMMON", true)
-    w.status_showSuccess("Engaging teleportation for " .. namePlayer .. "...")
-    return true
-  elseif keycode == 200 or keycode == 203 or character == '-' then -- Up or Left or -
+  if keycode == 200 or keycode == 203 or character == '-' then -- Up or Left or -
     ship_indexPlayer = ship_indexPlayer - 1
     return true
   elseif keycode == 208 or keycode == 205 or character == '+' then -- Down or Right or +
@@ -621,10 +551,10 @@ function ship_page_navigation()
     else
       local locationCurrent = "somewhere..."  -- @TODO ship.getLocation()
       w.writeLn("Current ship location        : " .. locationCurrent)
-      w.writeLn("Jumpgates or beacons in range:")
+      w.writeLn("Beacons in range:")
       local stringTargets, _ = "not implemented", nil -- ship.getTargets()
       if stringTargets == nil or stringTargets == "" then
-        stringTargets = "~ no beacon nor jumpgate in range ~"
+        stringTargets = "~ no beacon in range ~"
       end
       local arrayTargets = w.data_splitString(stringTargets, ",")
       ship_indexTarget = ship_writeArray(arrayTargets, ship_indexTarget)
@@ -634,14 +564,13 @@ function ship_page_navigation()
   w.setCursorPos(1, 20)
   w.setColorControl()
   w.writeFullLine(" select target (Up, Down), register target (enter)")
-  w.writeFullLine(" jump through Gate (G)")
 end
 
 function ship_key_navigation(character, keycode)
   if keycode == 28 then -- Enter
 --    local success, xxx = ship.xxx(ship_indexTarget)
 --    if success then
---      w.status_showSuccess("Engaging jumpgate jump to " .. xxx .. "...")
+--      w.status_showSuccess("Engaging jump to " .. xxx .. "...")
 --    else
 --      w.status_showWarning("Failed to summon crew member")
 --    end
@@ -649,9 +578,6 @@ function ship_key_navigation(character, keycode)
 --  elseif character == 'b' or character == 'B' then -- B
 --    ship_page_jumpToBeacon()
 --    return true
-  elseif character == 'g' or character == 'G' then -- G
-    ship_page_jumpToGate()
-    return true
   elseif keycode == 200 or keycode == 203 or character == '-' then -- Up or Left or -
     ship_indexTarget = ship_indexTarget - 1
     return true

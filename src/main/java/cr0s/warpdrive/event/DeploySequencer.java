@@ -55,8 +55,11 @@ public class DeploySequencer extends JumpSequencer {
 	}
 	
 	@Override
-	protected void state_chunkReleasing() {
-		super.state_chunkReleasing();
+	protected boolean state_chunkReleasing() {
+		final boolean isDone = super.state_chunkReleasing();
+		if (!isDone) {
+			return false;
+		}
 		
 		if (playerNameRequester != null) {
 			// Warn owner if deployment done but wait next tick for teleportation
@@ -65,6 +68,7 @@ public class DeploySequencer extends JumpSequencer {
 				Commons.addChatMessage(entityPlayerMP, new WarpDriveText(Commons.getStyleCorrect(), "warpdrive.builder.guide.ship_deployed"));
 			}
 		}
+		return true;
 	}
 	
 	@Override

@@ -84,7 +84,6 @@ import cr0s.warpdrive.block.movement.BlockTransporterBeacon;
 import cr0s.warpdrive.block.movement.BlockTransporterContainment;
 import cr0s.warpdrive.block.movement.BlockTransporterCore;
 import cr0s.warpdrive.block.movement.BlockTransporterScanner;
-import cr0s.warpdrive.block.movement.TileEntityJumpGateCore;
 import cr0s.warpdrive.block.movement.TileEntityLift;
 import cr0s.warpdrive.block.movement.TileEntityShipController;
 import cr0s.warpdrive.block.movement.TileEntityShipCore;
@@ -1073,7 +1072,6 @@ public class WarpDrive {
 		GameRegistry.registerTileEntity(TileEntityForceFieldProjector.class, new ResourceLocation(WarpDrive.MODID, "force_field_projector"));
 		GameRegistry.registerTileEntity(TileEntityForceFieldRelay.class, new ResourceLocation(WarpDrive.MODID, "force_field_relay"));
 		GameRegistry.registerTileEntity(TileEntityIC2reactorLaserMonitor.class, new ResourceLocation(WarpDrive.MODID, "ic2_reactor_laser_monitor"));
-		GameRegistry.registerTileEntity(TileEntityJumpGateCore.class, new ResourceLocation(WarpDrive.MODID, "jump_gate_core"));
 		GameRegistry.registerTileEntity(TileEntityLaser.class, new ResourceLocation(WarpDrive.MODID, "laser"));
 		GameRegistry.registerTileEntity(TileEntityLaserCamera.class, new ResourceLocation(WarpDrive.MODID, "laser_camera"));
 		GameRegistry.registerTileEntity(TileEntityLaserMedium.class, new ResourceLocation(WarpDrive.MODID, "laser_medium"));

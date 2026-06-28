@@ -23,7 +23,11 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraftforge.fml.common.Optional;
 
 public abstract class TileEntityAbstractShipController extends TileEntityAbstractEnergyCoreOrController implements IShipController {
-	
+
+	// Defensive cap on a single movement component. Gameplay range is enforced by ShipMovementCosts;
+	// this only rejects pathological GUI/computer/NBT values before they reach world-coordinate math.
+	protected static final int SHIP_MOVEMENT_INPUT_LIMIT = 30000000;
+
 	// persistent properties
 	private int front, right, up;
 	private int back, left, down;
@@ -32,7 +36,6 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	private int moveUp = 0;
 	private int moveRight = 0;
 	private byte rotationSteps = 0;
-	protected String nameTarget = "";
 	
 	protected EnumShipCommand enumShipCommand = EnumShipCommand.IDLE;
 	protected boolean isCommandConfirmed = false;
@@ -52,7 +55,8 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 				"movement",
 				"rotationSteps",
 				"state",
-				"targetName",
+				"validateMovement",
+				"validateNavigation",
 				});
 	}
 	
@@ -72,7 +76,6 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 				tagCompound.getInteger("moveUp"),
 				tagCompound.getInteger("moveRight") );
 		setRotationSteps(tagCompound.getByte("rotationSteps"));
-		nameTarget = tagCompound.getString("nameTarget");
 		
 		final boolean isConfirmed = tagCompound.hasKey("commandConfirmed") && tagCompound.getBoolean("commandConfirmed");
 		setCommand(tagCompound.getString("commandName"), isConfirmed);
@@ -94,7 +97,6 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		tagCompound.setInteger("moveUp", moveUp);
 		tagCompound.setInteger("moveRight", moveRight);
 		tagCompound.setByte("rotationSteps", rotationSteps);
-		tagCompound.setString("nameTarget", nameTarget);
 		
 		tagCompound.setString("commandName", enumShipCommand.getName());
 		tagCompound.setBoolean("commandConfirmed", isCommandConfirmed);
@@ -143,7 +145,6 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		tagCompound.removeTag("moveUp");
 		tagCompound.removeTag("moveRight");
 		tagCompound.removeTag("rotationSteps");
-		tagCompound.removeTag("nameTarget");
 		
 		tagCompound.removeTag("commandName");
 		tagCompound.removeTag("commandConfirmed");
@@ -239,9 +240,11 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	}
 	
 	protected void setMovement(final int moveFront, final int moveUp, final int moveRight) {
-		this.moveFront = moveFront;
-		this.moveUp = moveUp;
-		this.moveRight = moveRight;
+		// clamp at the single chokepoint so neither the GUI nor a computer can push a value that
+		// overflows the downstream Math.abs()/magnitude arithmetic (e.g. Integer.MIN_VALUE)
+		this.moveFront = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveFront);
+		this.moveUp    = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveUp);
+		this.moveRight = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveRight);
 		markDirty();
 	}
 	
@@ -260,16 +263,22 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		
 		assert multiblockCore instanceof TileEntityShipCore;
 		final TileEntityShipCore tileEntityShipCore = (TileEntityShipCore) multiblockCore;
+		final boolean isChanged = front != tileEntityShipCore.getFront()
+		                       || right != tileEntityShipCore.getRight()
+		                       || up != tileEntityShipCore.getUp()
+		                       || back != tileEntityShipCore.getBack()
+		                       || left != tileEntityShipCore.getLeft()
+		                       || down != tileEntityShipCore.getDown();
 		front = tileEntityShipCore.getFront();
 		right = tileEntityShipCore.getRight();
 		up    = tileEntityShipCore.getUp();
 		back  = tileEntityShipCore.getBack();
 		left  = tileEntityShipCore.getLeft();
 		down  = tileEntityShipCore.getDown();
-	}
-	
-	String getTargetName() {
-		return nameTarget;
+		if (isChanged) {
+			markDirtyParameters();
+			markDirty();
+		}
 	}
 	
 	// Common OC/CC methods
@@ -289,9 +298,17 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 				final int argInt0 = Commons.clamp(0, WarpDriveConfig.SHIP_SIZE_MAX_PER_SIDE_BY_TIER[enumTier.getIndex()], Math.abs(Commons.toInt(arguments[0])));
 				final int argInt1 = Commons.clamp(0, WarpDriveConfig.SHIP_SIZE_MAX_PER_SIDE_BY_TIER[enumTier.getIndex()], Math.abs(Commons.toInt(arguments[1])));
 				final int argInt2 = Commons.clamp(0, WarpDriveConfig.SHIP_SIZE_MAX_PER_SIDE_BY_TIER[enumTier.getIndex()], Math.abs(Commons.toInt(arguments[2])));
+				final int frontPrevious = front;
+				final int rightPrevious = right;
+				final int upPrevious = up;
 				setFront(argInt0);
 				setRight(argInt1);
 				setUp(Math.min(255 - pos.getY(), argInt2));
+				if ( front != frontPrevious
+				  || right != rightPrevious
+				  || up != upPrevious ) {
+					markDirty();
+				}
 			}
 		} catch (final Exception exception) {
 			if (WarpDriveConfig.LOGGING_LUA) {
@@ -310,9 +327,17 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 				final int argInt0 = Commons.clamp(0, WarpDriveConfig.SHIP_SIZE_MAX_PER_SIDE_BY_TIER[enumTier.getIndex()], Math.abs(Commons.toInt(arguments[0])));
 				final int argInt1 = Commons.clamp(0, WarpDriveConfig.SHIP_SIZE_MAX_PER_SIDE_BY_TIER[enumTier.getIndex()], Math.abs(Commons.toInt(arguments[1])));
 				final int argInt2 = Commons.clamp(0, WarpDriveConfig.SHIP_SIZE_MAX_PER_SIDE_BY_TIER[enumTier.getIndex()], Math.abs(Commons.toInt(arguments[2])));
+				final int backPrevious = back;
+				final int leftPrevious = left;
+				final int downPrevious = down;
 				setBack(argInt0);
 				setLeft(argInt1);
 				setDown(Math.min(pos.getY(), argInt2));
+				if ( back != backPrevious
+				  || left != leftPrevious
+				  || down != downPrevious ) {
+					markDirty();
+				}
 			}
 		} catch (final Exception exception) {
 			if (WarpDriveConfig.LOGGING_LUA) {
@@ -357,6 +382,10 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	@Override
 	abstract public Object[] getMaxJumpDistance();
 	
+	abstract public Object[] validateMovement(final Object[] arguments);
+	
+	abstract public Object[] validateNavigation();
+	
 	@Override
 	public Object[] rotationSteps(final Object[] arguments) {
 		try {
@@ -372,14 +401,6 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	
 	@Override
 	abstract public Object[] state();
-	
-	@Override
-	public Object[] targetName(final Object[] arguments) {
-		if (arguments.length == 1 && arguments[0] != null) {
-			this.nameTarget = (String) arguments[0];
-		}
-		return new Object[] { nameTarget };
-	}
 	
 	// OpenComputers callback methods
 	@Callback(direct = true)
@@ -456,8 +477,15 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	
 	@Callback(direct = true)
 	@Optional.Method(modid = "opencomputers")
-	public Object[] targetName(final Context context, final Arguments arguments) {
-		return targetName(OC_convertArgumentsAndLogCall(context, arguments));
+	public Object[] validateMovement(final Context context, final Arguments arguments) {
+		return validateMovement(OC_convertArgumentsAndLogCall(context, arguments));
+	}
+	
+	@Callback(direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] validateNavigation(final Context context, final Arguments arguments) {
+		OC_convertArgumentsAndLogCall(context, arguments);
+		return validateNavigation();
 	}
 	
 	// ComputerCraft IPeripheral methods
@@ -498,8 +526,11 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		case "state":
 			return state();
 		
-		case "targetName":
-			return targetName(arguments);
+		case "validateMovement":
+			return validateMovement(arguments);
+		
+		case "validateNavigation":
+			return validateNavigation();
 		}
 		
 		return super.CC_callMethod(methodName, arguments);

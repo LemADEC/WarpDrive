@@ -43,7 +43,7 @@ import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.text.WordUtils;
 
 /**
- * Registry of all known ships, jumpgates, etc. in the world
+ * Registry of all known ships and other global regions in the world.
  * 
  * @author LemADEC
  */
@@ -52,6 +52,10 @@ public class GlobalRegionManager {
 	public static String GALAXY_UNDEFINED = "???";
 	
 	private static final HashMap<Integer, CopyOnWriteArraySet<GlobalRegion>> registry = new HashMap<>();
+	private static final HashMap<Integer, HashMap<EnumGlobalRegionType, CopyOnWriteArraySet<GlobalRegion>>> registryByType = new HashMap<>();
+	private static final HashMap<Integer, HashMap<Long, CopyOnWriteArraySet<GlobalRegion>>> registryByChunk = new HashMap<>();
+	private static final HashMap<UUID, GlobalRegion> registryByUUID = new HashMap<>();
+	private static final HashMap<String, CopyOnWriteArraySet<GlobalRegion>> registryByName = new HashMap<>();
 	private static int countAdd = 0;
 	private static int countRemove = 0;
 	private static int countRead = 0;
@@ -101,6 +105,7 @@ public class GlobalRegionManager {
 					// note: in-place update only works as long as hashcode remains unchanged, that means same position, same type, same UUID
 					registryItem.update(globalRegionProvider);
 					setRegistryItems.removeAll(listToRemove);
+					rebuildIndexes();
 					if (WarpDriveConfig.LOGGING_GLOBAL_REGION_REGISTRY) {
 						printRegistry("updated");
 					}
@@ -116,6 +121,7 @@ public class GlobalRegionManager {
 		countAdd++;
 		setRegistryItems.add(new GlobalRegion(globalRegionProvider));
 		registry.put(globalRegionProvider.getDimension(), setRegistryItems);
+		rebuildIndexes();
 		if (WarpDriveConfig.LOGGING_GLOBAL_REGION_REGISTRY) {
 			printRegistry("added");
 		}
@@ -135,6 +141,7 @@ public class GlobalRegionManager {
 				// found it, remove and exit
 				countRemove++;
 				setRegistryItems.remove(registryItem);
+				rebuildIndexes();
 				return;
 			}
 		}
@@ -143,6 +150,15 @@ public class GlobalRegionManager {
 	
 	@Nullable
 	public static GlobalRegion getByName(final EnumGlobalRegionType enumGlobalRegionType, final String name) {
+		final Set<GlobalRegion> setByName = registryByName.get(name == null ? "" : name);
+		if (setByName != null) {
+			for (final GlobalRegion globalRegion : setByName) {
+				if ( enumGlobalRegionType == null
+				  || globalRegion.type == enumGlobalRegionType ) {
+					return globalRegion;
+				}
+			}
+		}
 		for (final Integer dimensionId : registry.keySet()) {
 			final CopyOnWriteArraySet<GlobalRegion> setGlobalRegions = registry.get(dimensionId);
 			if (setGlobalRegions == null) {
@@ -164,6 +180,12 @@ public class GlobalRegionManager {
 	public static GlobalRegion getByUUID(final EnumGlobalRegionType enumGlobalRegionType, final UUID uuid) {
 		if (uuid == null) {
 			return null;
+		}
+		final GlobalRegion globalRegionCached = registryByUUID.get(uuid);
+		if ( globalRegionCached != null
+		  && ( enumGlobalRegionType == null
+		    || globalRegionCached.type == enumGlobalRegionType ) ) {
+			return globalRegionCached;
 		}
 		for (final Integer dimensionId : registry.keySet()) {
 			final CopyOnWriteArraySet<GlobalRegion> setGlobalRegions = registry.get(dimensionId);
@@ -251,7 +273,7 @@ public class GlobalRegionManager {
 	
 	@Nullable
 	public static GlobalRegion getNearest(final EnumGlobalRegionType enumGlobalRegionType, @Nonnull final World world, @Nonnull final BlockPos blockPos) {
-		final CopyOnWriteArraySet<GlobalRegion> setGlobalRegions = registry.get(world.provider.getDimension());
+		final Set<GlobalRegion> setGlobalRegions = getRegionsByType(world.provider.getDimension(), enumGlobalRegionType);
 		if (setGlobalRegions == null) {
 			return null;
 		}
@@ -280,7 +302,7 @@ public class GlobalRegionManager {
 	
 	@Nonnull
 	public static ArrayList<GlobalRegion> getContainers(final EnumGlobalRegionType enumGlobalRegionType, @Nonnull final World world, @Nonnull final BlockPos blockPos) {
-		final CopyOnWriteArraySet<GlobalRegion> setGlobalRegions = registry.get(world.provider.getDimension());
+		final Set<GlobalRegion> setGlobalRegions = getRegionsByChunk(world.provider.getDimension(), blockPos);
 		if (setGlobalRegions == null) {
 			return new ArrayList<>(0);
 		}
@@ -316,7 +338,7 @@ public class GlobalRegionManager {
 			                                     blockState, Commons.format(world, blockPos) ));
 			return false;
 		}
-		final CopyOnWriteArraySet<GlobalRegion> setGlobalRegions = registry.get(world.provider.getDimension());
+		final Set<GlobalRegion> setGlobalRegions = getRegionsByChunk(world.provider.getDimension(), blockPos);
 		if (setGlobalRegions == null) {
 			return true;
 		}
@@ -339,11 +361,11 @@ public class GlobalRegionManager {
 			                                     entityPlayer, message ));
 			return false;
 		}
-		final CopyOnWriteArraySet<GlobalRegion> setGlobalRegions = registry.get(entityPlayer.world.provider.getDimension());
+		final BlockPos blockPos = entityPlayer.getPosition();
+		final Set<GlobalRegion> setGlobalRegions = getRegionsByChunk(entityPlayer.world.provider.getDimension(), blockPos);
 		if (setGlobalRegions == null) {
 			return true;
 		}
-		final BlockPos blockPos = entityPlayer.getPosition();
 		boolean isCancelled = false;
 		for (final GlobalRegion registryItem : setGlobalRegions) {
 			if (registryItem.type == EnumGlobalRegionType.VIRTUAL_ASSISTANT
@@ -430,6 +452,67 @@ public class GlobalRegionManager {
 			hasHyperspace |= celestialObjectNode.isHyperspace();
 		}
 		return hasHyperspace ? vec3Result : null;
+	}
+
+	@Nullable
+	private static Set<GlobalRegion> getRegionsByType(final int dimensionId, @Nullable final EnumGlobalRegionType enumGlobalRegionType) {
+		if (enumGlobalRegionType == null) {
+			return registry.get(dimensionId);
+		}
+		final HashMap<EnumGlobalRegionType, CopyOnWriteArraySet<GlobalRegion>> mapByType = registryByType.get(dimensionId);
+		return mapByType == null ? null : mapByType.get(enumGlobalRegionType);
+	}
+
+	@Nullable
+	private static Set<GlobalRegion> getRegionsByChunk(final int dimensionId, @Nonnull final BlockPos blockPos) {
+		final HashMap<Long, CopyOnWriteArraySet<GlobalRegion>> mapByChunk = registryByChunk.get(dimensionId);
+		return mapByChunk == null ? null : mapByChunk.get(ChunkPos.asLong(blockPos.getX() >> 4, blockPos.getZ() >> 4));
+	}
+
+	private static void rebuildIndexes() {
+		registryByType.clear();
+		registryByChunk.clear();
+		registryByUUID.clear();
+		registryByName.clear();
+		for (final Map.Entry<Integer, CopyOnWriteArraySet<GlobalRegion>> entryDimension : registry.entrySet()) {
+			final int dimensionId = entryDimension.getKey();
+			final HashMap<EnumGlobalRegionType, CopyOnWriteArraySet<GlobalRegion>> mapByType = new HashMap<>();
+			final HashMap<Long, CopyOnWriteArraySet<GlobalRegion>> mapByChunk = new HashMap<>();
+			for (final GlobalRegion globalRegion : entryDimension.getValue()) {
+				if (globalRegion == null) {
+					continue;
+				}
+				CopyOnWriteArraySet<GlobalRegion> setByType = mapByType.get(globalRegion.type);
+				if (setByType == null) {
+					setByType = new CopyOnWriteArraySet<>();
+					mapByType.put(globalRegion.type, setByType);
+				}
+				setByType.add(globalRegion);
+				if (globalRegion.uuid != null) {
+					registryByUUID.put(globalRegion.uuid, globalRegion);
+				}
+				final String name = globalRegion.name == null ? "" : globalRegion.name;
+				CopyOnWriteArraySet<GlobalRegion> setByName = registryByName.get(name);
+				if (setByName == null) {
+					setByName = new CopyOnWriteArraySet<>();
+					registryByName.put(name, setByName);
+				}
+				setByName.add(globalRegion);
+				for (int xChunk = globalRegion.minX >> 4; xChunk <= globalRegion.maxX >> 4; xChunk++) {
+					for (int zChunk = globalRegion.minZ >> 4; zChunk <= globalRegion.maxZ >> 4; zChunk++) {
+						final Long keyChunk = ChunkPos.asLong(xChunk, zChunk);
+						CopyOnWriteArraySet<GlobalRegion> setByChunk = mapByChunk.get(keyChunk);
+						if (setByChunk == null) {
+							setByChunk = new CopyOnWriteArraySet<>();
+							mapByChunk.put(keyChunk, setByChunk);
+						}
+						setByChunk.add(globalRegion);
+					}
+				}
+			}
+			registryByType.put(dimensionId, mapByType);
+			registryByChunk.put(dimensionId, mapByChunk);
+		}
 	}
 	
 	public static void printRegistry(final String trigger) {
@@ -564,14 +647,13 @@ public class GlobalRegionManager {
 					
 					final TileEntity tileEntity = world.getTileEntity(registryItem.getBlockPos());
 					isValid = true;
-					switch (registryItem.type) {
+					if (registryItem.type == null) {
+						isValid = false;
+					} else switch (registryItem.type) {
 					case UNDEFINED:
 						break;
 					case SHIP:
 						isValid = block instanceof BlockShipCore && tileEntity != null && !tileEntity.isInvalid();
-						break;
-					case JUMP_GATE:
-						// isValid = block == WarpDrive.blockJumpGateCore && tileEntity != null && !tileEntity.isInvalid();
 						break;
 					case PLANET:
 						break;
@@ -608,6 +690,7 @@ public class GlobalRegionManager {
 				}
 			}
 		}
+		rebuildIndexes();
 		
 		LocalProfiler.stop();
 	}
@@ -617,6 +700,7 @@ public class GlobalRegionManager {
 		  || ( !tagCompound.hasKey("starMapRegistryItems")
 		    && !tagCompound.hasKey("globalRegions") ) ) {
 			registry.clear();
+			rebuildIndexes();
 			return;
 		}
 		
@@ -631,6 +715,9 @@ public class GlobalRegionManager {
 		final HashMap<Integer, Integer> sizeDimensions = new HashMap<>();
 		for (int index = 0; index < tagList.tagCount(); index++) {
 			final GlobalRegion globalRegion = new GlobalRegion(tagList.getCompoundTagAt(index));
+			if (globalRegion.type == null) {
+				continue;
+			}
 			registryFlat[index] = globalRegion;
 			
 			// update stats
@@ -647,6 +734,9 @@ public class GlobalRegionManager {
 		
 		// fill the local collections
 		for (final GlobalRegion globalRegion : registryFlat) {
+			if (globalRegion == null) {
+				continue;
+			}
 			registryLocal.get(globalRegion.dimensionId).add(globalRegion);
 		}
 		
@@ -655,6 +745,7 @@ public class GlobalRegionManager {
 		for (final Entry<Integer, ArrayList<GlobalRegion>> entry : registryLocal.entrySet()) {
 			registry.put(entry.getKey(), new CopyOnWriteArraySet<>(entry.getValue()));
 		}
+		rebuildIndexes();
 	}
 	
 	public static void writeToNBT(@Nonnull final NBTTagCompound tagCompound) {

@@ -295,6 +295,37 @@ public class VectorI implements Cloneable {
 	public long getMagnitudeSquared() {
 		return (long) x * x + (long) y * y + (long) z * z;
 	}
+
+	public long getMagnitudeSquaredLong() {
+		return (long) x * x + (long) y * y + (long) z * z;
+	}
+
+	public VectorI limitedToMagnitude(final int maximumMagnitude) {
+		if (maximumMagnitude <= 0) {
+			return new VectorI();
+		}
+		final long magnitudeSquared = getMagnitudeSquaredLong();
+		final long maximumMagnitudeSquared = (long) maximumMagnitude * maximumMagnitude;
+		if (magnitudeSquared <= maximumMagnitudeSquared) {
+			return clone();
+		}
+		final double scale = maximumMagnitude / Math.sqrt(magnitudeSquared);
+		final int xLimited = (int) (Math.signum(x) * Math.floor(Math.abs(x) * scale));
+		final int yLimited = (int) (Math.signum(y) * Math.floor(Math.abs(y) * scale));
+		final int zLimited = (int) (Math.signum(z) * Math.floor(Math.abs(z) * scale));
+		if ( xLimited != 0
+		  || yLimited != 0
+		  || zLimited != 0 ) {
+			return new VectorI(xLimited, yLimited, zLimited);
+		}
+		if (Math.abs(x) >= Math.abs(y) && Math.abs(x) >= Math.abs(z)) {
+			return new VectorI((int) Math.signum(x) * maximumMagnitude, 0, 0);
+		}
+		if (Math.abs(y) >= Math.abs(z)) {
+			return new VectorI(0, (int) Math.signum(y) * maximumMagnitude, 0);
+		}
+		return new VectorI(0, 0, (int) Math.signum(z) * maximumMagnitude);
+	}
 	
 	public VectorI scale(final float amount) {
 		x = Math.round(x * amount);

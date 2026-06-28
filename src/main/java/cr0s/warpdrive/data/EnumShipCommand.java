@@ -13,7 +13,6 @@ public enum EnumShipCommand implements IStringSerializable {
 	// AUTOPILOT("autopilot"         , true ), // Move ship towards a far destination
 	// SUMMON   ("summon"            , false), // Summoning crew
 	HYPERDRIVE  ("hyperdrive"     , true ), // Jump to/from Hyperspace
-	GATE        ("gate"           , true ), // Jump via jumpgate
 	MAINTENANCE ("maintenance"    , false); // Maintenance mode
 	
 	private final String name;

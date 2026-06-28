@@ -1046,22 +1046,6 @@ function core_page_jumpToBeacon()
   -- rs.setOutput(alarm_side, false)
 end
 
-function core_page_jumpToGate()
-  ShowTitle("<==== Jump to Jumpgate ====>")
-  
-  Write("Enter jumpgate name: ")
-  local name = readInputText("")
-  -- rs.setOutput(alarm_side, true)
-  if readConfirmation() then
-    -- rs.setOutput(alarm_side, false)
-    ship.mode(6)
-    ship.targetJumpgate(name)
-    ship.jump()
-    -- ship = nil
-  end
-  -- rs.setOutput(alarm_side, false)
-end
-
 function core_page()
   ShowTitle(label .. " - Ship status")
   if ship ~= nil then
@@ -1099,7 +1083,7 @@ function core_page()
   SetCursorPos(1, 15)
   SetColorTitle()
   ShowMenu("D - Dimensions, N - set ship Name, M - set Movement")
-  ShowMenu("J - Jump, G - jump through Gate, B - jump to Beacon")
+  ShowMenu("J - Jump, B - jump to Beacon")
   ShowMenu("H - Hyperspace, C - summon Crew, T - Toggle summon")
 end
 
@@ -1127,9 +1111,6 @@ function core_key(char, keycode)
     return true
   elseif keycode == 48 then -- B
     core_page_jumpToBeacon()
-    return true
-  elseif keycode == 34 then -- G
-    core_page_jumpToGate()
     return true
   elseif keycode == 35 then -- H
     -- rs.setOutput(alarm_side, true)
