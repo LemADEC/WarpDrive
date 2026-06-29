@@ -125,41 +125,41 @@ public class MessageShipNavigationAction implements IMessage, IMessageHandler<Me
 		}
 		final WorldServer worldServer = DimensionManager.getWorld(message.dimensionId);
 		if (worldServer == null) {
-			WarpDrive.logger.warn(String.format("Ignoring ship navigation action %d for unloaded dimension %d from %s",
-			                                    message.action, message.dimensionId, entityPlayerMP));
+			logRejectedAction(message, String.format("Ignoring ship navigation action %d for unloaded dimension %d from %s",
+			                                         message.action, message.dimensionId, entityPlayerMP));
 			return;
 		}
 		if (entityPlayerMP.dimension != message.dimensionId) {
-			WarpDrive.logger.warn(String.format("Ignoring remote ship navigation action %d in dimension %d from %s in dimension %d",
-			                                    message.action, message.dimensionId, entityPlayerMP, entityPlayerMP.dimension));
+			logRejectedAction(message, String.format("Ignoring remote ship navigation action %d in dimension %d from %s in dimension %d",
+			                                         message.action, message.dimensionId, entityPlayerMP, entityPlayerMP.dimension));
 			return;
 		}
 		final BlockPos blockPos = new BlockPos(message.x, message.y, message.z);
 		final BlockPos blockPosAccess = new BlockPos(message.accessX, message.accessY, message.accessZ);
 		if (entityPlayerMP.getDistanceSq(blockPosAccess) > 64.0D * 64.0D) {
-			WarpDrive.logger.warn(String.format("Ignoring distant ship navigation action %d for access %s from %s",
-			                                    message.action, Commons.format(worldServer, blockPosAccess), entityPlayerMP));
+			logRejectedAction(message, String.format("Ignoring distant ship navigation action %d for access %s from %s",
+			                                         message.action, Commons.format(worldServer, blockPosAccess), entityPlayerMP));
 			return;
 		}
 		if ( !worldServer.isBlockLoaded(blockPos, false)
 		  || !worldServer.isBlockLoaded(blockPosAccess, false) ) {
-			WarpDrive.logger.warn(String.format("Ignoring ship navigation action %d for unloaded core/access %s/%s from %s",
-			                                    message.action, Commons.format(worldServer, blockPos),
-			                                    Commons.format(worldServer, blockPosAccess), entityPlayerMP));
+			logRejectedAction(message, String.format("Ignoring ship navigation action %d for unloaded core/access %s/%s from %s",
+			                                         message.action, Commons.format(worldServer, blockPos),
+			                                         Commons.format(worldServer, blockPosAccess), entityPlayerMP));
 			return;
 		}
 		final TileEntity tileEntity = worldServer.getTileEntity(blockPos);
 		if (!(tileEntity instanceof TileEntityShipCore)) {
-			WarpDrive.logger.warn(String.format("Ignoring ship navigation action %d for invalid core %s from %s",
-			                                    message.action, Commons.format(worldServer, blockPos), entityPlayerMP));
+			logRejectedAction(message, String.format("Ignoring ship navigation action %d for invalid core %s from %s",
+			                                         message.action, Commons.format(worldServer, blockPos), entityPlayerMP));
 			return;
 		}
 		
 		final TileEntityShipCore shipCore = (TileEntityShipCore) tileEntity;
 		if (!isValidAccess(worldServer, blockPos, blockPosAccess, shipCore)) {
-			WarpDrive.logger.warn(String.format("Ignoring ship navigation action %d for unauthorized access %s to core %s from %s",
-			                                    message.action, Commons.format(worldServer, blockPosAccess),
-			                                    Commons.format(worldServer, blockPos), entityPlayerMP));
+			logRejectedAction(message, String.format("Ignoring ship navigation action %d for unauthorized access %s to core %s from %s",
+			                                         message.action, Commons.format(worldServer, blockPosAccess),
+			                                         Commons.format(worldServer, blockPos), entityPlayerMP));
 			return;
 		}
 		if (!shipCore.isCrewMember(entityPlayerMP)) {
@@ -249,6 +249,13 @@ public class MessageShipNavigationAction implements IMessage, IMessageHandler<Me
 		PacketHandler.sendShipNavigationPacket(entityPlayerMP, tagCompound);
 	}
 	
+	private static void logRejectedAction(final MessageShipNavigationAction message, final String logMessage) {
+		if (message.action == ACTION_REFRESH) {
+			return;
+		}
+		WarpDrive.logger.warn(logMessage);
+	}
+
 	private static boolean isThrottled(final MessageShipNavigationAction message,
 	                                   final EntityPlayerMP entityPlayerMP,
 	                                   final BlockPos blockPosCore) {
