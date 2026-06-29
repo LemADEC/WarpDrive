@@ -24,3 +24,10 @@ classes
 gradle\.properties
 LemADEC\.jks
 LemADEC\.jks\.old
+
+# Local agent and Codex workspace artifacts
+AGENTS.md
+.agents/
+.codex/
+memories/
+notes/
