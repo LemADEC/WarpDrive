@@ -80,6 +80,15 @@ public class TileEntityLift extends TileEntityAbstractEnergyConsumer implements 
 	
 	@Override
 	public void update() {
+		if (world == null) {
+			return;
+		}
+
+		final IBlockState blockState = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState, BlockLift.class, BlockLift.MODE)) {
+			return;
+		}
+
 		super.update();
 		
 		if (world.isRemote) {
@@ -104,7 +113,6 @@ public class TileEntityLift extends TileEntityAbstractEnergyConsumer implements 
 			       && isPassableBlock(pos.getY() - 2);
 			isActive = isEnabled && isValid;
 			
-			final IBlockState blockState = world.getBlockState(pos);
 			if (energy_getEnergyStored() < WarpDriveConfig.LIFT_ENERGY_PER_ENTITY || !isActive) {
 				mode = EnumLiftMode.INACTIVE;
 				if (blockState.getValue(BlockLift.MODE) != EnumLiftMode.INACTIVE) {

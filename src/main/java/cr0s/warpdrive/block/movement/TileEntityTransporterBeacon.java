@@ -62,6 +62,14 @@ public class TileEntityTransporterBeacon extends TileEntityAbstractEnergyConsume
 	
 	@Override
 	public void update() {
+		if (world == null) {
+			return;
+		}
+		final IBlockState blockState_actual = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState_actual, BlockTransporterBeacon.class, BlockProperties.ACTIVE, BlockTransporterBeacon.DEPLOYED)) {
+			return;
+		}
+
 		super.update();
 		
 		if (world.isRemote) {
@@ -101,7 +109,6 @@ public class TileEntityTransporterBeacon extends TileEntityAbstractEnergyConsume
 		}
 		
 		// report updated status
-		final IBlockState blockState_actual = world.getBlockState(pos);
 		updateBlockState(blockState_actual,
 		                 blockState_actual.withProperty(BlockProperties.ACTIVE, isActive)
 		                                  .withProperty(BlockTransporterBeacon.DEPLOYED, isDeployed));

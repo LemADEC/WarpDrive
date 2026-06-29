@@ -3,6 +3,7 @@ package cr0s.warpdrive.block.movement;
 import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.api.WarpDriveText;
 import cr0s.warpdrive.config.ShipMovementCosts;
+import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.data.BlockProperties;
 import cr0s.warpdrive.data.CelestialObject;
 import cr0s.warpdrive.data.CelestialObjectManager;
@@ -425,7 +426,7 @@ public final class ShipNavigationHelper {
 		if (celestialObjectTarget.isVirtual()) {
 			return route(tagCompound, tagListLegs, false, "warpdrive.navigation.route.visual_only", "warpdrive.navigation.route.no_dimension");
 		}
-		if (celestialObjectCurrent.id.equals(celestialObjectTarget.id)) {
+		if (isAtNavigationDestination(shipCore, celestialObjectCurrent, celestialObjectTarget)) {
 			return route(tagCompound, tagListLegs, false, "warpdrive.navigation.route.already_at_destination", "");
 		}
 
@@ -446,7 +447,7 @@ public final class ShipNavigationHelper {
 		tagCompound.setString("blockerMessage", preview.canEngage ? "" : preview.blockerMessage);
 		tagCompound.setTag("validation", preview.writeToNBT());
 		tagListLegs.appendTag(writeLeg(nextLeg, preview));
-		appendPreviewLegs(tagListLegs, celestialObjectCurrent, celestialObjectTarget, nextLeg);
+		appendPreviewLegs(shipCore, tagListLegs, celestialObjectCurrent, celestialObjectTarget, nextLeg);
 		tagCompound.setTag("legs", tagListLegs);
 		return tagCompound;
 	}
@@ -461,7 +462,8 @@ public final class ShipNavigationHelper {
 		return tagCompound;
 	}
 
-	private static void appendPreviewLegs(@Nonnull final NBTTagList tagListLegs,
+	private static void appendPreviewLegs(@Nonnull final TileEntityShipCore shipCore,
+	                                      @Nonnull final NBTTagList tagListLegs,
 	                                      @Nonnull final CelestialObject celestialObjectCurrent,
 	                                      @Nonnull final CelestialObject celestialObjectTarget,
 	                                      @Nonnull final Leg nextLeg) {
@@ -478,7 +480,9 @@ public final class ShipNavigationHelper {
 		}
 		if (!celestialObjectTarget.isSpace() && !celestialObjectTarget.isHyperspace()) {
 			tagListLegs.appendTag(writePreviewLeg(EnumShipNavigationLegType.ORBITAL_APPROACH));
-			tagListLegs.appendTag(writePreviewLeg(EnumShipNavigationLegType.LANDING));
+			if (canLandOnPlanet(shipCore)) {
+				tagListLegs.appendTag(writePreviewLeg(EnumShipNavigationLegType.LANDING));
+			}
 		}
 	}
 
@@ -534,7 +538,8 @@ public final class ShipNavigationHelper {
 			tagCompound.setString("type", celestialObject.isHyperspace() ? "hyperspace" : celestialObject.isSpace() ? "space" : "body");
 			tagCompound.setInteger("mapX", celestialObject.parentId == null ? celestialObject.dimensionCenterX : celestialObject.getParentCenterX());
 			tagCompound.setInteger("mapZ", celestialObject.parentId == null ? celestialObject.dimensionCenterZ : celestialObject.getParentCenterZ());
-			final boolean isCurrent = celestialObjectCurrent != null && celestialObjectCurrent.id.equals(celestialObject.id);
+			final boolean isCurrent = celestialObjectCurrent != null
+			                       && isAtNavigationDestination(shipCore, celestialObjectCurrent, celestialObject);
 			tagCompound.setBoolean("current", isCurrent);
 
 			final DestinationEstimate estimate = isCurrent || celestialObjectCurrent == null
@@ -567,7 +572,8 @@ public final class ShipNavigationHelper {
 	private static DestinationEstimate estimateDestination(@Nonnull final TileEntityShipCore shipCore,
 	                                                       @Nonnull final CelestialObject celestialObjectCurrent,
 	                                                       @Nonnull final CelestialObject celestialObjectTarget) {
-		if (celestialObjectTarget.isVirtual() || celestialObjectCurrent.id.equals(celestialObjectTarget.id)) {
+		if ( celestialObjectTarget.isVirtual()
+		  || isAtNavigationDestination(shipCore, celestialObjectCurrent, celestialObjectTarget) ) {
 			return null;
 		}
 		final DestinationEstimate estimate = new DestinationEstimate();
@@ -630,8 +636,10 @@ public final class ShipNavigationHelper {
 			                  ORBIT_Y - shipCore.getPos().getY(),
 			                  celestialObjectTarget.getParentCenterZ() - currentZ);
 		}
-		addSingleLegEstimate(shipCore, estimate, EnumShipNavigationLegType.LANDING,
-		                     Math.max(1, Math.abs(shipCore.minY + LANDING_MARGIN_BLOCKS)));
+		if (canLandOnPlanet(shipCore)) {
+			addSingleLegEstimate(shipCore, estimate, EnumShipNavigationLegType.LANDING,
+			                     Math.max(1, Math.abs(shipCore.minY + LANDING_MARGIN_BLOCKS)));
+		}
 		return estimate.legs == 0 ? null : estimate;
 	}
 
@@ -755,7 +763,7 @@ public final class ShipNavigationHelper {
 			Commons.addChatMessage(entityPlayerMP, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.navigation.no_route"));
 			return false;
 		}
-		if (celestialObjectCurrent.id.equals(celestialObjectTarget.id)) {
+		if (isAtNavigationDestination(shipCore, celestialObjectCurrent, celestialObjectTarget)) {
 			shipCore.cancelAutopilot();
 			shipCore.clearNavigationTarget();
 			Commons.addChatMessage(entityPlayerMP, new WarpDriveText(Commons.getStyleCorrect(), "warpdrive.navigation.arrived"));
@@ -858,7 +866,7 @@ public final class ShipNavigationHelper {
 		if ( celestialObjectCurrent == null
 		  || celestialObjectTarget == null
 		  || celestialObjectTarget.isVirtual()
-		  || celestialObjectCurrent.id.equals(celestialObjectTarget.id) ) {
+		  || isAtNavigationDestination(shipCore, celestialObjectCurrent, celestialObjectTarget) ) {
 			return null;
 		}
 		return computeNextLeg(shipCore, celestialObjectCurrent, celestialObjectTarget);
@@ -892,8 +900,11 @@ public final class ShipNavigationHelper {
 				return new Leg(EnumShipNavigationLegType.HYPERSPACE_ENTER, 0, 0, 0, "", 0, 0);
 			}
 
-			if (celestialObjectTarget.parent == celestialObjectCurrent) {
+			if (isParentOf(celestialObjectCurrent, celestialObjectTarget)) {
 				if (celestialObjectTarget.isInOrbit(shipCore.getWorld().provider.getDimension(), shipCore.getPos().getX(), shipCore.getPos().getZ())) {
+					if (!canLandOnPlanet(shipCore)) {
+						return null;
+					}
 					return new Leg(EnumShipNavigationLegType.LANDING,
 					               0, -Math.max(1, shipCore.minY + LANDING_MARGIN_BLOCKS), 0, "", 0, 0);
 				}
@@ -920,6 +931,44 @@ public final class ShipNavigationHelper {
 		}
 
 		return null;
+	}
+
+	public static boolean isAtNavigationDestination(@Nonnull final TileEntityShipCore shipCore,
+	                                                @Nullable final CelestialObject celestialObjectCurrent,
+	                                                @Nullable final CelestialObject celestialObjectTarget) {
+		if ( celestialObjectCurrent == null
+		  || celestialObjectTarget == null
+		  || celestialObjectTarget.isVirtual() ) {
+			return false;
+		}
+		if (celestialObjectCurrent.id.equals(celestialObjectTarget.id)) {
+			return true;
+		}
+		if ( canLandOnPlanet(shipCore)
+		  || !celestialObjectCurrent.isSpace()
+		  || celestialObjectTarget.isSpace()
+		  || celestialObjectTarget.isHyperspace()
+		  || !isParentOf(celestialObjectCurrent, celestialObjectTarget) ) {
+			return false;
+		}
+		return celestialObjectTarget.isInOrbit(shipCore.getWorld().provider.getDimension(),
+		                                       shipCore.getPos().getX(), shipCore.getPos().getZ());
+	}
+
+	private static boolean isParentOf(@Nonnull final CelestialObject celestialObjectCurrent,
+	                                  @Nonnull final CelestialObject celestialObjectTarget) {
+		return celestialObjectTarget.parent != null
+		    && ( celestialObjectTarget.parent == celestialObjectCurrent
+		      || celestialObjectTarget.parent.id.equals(celestialObjectCurrent.id) );
+	}
+
+	private static boolean canLandOnPlanet(@Nonnull final TileEntityShipCore shipCore) {
+		if (!shipCore.isShipScanReady()) {
+			return true;
+		}
+		final int shipHeight = Math.max(1, shipCore.maxY - shipCore.minY + 1);
+		return shipHeight + LANDING_MARGIN_BLOCKS <= 256
+		    && shipCore.shipMass <= WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE;
 	}
 
 	@Nullable

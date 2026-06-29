@@ -1260,16 +1260,19 @@ public class GuiShipNavigation extends GuiScreen {
 			drawCircle(x, y, radius + 6.0F, 0x99FFFFFF, 48);
 		}
 		if (mapObject.hyperspace) {
-			drawIconTexture(mapObject.iconTexture, x, y, radius + 1.0F, rgb, 0.65F);
-			drawDiamond(x, y, radius + 1.0F, rgb);
-			drawDiamond(x, y, radius + 5.0F, 0x55FFAA55);
-		} else if (mapObject.space) {
-			drawIconTexture(mapObject.iconTexture, x, y, radius + 2.0F, rgb, 0.55F);
+			drawDiamond(x, y, radius + 5.0F, 0x22000000 | (rgb & 0x00FFFFFF));
+			drawIconTexture(mapObject.iconTexture, x, y, radius + 2.0F, 0xFFFFFFFF, 0.90F);
 			drawDiamond(x, y, radius + 2.0F, rgb);
+			drawDiamond(x, y, radius + 6.0F, 0x99FFAA55);
+		} else if (mapObject.space) {
+			drawDiamond(x, y, radius + 6.0F, 0x22000000 | (rgb & 0x00FFFFFF));
+			drawIconTexture(mapObject.iconTexture, x, y, radius + 4.0F, 0xFFFFFFFF, 0.90F);
+			drawDiamond(x, y, radius + 3.0F, rgb);
 			drawCircle(x, y, radius * 0.45F, 0xFFF5C542, 24);
 		} else {
-			drawIconTexture(mapObject.iconTexture, x, y, radius, rgb, 0.85F);
-			drawCircle(x, y, radius, rgb, 36);
+			drawCircle(x, y, radius + 1.0F, 0x33000000 | (rgb & 0x00FFFFFF), 36);
+			drawIconTexture(mapObject.iconTexture, x, y, radius, 0xFFFFFFFF, 0.95F);
+			drawCircleOutline(x, y, radius + 1.0F, rgb, 36);
 			drawLine(x - (int) (radius + 5), y, x + (int) (radius + 5), y, 0x8830E8FF);
 		}
 		if (mapObject.virtual) {
@@ -1692,12 +1695,12 @@ public class GuiShipNavigation extends GuiScreen {
 		GlStateManager.color(red, green, blue, alpha);
 		final Tessellator tessellator = Tessellator.getInstance();
 		final BufferBuilder bufferBuilder = tessellator.getBuffer();
-		bufferBuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION);
+		GL11.glLineWidth(2.0F);
+		bufferBuilder.begin(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION);
 		bufferBuilder.pos(centerX, centerY - radius, 0).endVertex();
 		bufferBuilder.pos(centerX + radius, centerY, 0).endVertex();
 		bufferBuilder.pos(centerX, centerY + radius, 0).endVertex();
 		bufferBuilder.pos(centerX - radius, centerY, 0).endVertex();
-		bufferBuilder.pos(centerX, centerY - radius, 0).endVertex();
 		tessellator.draw();
 		GlStateManager.enableTexture2D();
 		GlStateManager.disableBlend();
@@ -1716,6 +1719,27 @@ public class GuiShipNavigation extends GuiScreen {
 		bufferBuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION);
 		bufferBuilder.pos(centerX, centerY, 0).endVertex();
 		for (int index = 0; index <= segments; index++) {
+			final double angle = Math.PI * 2.0D * index / segments;
+			bufferBuilder.pos(centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius, 0).endVertex();
+		}
+		tessellator.draw();
+		GlStateManager.enableTexture2D();
+		GlStateManager.disableBlend();
+	}
+
+	private static void drawCircleOutline(final int centerX, final int centerY, final float radius, final int color, final int segments) {
+		final float alpha = (color >> 24 & 255) / 255.0F;
+		final float red = (color >> 16 & 255) / 255.0F;
+		final float green = (color >> 8 & 255) / 255.0F;
+		final float blue = (color & 255) / 255.0F;
+		GlStateManager.disableTexture2D();
+		GlStateManager.enableBlend();
+		GlStateManager.color(red, green, blue, alpha);
+		GL11.glLineWidth(2.0F);
+		final Tessellator tessellator = Tessellator.getInstance();
+		final BufferBuilder bufferBuilder = tessellator.getBuffer();
+		bufferBuilder.begin(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION);
+		for (int index = 0; index < segments; index++) {
 			final double angle = Math.PI * 2.0D * index / segments;
 			bufferBuilder.pos(centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius, 0).endVertex();
 		}

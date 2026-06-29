@@ -45,6 +45,14 @@ public class TileEntityAirGeneratorTiered extends TileEntityAbstractEnergyConsum
 	
 	@Override
 	public void update() {
+		if (world == null) {
+			return;
+		}
+		final IBlockState blockState = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState, BlockAirGeneratorTiered.class, BlockProperties.ACTIVE, BlockProperties.FACING)) {
+			return;
+		}
+
 		super.update();
 		
 		if (world.isRemote) {
@@ -58,7 +66,6 @@ public class TileEntityAirGeneratorTiered extends TileEntityAbstractEnergyConsum
 		tickUpdate = WarpDriveConfig.BREATHING_AIR_GENERATION_TICKS;
 		
 		// Air generator works only in space & hyperspace
-		final IBlockState blockState = world.getBlockState(pos);
 		if (CelestialObjectManager.hasAtmosphere(world, pos.getX(), pos.getZ())) {
 			updateBlockState(blockState, BlockProperties.ACTIVE, false);
 			return;

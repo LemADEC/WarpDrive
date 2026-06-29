@@ -43,6 +43,9 @@ public class TileEntitySiren extends TileEntityAbstractMachine {
 		range = WarpDriveConfig.SIREN_RANGE_BLOCKS_BY_TIER[enumTier.getIndex()];
 		
 		final IBlockState blockState = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState, BlockSiren.class)) {
+			return;
+		}
 		isIndustrial = ((BlockSiren) blockState.getBlock()).getIsIndustrial();
 	}
 	

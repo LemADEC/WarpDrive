@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.29 - 2026-06-28
 
 ### Added
 
@@ -23,6 +23,7 @@
 - Jump target chunk loading now happens before destination collision reads to avoid accidental generation of unloaded target chunks.
 - Jump collision adjustment now rechecks target chunks after movement changes and keeps completion callbacks tied to the moved core.
 - Ship navigation route estimates now use the same effective movement calculation as the executed leg.
+- Autopilot now treats target orbit as arrival when the ship is too large or heavy to land on that body.
 
 ### Fixed
 
@@ -33,6 +34,8 @@
 - Fixed Pluto and other nested bodies being difficult to diagnose by adding real map and destination coordinates.
 - Fixed jump aborts caused by target collision checks touching chunks before the batched loading path completed.
 - Fixed ship core orientation access during moved-core restoration.
+- Fixed stale tile entities crashing when their saved tile entity outlives the block state at the same position.
+- Fixed navigation map body icons being hidden behind opaque fallback markers.
 
 ### Removed
 

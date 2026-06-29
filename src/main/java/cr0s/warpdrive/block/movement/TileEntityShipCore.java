@@ -736,7 +736,6 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 
 	// invoked by JumpSequencer on the success branch, with the destination that was engaged
 	public void onNavigationMovementCompleted(@Nonnull final String navigationEngagedTargetId) {
-		refreshShipScanCacheTimestamp();
 		if (navigationEngagedTargetId.isEmpty() || navigationTargetId.isEmpty()) {
 			return;
 		}
@@ -744,11 +743,12 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 			return;
 		}
 		final CelestialObject celestialObjectCurrent = CelestialObjectManager.get(world, pos.getX(), pos.getZ());
-		if ( celestialObjectCurrent != null
-		  && navigationTargetId.equals(celestialObjectCurrent.id) ) {
+		final CelestialObject celestialObjectTarget = CelestialObjectManager.get(false, navigationTargetId);
+		if (ShipNavigationHelper.isAtNavigationDestination(this, celestialObjectCurrent, celestialObjectTarget)) {
 			onAutopilotArrived();
 			return;
 		}
+		refreshShipScanCacheTimestamp();
 		// an intermediate leg landed - decide whether to chain the next one
 		if (autopilotMode == EnumShipAutopilotMode.OFF) {
 			clearNavigationEngagedTargetId();
@@ -836,8 +836,8 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		}
 
 		final CelestialObject celestialObjectCurrent = CelestialObjectManager.get(world, pos.getX(), pos.getZ());
-		if ( celestialObjectCurrent != null
-		  && navigationTargetId.equals(celestialObjectCurrent.id) ) {
+		final CelestialObject celestialObjectTarget = CelestialObjectManager.get(false, navigationTargetId);
+		if (ShipNavigationHelper.isAtNavigationDestination(this, celestialObjectCurrent, celestialObjectTarget)) {
 			onAutopilotArrived();
 			return;
 		}
@@ -937,6 +937,14 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		    && shipScanner == null
 		    && timeLastShipScanDone > 0L
 		    && timeLastShipScanDone + WarpDriveConfig.SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS * 20L < world.getTotalWorldTime();
+	}
+
+	public boolean isShipScanReady() {
+		return !world.isRemote
+		    && isShipScanValid
+		    && shipScanner == null
+		    && timeLastShipScanDone > 0L
+		    && !isShipScanStale();
 	}
 
 	public void requestShipScan() {
@@ -1073,7 +1081,11 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		}
 		
 		// refresh cache
-		facing = world.getBlockState(pos).getValue(BlockProperties.FACING_HORIZONTAL);
+		final IBlockState blockStateCore = world.getBlockState(pos);
+		if (isInvalidBlockState(blockStateCore, BlockShipCore.class, BlockProperties.FACING_HORIZONTAL)) {
+			return false;
+		}
+		facing = blockStateCore.getValue(BlockProperties.FACING_HORIZONTAL);
 		restoreSecurityStationFromScanCache();
 		
 		// Search block in cube around core

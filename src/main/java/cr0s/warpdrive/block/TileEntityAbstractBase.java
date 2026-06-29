@@ -129,6 +129,48 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 		return isFirstTick;
 	}
 	
+	protected boolean isInvalidBlockState(@Nonnull final IBlockState blockState, final IProperty<?>... properties) {
+		return isInvalidBlockState(blockState, null, properties);
+	}
+
+	protected boolean isInvalidBlockState(@Nonnull final IBlockState blockState,
+	                                      @Nullable final Class<? extends Block> blockClassExpected,
+	                                      final IProperty<?>... properties) {
+		String reason = null;
+		if ( blockClassExpected != null
+		  && !blockClassExpected.isInstance(blockState.getBlock()) ) {
+			reason = String.format("expected block class %s", blockClassExpected.getName());
+		} else if (!blockState.getBlock().hasTileEntity(blockState)) {
+			reason = "block has no tile entity";
+		} else {
+			for (final IProperty<?> property : properties) {
+				if ( property != null
+				  && !blockState.getProperties().containsKey(property) ) {
+					reason = String.format("missing property %s", property);
+					break;
+				}
+			}
+		}
+		if (reason == null) {
+			return false;
+		}
+
+		if (!world.isRemote) {
+			final TileEntity tileEntityActual = world.getTileEntity(pos);
+			if (Commons.throttleMe("InvalidBlockState " + getClass().getName())) {
+				WarpDrive.logger.warn(String.format("%s orphaned tile entity %s at %s, found block state %s: %s",
+				                                    tileEntityActual == this ? "Removing" : "Invalidating",
+				                                    this, Commons.format(world, pos), blockState, reason));
+			}
+			if (tileEntityActual == this) {
+				world.removeTileEntity(pos);
+			} else {
+				invalidate();
+			}
+		}
+		return true;
+	}
+
 	@Override
 	public void onBlockUpdateDetected(@Nonnull final BlockPos blockPosUpdated) {
 		assert Commons.isSafeThread();
@@ -147,9 +189,7 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 			blockState = world.getBlockState(pos);
 		}
 		if (property != null) {
-			if (!blockState.getProperties().containsKey(property)) {
-				WarpDrive.logger.error(String.format("Unable to update block state due to missing property in %s: %s calling updateBlockState(%s, %s, %s)",
-				                                     blockState.getBlock(), this, blockState_in, property, value));
+			if (isInvalidBlockState(blockState, property)) {
 				return;
 			}
 			if (blockState.getValue(property) == value) {
@@ -170,6 +210,9 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 		
 		final Block block_old = blockState_old.getBlock();
 		final Block block_new = blockState_new.getBlock();
+		if (isInvalidBlockState(blockState_old)) {
+			return;
+		}
 		if (block_new != block_old) {
 			WarpDrive.logger.error(String.format("Unable to update block state from %s to %s: %s calling updateBlockState(%s, %s)",
 			                                     block_old, block_new, this, blockState_in, blockState_new));
