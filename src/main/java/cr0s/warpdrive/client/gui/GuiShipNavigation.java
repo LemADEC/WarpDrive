@@ -45,6 +45,8 @@ public class GuiShipNavigation extends GuiScreen {
 
 	private static final int BUTTON_TAB_BASE = 10;
 	private static final int BUTTON_MAP_FIT = 30;
+	private static final int BUTTON_MAP_LOCAL = 38;
+	private static final int BUTTON_MAP_HYPERSPACE = 39;
 	private static final int BUTTON_ENGAGE = 31;
 	private static final int BUTTON_STEP = 32;
 	private static final int BUTTON_MODE = 33;
@@ -153,6 +155,8 @@ public class GuiShipNavigation extends GuiScreen {
 	private double viewCenterZ;
 	private double mapZoom = 1.0D;
 	private boolean isMapViewInitialized;
+	private boolean isMapHyperspaceView;
+	private String mapSpaceId = "";
 	private boolean isDraggingMap;
 	private int dragStartX;
 	private int dragStartY;
@@ -274,6 +278,7 @@ public class GuiShipNavigation extends GuiScreen {
 		snapshotClientTick = clientTick;
 
 		updateStaticMapFromCache();
+		updateMapViewDefaults();
 
 		routeLegs.clear();
 		final NBTTagCompound route = this.snapshot.getCompoundTag("route");
@@ -329,6 +334,27 @@ public class GuiShipNavigation extends GuiScreen {
 		layoutMapObjects();
 	}
 
+	private void updateMapViewDefaults() {
+		if (snapshot == null) {
+			return;
+		}
+		if (snapshot.getBoolean("inHyperspace")) {
+			if (!isMapHyperspaceView) {
+				isMapViewInitialized = false;
+			}
+			isMapHyperspaceView = true;
+			mapSpaceId = "";
+			return;
+		}
+		final MapObject currentSpaceRegion = findContainingSpaceRegion(findObject(currentId));
+		final String currentSpaceId = currentSpaceRegion == null ? "" : currentSpaceRegion.id;
+		if (!currentSpaceId.equals(mapSpaceId)) {
+			mapSpaceId = currentSpaceId;
+			isMapHyperspaceView = false;
+			isMapViewInitialized = false;
+		}
+	}
+
 	private void rebuildDestinationRows() {
 		destinationRows.clear();
 		final ArrayList<String> addedIds = new ArrayList<>();
@@ -371,57 +397,82 @@ public class GuiShipNavigation extends GuiScreen {
 
 	private void layoutMapObjects() {
 		for (final MapObject mapObject : mapObjects) {
-			mapObject.displayMapX = mapObject.mapX;
-			mapObject.displayMapZ = mapObject.mapZ;
-			mapObject.stackIndex = 0;
-			mapObject.stackCount = 1;
+			resetMapObjectLayout(mapObject);
 		}
 		for (final MapObject parent : mapObjects) {
-			int childCount = 0;
-			for (final MapObject child : mapObjects) {
-				if (parent.id.equals(child.parentId)) {
-					childCount++;
-				}
-			}
-			if (childCount <= 0) {
-				continue;
-			}
-			int childIndex = 0;
-			for (final MapObject child : mapObjects) {
-				if (!parent.id.equals(child.parentId)) {
-					continue;
-				}
-				final double dx = child.mapX - parent.mapX;
-				final double dz = child.mapZ - parent.mapZ;
-				final double distance = Math.sqrt(dx * dx + dz * dz);
-				final double minimumOrbit = Math.max(9000.0D, Math.min(80000.0D, Math.max(parent.borderRadiusX, parent.borderRadiusZ) * 0.18D));
-				if (distance < minimumOrbit * 0.55D) {
-					final double angle = Math.PI * 2.0D * childIndex / Math.max(1, childCount) - Math.PI / 2.0D;
-					final double orbit = minimumOrbit + childIndex * Math.max(2500.0D, minimumOrbit * 0.10D);
-					child.displayMapX = parent.mapX + Math.cos(angle) * orbit;
-					child.displayMapZ = parent.mapZ + Math.sin(angle) * orbit;
-				}
+			layoutMapChildren(parent);
+		}
+		for (final MapObject mapObject : mapObjects) {
+			layoutMapStack(mapObject);
+		}
+	}
+
+	private static void resetMapObjectLayout(final MapObject mapObject) {
+		mapObject.displayMapX = mapObject.mapX;
+		mapObject.displayMapZ = mapObject.mapZ;
+		mapObject.stackIndex = 0;
+		mapObject.stackCount = 1;
+	}
+
+	private void layoutMapChildren(final MapObject parent) {
+		final int childCount = countMapChildren(parent);
+		if (childCount <= 0) {
+			return;
+		}
+		int childIndex = 0;
+		for (final MapObject child : mapObjects) {
+			if (parent.id.equals(child.parentId)) {
+				layoutMapChild(parent, child, childIndex, childCount);
 				childIndex++;
 			}
 		}
-		for (final MapObject mapObject : mapObjects) {
-			int stackCount = 0;
-			for (final MapObject stackedObject : mapObjects) {
-				if (isSameMapStack(mapObject, stackedObject)) {
-					stackCount++;
-				}
-			}
-			if (stackCount <= 1) {
-				continue;
-			}
-			int stackIndex = 0;
-			for (final MapObject stackedObject : mapObjects) {
-				if (isSameMapStack(mapObject, stackedObject)) {
-					stackedObject.stackIndex = stackIndex++;
-					stackedObject.stackCount = stackCount;
-				}
+	}
+
+	private int countMapChildren(final MapObject parent) {
+		int childCount = 0;
+		for (final MapObject child : mapObjects) {
+			if (parent.id.equals(child.parentId)) {
+				childCount++;
 			}
 		}
+		return childCount;
+	}
+
+	private static void layoutMapChild(final MapObject parent, final MapObject child, final int childIndex, final int childCount) {
+		final double dx = child.mapX - parent.mapX;
+		final double dz = child.mapZ - parent.mapZ;
+		final double distance = Math.sqrt(dx * dx + dz * dz);
+		final double minimumOrbit = Math.max(9000.0D, Math.min(80000.0D, Math.max(parent.borderRadiusX, parent.borderRadiusZ) * 0.18D));
+		if (distance < minimumOrbit * 0.55D) {
+			final double angle = Math.PI * 2.0D * childIndex / Math.max(1, childCount) - Math.PI / 2.0D;
+			final double orbit = minimumOrbit + childIndex * Math.max(2500.0D, minimumOrbit * 0.10D);
+			child.displayMapX = parent.mapX + Math.cos(angle) * orbit;
+			child.displayMapZ = parent.mapZ + Math.sin(angle) * orbit;
+		}
+	}
+
+	private void layoutMapStack(final MapObject mapObject) {
+		final int stackCount = countStackedMapObjects(mapObject);
+		if (stackCount <= 1) {
+			return;
+		}
+		int stackIndex = 0;
+		for (final MapObject stackedObject : mapObjects) {
+			if (isSameMapStack(mapObject, stackedObject)) {
+				stackedObject.stackIndex = stackIndex++;
+				stackedObject.stackCount = stackCount;
+			}
+		}
+	}
+
+	private int countStackedMapObjects(final MapObject mapObject) {
+		int stackCount = 0;
+		for (final MapObject stackedObject : mapObjects) {
+			if (isSameMapStack(mapObject, stackedObject)) {
+				stackCount++;
+			}
+		}
+		return stackCount;
 	}
 
 	@SuppressWarnings("PMD.NPathComplexity")
@@ -507,6 +558,7 @@ public class GuiShipNavigation extends GuiScreen {
 		textFields.clear();
 		addTabButtons();
 		buttonList.add(styled(new GuiButton(BUTTON_MAP_FIT, mapX + mapWidth - 50, mapY + 6, 44, 16, I18n.format("warpdrive.navigation.gui.fit"))));
+		addMapViewButtons();
 		switch (selectedTab) {
 		case MAP:
 			addMapButtons();
@@ -554,6 +606,19 @@ public class GuiShipNavigation extends GuiScreen {
 		buttonList.add(styled(new GuiButton(BUTTON_RESUME, panelX + 72, y2, 60, 18, I18n.format("warpdrive.navigation.gui.resume"))));
 		buttonList.add(styled(new GuiButton(BUTTON_CANCEL, panelX + 136, y2, 60, 18, I18n.format("warpdrive.navigation.gui.cancel"))));
 		buttonList.add(styled(new GuiButton(BUTTON_REFRESH, panelX + panelWidth - 60, y2, 52, 18, I18n.format("warpdrive.navigation.gui.refresh"))));
+	}
+
+	private void addMapViewButtons() {
+		if (!shouldShowMapViewButtons()) {
+			return;
+		}
+		final int y = mapY + 24;
+		final int hyperspaceWidth = 70;
+		final int localWidth = 44;
+		final int hyperspaceX = mapX + mapWidth - hyperspaceWidth - 6;
+		final int localX = hyperspaceX - localWidth - 4;
+		buttonList.add(styled(new GuiButton(BUTTON_MAP_LOCAL, localX, y, localWidth, 16, I18n.format("warpdrive.navigation.gui.map.local"))));
+		buttonList.add(styled(new GuiButton(BUTTON_MAP_HYPERSPACE, hyperspaceX, y, hyperspaceWidth, 16, I18n.format("warpdrive.navigation.gui.map.hyperspace"))));
 	}
 
 	private void addShipButtonsAndFields() {
@@ -668,6 +733,10 @@ public class GuiShipNavigation extends GuiScreen {
 				button.enabled = allowed && "paused".equals(autopilotStatus);
 			} else if (button.id == BUTTON_CANCEL) {
 				button.enabled = allowed && !targetId.isEmpty();
+			} else if (button.id == BUTTON_MAP_LOCAL) {
+				button.enabled = isMapHyperspaceView;
+			} else if (button.id == BUTTON_MAP_HYPERSPACE) {
+				button.enabled = !isMapHyperspaceView;
 			} else if (button.id != BUTTON_REFRESH && button.id != BUTTON_MAP_FIT && button.id != BUTTON_MODE) {
 				button.enabled = allowed;
 			} else if (button.id == BUTTON_MODE) {
@@ -701,6 +770,12 @@ public class GuiShipNavigation extends GuiScreen {
 		switch (button.id) {
 		case BUTTON_MAP_FIT:
 			resetMapView();
+			break;
+		case BUTTON_MAP_LOCAL:
+			setMapHyperspaceView(false);
+			break;
+		case BUTTON_MAP_HYPERSPACE:
+			setMapHyperspaceView(true);
 			break;
 		case BUTTON_ENGAGE:
 			sendAction(MessageShipNavigationAction.ACTION_ENGAGE, "");
@@ -783,6 +858,32 @@ public class GuiShipNavigation extends GuiScreen {
 			break;
 		}
 		updateButtons();
+	}
+
+	private void setMapHyperspaceView(final boolean isHyperspaceView) {
+		if ( snapshot == null
+		  || snapshot.getBoolean("inHyperspace")
+		  || this.isMapHyperspaceView == isHyperspaceView ) {
+			return;
+		}
+		this.isMapHyperspaceView = isHyperspaceView;
+		computeBounds();
+		resetMapView();
+	}
+
+	private void setMapViewForSelectedTarget(final String id) {
+		if ( snapshot == null
+		  || snapshot.getBoolean("inHyperspace") ) {
+			return;
+		}
+		final MapObject selectedObject = findObject(id);
+		final MapObject selectedSpaceRegion = selectedObject == null || selectedObject.space ? selectedObject : findContainingSpaceRegion(selectedObject);
+		if ( selectedSpaceRegion != null
+		  && selectedSpaceRegion.space
+		  && !selectedSpaceRegion.hyperspace
+		  && !selectedSpaceRegion.id.equals(mapSpaceId) ) {
+			setMapHyperspaceView(true);
+		}
 	}
 
 	private String nextMode() {
@@ -1025,6 +1126,7 @@ public class GuiShipNavigation extends GuiScreen {
 		if (index >= 0 && index < destinationRows.size()) {
 			final DestinationEntry entry = destinationRows.get(index).entry;
 			selectedId = entry.id;
+			setMapViewForSelectedTarget(entry.id);
 			sendAction(MessageShipNavigationAction.ACTION_PLAN, entry.id);
 			selectedTab = Tab.MAP;
 			initGui();
@@ -1179,12 +1281,15 @@ public class GuiShipNavigation extends GuiScreen {
 		drawRect(mapX, mapY, mapX + mapWidth, mapY + mapHeight, 0xDD040810);
 		drawRect(mapX, mapY, mapX + mapWidth, mapY + 1, COLOR_CYAN_DIM);
 		drawRect(mapX, mapY + mapHeight - 1, mapX + mapWidth, mapY + mapHeight, COLOR_CYAN_DIM);
-		final boolean isHyperspaceView = snapshot.getBoolean("inHyperspace");
-		fontRenderer.drawString(isHyperspaceView ? I18n.format("warpdrive.navigation.gui.hyperspace_chart") : I18n.format("warpdrive.navigation.gui.starmap"),
+		final boolean isHyperspaceView = isHyperspaceMapView();
+		final MapObject current = findObject(currentId);
+		final MapObject currentSpaceRegion = findContainingSpaceRegion(current);
+		final String localTitle = currentSpaceRegion == null ? I18n.format("warpdrive.navigation.gui.starmap") : currentSpaceRegion.name;
+		fontRenderer.drawString(isHyperspaceView ? I18n.format("warpdrive.navigation.gui.hyperspace_chart") : trimToWidth(localTitle, 76),
 		                        mapX + 10, mapY + 8, 0xFFE8F3FF);
 		fontRenderer.drawString(I18n.format("warpdrive.navigation.gui.zoom", String.format("%.1f", mapZoom)), mapX + 92, mapY + 8, COLOR_TEXT_DIM);
 		if (isHyperspaceView) {
-			fontRenderer.drawString(I18n.format("warpdrive.navigation.gui.hyperspace_chart_hint"), mapX + 10, mapY + 21, COLOR_TEXT_DIM);
+			fontRenderer.drawString(I18n.format("warpdrive.navigation.gui.hyperspace_chart_hint"), mapX + 10, shouldShowMapViewButtons() ? mapY + 43 : mapY + 21, COLOR_TEXT_DIM);
 		}
 
 		final long time = System.currentTimeMillis() - openedAtMs;
@@ -1196,7 +1301,6 @@ public class GuiShipNavigation extends GuiScreen {
 		}
 
 		final MapObject target = visibleTargetFor(targetId);
-		final MapObject current = findObject(currentId);
 		if (!isStaticMapReady || mapObjects.isEmpty()) {
 			drawCenteredString(fontRenderer, I18n.format("warpdrive.navigation.gui.map_loading"), mapX + mapWidth / 2, mapY + mapHeight / 2, COLOR_AMBER);
 			return;
@@ -1206,8 +1310,10 @@ public class GuiShipNavigation extends GuiScreen {
 		                                   && current != null
 		                                   && !current.space
 		                                   && !current.hyperspace;
-		final double shipDisplayX = isShipInBodyDimension ? current.displayMapX : shipMapX;
-		final double shipDisplayZ = isShipInBodyDimension ? current.displayMapZ : shipMapZ;
+		final MapObject shipMapObject = isHyperspaceView && !snapshot.getBoolean("inHyperspace") ? currentSpaceRegion
+		                          : isShipInBodyDimension ? current : null;
+		final double shipDisplayX = shipMapObject == null ? shipMapX : shipMapObject.displayMapX;
+		final double shipDisplayZ = shipMapObject == null ? shipMapZ : shipMapObject.displayMapZ;
 		if (!isHyperspaceView) {
 			final MapObject spaceRegion = current != null && current.space ? current : findSpaceRegion();
 			if (spaceRegion != null) {
@@ -1215,8 +1321,8 @@ public class GuiShipNavigation extends GuiScreen {
 			}
 		}
 		if (target != null) {
-			final int shipScreenX = isShipInBodyDimension ? toObjectScreenX(current) : toScreenX(shipDisplayX);
-			final int shipScreenY = isShipInBodyDimension ? toObjectScreenY(current) : toScreenY(shipDisplayZ);
+			final int shipScreenX = shipMapObject == null ? toScreenX(shipDisplayX) : toObjectScreenX(shipMapObject);
+			final int shipScreenY = shipMapObject == null ? toScreenY(shipDisplayZ) : toObjectScreenY(shipMapObject);
 			drawLine(shipScreenX, shipScreenY, toObjectScreenX(target), toObjectScreenY(target), 0xAA2DD4FF);
 		}
 		for (final MapObject mapObject : mapObjects) {
@@ -1240,8 +1346,8 @@ public class GuiShipNavigation extends GuiScreen {
 		final ArrayList<LabelBounds> occupiedLabels = new ArrayList<>();
 		drawMapObjectLabels(occupiedLabels);
 
-		final int x = isShipInBodyDimension ? toObjectScreenX(current) : toScreenX(shipDisplayX);
-		final int y = isShipInBodyDimension ? toObjectScreenY(current) : toScreenY(shipDisplayZ);
+		final int x = shipMapObject == null ? toScreenX(shipDisplayX) : toObjectScreenX(shipMapObject);
+		final int y = shipMapObject == null ? toScreenY(shipDisplayZ) : toObjectScreenY(shipMapObject);
 		drawCircle(x, y, 9.0F + (float) (2.0D * Math.sin(time / 250.0D)), 0x6630E8FF, 40);
 		drawMapLabel(occupiedLabels, I18n.format("warpdrive.navigation.gui.ship"), x, y, 10, 0xFF9DEBFF);
 		drawMapLabel(occupiedLabels, trimToWidth("X " + Commons.format(shipMapX) + "  Z " + Commons.format(shipMapZ), 120),
@@ -1681,14 +1787,29 @@ public class GuiShipNavigation extends GuiScreen {
 		return (float) clamp(Math.max(minimum, bodyRadius), minimum, mapObject.space || mapObject.hyperspace ? 34.0D : 28.0D);
 	}
 
-	private boolean isMapObjectVisible(final MapObject mapObject) {
-		return mapObject != null
-		    && (snapshot == null || !snapshot.getBoolean("inHyperspace") || mapObject.space);
+	private boolean isMapObjectDrawable(final MapObject mapObject) {
+		if (mapObject == null) {
+			return false;
+		}
+		if (isHyperspaceMapView()) {
+			return mapObject.space && !mapObject.hyperspace;
+		}
+		return isObjectInCurrentSpaceRegion(mapObject)
+		    && !mapObject.space
+		    && !mapObject.hyperspace;
 	}
 
-	private boolean isMapObjectDrawable(final MapObject mapObject) {
-		return isMapObjectVisible(mapObject)
-		    && (snapshot != null && snapshot.getBoolean("inHyperspace") || !mapObject.space);
+	private boolean isObjectInCurrentSpaceRegion(final MapObject mapObject) {
+		final MapObject containingSpaceRegion = findContainingSpaceRegion(mapObject);
+		return containingSpaceRegion != null && containingSpaceRegion.id.equals(mapSpaceId);
+	}
+
+	private boolean isHyperspaceMapView() {
+		return snapshot != null && (snapshot.getBoolean("inHyperspace") || isMapHyperspaceView);
+	}
+
+	private boolean shouldShowMapViewButtons() {
+		return snapshot != null && !snapshot.getBoolean("inHyperspace");
 	}
 
 	private static boolean isSameMapStack(final MapObject mapObject1, final MapObject mapObject2) {
@@ -1759,8 +1880,21 @@ public class GuiShipNavigation extends GuiScreen {
 	}
 
 	private boolean isOverMapButton(final int x, final int y) {
-		return x >= mapX + mapWidth - 50 && x <= mapX + mapWidth - 6
-		    && y >= mapY + 6 && y <= mapY + 22;
+		for (final GuiButton button : buttonList) {
+			if ( isMapCanvasButton(button.id)
+			  && button.visible
+			  && x >= button.x && x <= button.x + button.width
+			  && y >= button.y && y <= button.y + button.height ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean isMapCanvasButton(final int buttonId) {
+		return buttonId == BUTTON_MAP_FIT
+		    || buttonId == BUTTON_MAP_LOCAL
+		    || buttonId == BUTTON_MAP_HYPERSPACE;
 	}
 
 	private static double clamp(final double value, final double min, final double max) {
@@ -1780,12 +1914,30 @@ public class GuiShipNavigation extends GuiScreen {
 	}
 
 	private MapObject findSpaceRegion() {
+		final MapObject selectedSpaceRegion = findObject(mapSpaceId);
+		if ( selectedSpaceRegion != null
+		  && selectedSpaceRegion.space
+		  && !selectedSpaceRegion.hyperspace ) {
+			return selectedSpaceRegion;
+		}
+		final MapObject currentSpaceRegion = findContainingSpaceRegion(findObject(currentId));
+		if (currentSpaceRegion != null) {
+			return currentSpaceRegion;
+		}
 		for (final MapObject mapObject : mapObjects) {
 			if (mapObject.space && !mapObject.hyperspace) {
 				return mapObject;
 			}
 		}
 		return null;
+	}
+
+	private MapObject findContainingSpaceRegion(final MapObject mapObject) {
+		MapObject current = mapObject;
+		while (current != null && !current.space && !current.parentId.isEmpty()) {
+			current = findObject(current.parentId);
+		}
+		return current != null && current.space && !current.hyperspace ? current : null;
 	}
 
 	private static void drawLine(final int x1, final int y1, final int x2, final int y2, final int color) {

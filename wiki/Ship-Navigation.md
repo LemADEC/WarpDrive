@@ -6,7 +6,9 @@ The ship navigation interface is opened from a ship core or linked ship controll
 
 - The map shows configured celestial bodies in their parent coordinate space.
 - Space is treated as the containing backdrop for planets and other local bodies, not as a body at the ship location.
-- The ship marker uses the ship core X/Z position while in space or hyperspace.
+- In normal space, the Local map layer shows only bodies in the current solar system.
+- The Hyperspace map layer shows solar-system regions and hides individual local bodies until a local system is selected.
+- The ship marker uses the ship core X/Z position while in space or hyperspace. When viewing the Hyperspace layer from normal space, the ship marker is anchored to the current solar-system region.
 - Celestial body tooltips show object id, type, and X/Z coordinates.
 
 ## Destinations

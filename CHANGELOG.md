@@ -19,6 +19,7 @@
 - Ship scan data, dimensions, navigation targets, and autopilot state now persist across jumps.
 - Movement preview and execution now clamp to the calculated ship movement range as a vector magnitude.
 - Space-map rendering now treats space as the backdrop region and shows celestial bodies by their actual parent coordinates.
+- Navigation maps now separate local solar-system bodies from the hyperspace systems layer.
 - Destination lists and map tooltips now include celestial body X/Z coordinates.
 - Jump target chunk loading now happens before destination collision reads to avoid accidental generation of unloaded target chunks.
 - Jump collision adjustment now rechecks target chunks after movement changes and keeps completion callbacks tied to the moved core.
