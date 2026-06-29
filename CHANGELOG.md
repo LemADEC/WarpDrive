@@ -36,6 +36,7 @@
 - Fixed ship core orientation access during moved-core restoration.
 - Fixed stale tile entities crashing when their saved tile entity outlives the block state at the same position.
 - Fixed navigation map body icons being hidden behind opaque fallback markers.
+- Fixed overlapping navigation map labels by stacking same-location bodies and resolving label collisions.
 
 ### Removed
 

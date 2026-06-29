@@ -373,6 +373,8 @@ public class GuiShipNavigation extends GuiScreen {
 		for (final MapObject mapObject : mapObjects) {
 			mapObject.displayMapX = mapObject.mapX;
 			mapObject.displayMapZ = mapObject.mapZ;
+			mapObject.stackIndex = 0;
+			mapObject.stackCount = 1;
 		}
 		for (final MapObject parent : mapObjects) {
 			int childCount = 0;
@@ -400,6 +402,24 @@ public class GuiShipNavigation extends GuiScreen {
 					child.displayMapZ = parent.mapZ + Math.sin(angle) * orbit;
 				}
 				childIndex++;
+			}
+		}
+		for (final MapObject mapObject : mapObjects) {
+			int stackCount = 0;
+			for (final MapObject stackedObject : mapObjects) {
+				if (isSameMapStack(mapObject, stackedObject)) {
+					stackCount++;
+				}
+			}
+			if (stackCount <= 1) {
+				continue;
+			}
+			int stackIndex = 0;
+			for (final MapObject stackedObject : mapObjects) {
+				if (isSameMapStack(mapObject, stackedObject)) {
+					stackedObject.stackIndex = stackIndex++;
+					stackedObject.stackCount = stackCount;
+				}
 			}
 		}
 	}
@@ -975,8 +995,8 @@ public class GuiShipNavigation extends GuiScreen {
 			if (!isMapObjectDrawable(mapObject)) {
 				continue;
 			}
-			final int screenX = toScreenX(mapObject.displayMapX);
-			final int screenY = toScreenY(mapObject.displayMapZ);
+			final int screenX = toObjectScreenX(mapObject);
+			final int screenY = toObjectScreenY(mapObject);
 			final double dx = mouseX - screenX;
 			final double dy = mouseY - screenY;
 			final double distance = dx * dx + dy * dy;
@@ -1195,8 +1215,9 @@ public class GuiShipNavigation extends GuiScreen {
 			}
 		}
 		if (target != null) {
-			drawLine(toScreenX(shipDisplayX), toScreenY(shipDisplayZ),
-			         toScreenX(target.displayMapX), toScreenY(target.displayMapZ), 0xAA2DD4FF);
+			final int shipScreenX = isShipInBodyDimension ? toObjectScreenX(current) : toScreenX(shipDisplayX);
+			final int shipScreenY = isShipInBodyDimension ? toObjectScreenY(current) : toScreenY(shipDisplayZ);
+			drawLine(shipScreenX, shipScreenY, toObjectScreenX(target), toObjectScreenY(target), 0xAA2DD4FF);
 		}
 		for (final MapObject mapObject : mapObjects) {
 			if (!isMapObjectDrawable(mapObject)) {
@@ -1204,8 +1225,8 @@ public class GuiShipNavigation extends GuiScreen {
 			}
 			final MapObject parent = findObject(mapObject.parentId);
 			if (parent != null && isMapObjectDrawable(parent) && !mapObject.hyperspace) {
-				drawLine(toScreenX(parent.displayMapX), toScreenY(parent.displayMapZ),
-				         toScreenX(mapObject.displayMapX), toScreenY(mapObject.displayMapZ), 0x33477C9A);
+				drawLine(toObjectScreenX(parent), toObjectScreenY(parent),
+				         toObjectScreenX(mapObject), toObjectScreenY(mapObject), 0x33477C9A);
 			}
 		}
 
@@ -1216,11 +1237,15 @@ public class GuiShipNavigation extends GuiScreen {
 			drawObject(mapObject, mouseX, mouseY, time);
 		}
 
-		final int x = toScreenX(shipDisplayX);
-		final int y = toScreenY(shipDisplayZ);
+		final ArrayList<LabelBounds> occupiedLabels = new ArrayList<>();
+		drawMapObjectLabels(occupiedLabels);
+
+		final int x = isShipInBodyDimension ? toObjectScreenX(current) : toScreenX(shipDisplayX);
+		final int y = isShipInBodyDimension ? toObjectScreenY(current) : toScreenY(shipDisplayZ);
 		drawCircle(x, y, 9.0F + (float) (2.0D * Math.sin(time / 250.0D)), 0x6630E8FF, 40);
-		fontRenderer.drawString(I18n.format("warpdrive.navigation.gui.ship"), x + 10, y - 4, 0xFF9DEBFF);
-		fontRenderer.drawString(trimToWidth("X " + Commons.format(shipMapX) + "  Z " + Commons.format(shipMapZ), 120), x + 10, y + 7, COLOR_TEXT_DIM);
+		drawMapLabel(occupiedLabels, I18n.format("warpdrive.navigation.gui.ship"), x, y, 10, 0xFF9DEBFF);
+		drawMapLabel(occupiedLabels, trimToWidth("X " + Commons.format(shipMapX) + "  Z " + Commons.format(shipMapZ), 120),
+		             x, y + 11, 10, COLOR_TEXT_DIM);
 	}
 
 	private void drawSpaceRegionBackdrop(final MapObject spaceRegion) {
@@ -1237,8 +1262,8 @@ public class GuiShipNavigation extends GuiScreen {
 
 	@SuppressWarnings("PMD.NPathComplexity")
 	private void drawObject(final MapObject mapObject, final int mouseX, final int mouseY, final long time) {
-		final int x = toScreenX(mapObject.displayMapX);
-		final int y = toScreenY(mapObject.displayMapZ);
+		final int x = toObjectScreenX(mapObject);
+		final int y = toObjectScreenY(mapObject);
 		if (x < mapX - 48 || x > mapX + mapWidth + 48 || y < mapY - 48 || y > mapY + mapHeight + 48) {
 			return;
 		}
@@ -1279,10 +1304,6 @@ public class GuiShipNavigation extends GuiScreen {
 			drawCircle(x, y, radius + 2.0F, 0x55808080, 36);
 		}
 
-		if (mapZoom >= 1.5D || mapObject.id.equals(currentId) || mapObject.id.equals(targetId)) {
-			fontRenderer.drawString(trimToWidth(mapObject.name, 110), x + (int) radius + 4, y - 4, 0xFFC8D6E0);
-		}
-
 		final double dx = mouseX - x;
 		final double dy = mouseY - y;
 		if (dx * dx + dy * dy < (radius + 8.0F) * (radius + 8.0F)) {
@@ -1293,6 +1314,85 @@ public class GuiShipNavigation extends GuiScreen {
 			tooltip.add(I18n.format("warpdrive.navigation.gui.id", mapObject.id));
 			drawHoveringText(tooltip, mouseX, mouseY);
 		}
+	}
+
+	private void drawMapObjectLabels(final ArrayList<LabelBounds> occupiedLabels) {
+		for (final MapObject mapObject : mapObjects) {
+			if (!isMapObjectDrawable(mapObject)) {
+				continue;
+			}
+			if (mapZoom < 1.5D && !mapObject.id.equals(currentId) && !mapObject.id.equals(targetId)) {
+				continue;
+			}
+			final int x = toObjectScreenX(mapObject);
+			final int y = toObjectScreenY(mapObject);
+			if (x < mapX - 48 || x > mapX + mapWidth + 48 || y < mapY - 48 || y > mapY + mapHeight + 48) {
+				continue;
+			}
+			drawMapLabel(occupiedLabels, trimToWidth(mapObject.name, 110), x, y, Math.round(renderedRadius(mapObject)) + 4, 0xFFC8D6E0);
+		}
+	}
+
+	private void drawMapLabel(final ArrayList<LabelBounds> occupiedLabels,
+	                          final String label,
+	                          final int markerX,
+	                          final int markerY,
+	                          final int markerRadius,
+	                          final int color) {
+		if (label == null || label.isEmpty()) {
+			return;
+		}
+		final int widthLabel = fontRenderer.getStringWidth(label);
+		final int heightLabel = 9;
+		final int labelX = Math.max(mapX + 4, Math.min(mapX + mapWidth - widthLabel - 4, markerX + markerRadius + 4));
+		final int labelY = Math.max(mapY + 26, Math.min(mapY + mapHeight - heightLabel - 4, markerY - heightLabel / 2));
+		final LabelBounds bounds = placeMapLabel(occupiedLabels, labelX, labelY, widthLabel, heightLabel);
+		if (Math.abs(bounds.x - labelX) > 4 || Math.abs(bounds.y - labelY) > 6) {
+			drawLine(markerX, markerY, bounds.x - 3, bounds.y + heightLabel / 2, 0x5530E8FF);
+		}
+		fontRenderer.drawString(label, bounds.x, bounds.y, color);
+		occupiedLabels.add(bounds);
+	}
+
+	private LabelBounds placeMapLabel(final ArrayList<LabelBounds> occupiedLabels,
+	                                  final int preferredX,
+	                                  final int preferredY,
+	                                  final int widthLabel,
+	                                  final int heightLabel) {
+		LabelBounds best = null;
+		int bestScore = Integer.MAX_VALUE;
+		for (int ring = 0; ring < 18; ring++) {
+			final int offsetY = ring == 0 ? 0 : ((ring + 1) / 2) * 11 * (ring % 2 == 0 ? -1 : 1);
+			final int[] offsetsX = { 0, -widthLabel - 12, 18 };
+			for (final int offsetX : offsetsX) {
+				final int x = Math.max(mapX + 4, Math.min(mapX + mapWidth - widthLabel - 4, preferredX + offsetX));
+				final int y = Math.max(mapY + 26, Math.min(mapY + mapHeight - heightLabel - 4, preferredY + offsetY));
+				final LabelBounds candidate = new LabelBounds(x, y, x + widthLabel + 2, y + heightLabel);
+				if (intersectsAny(candidate, occupiedLabels)) {
+					continue;
+				}
+				final int score = Math.abs(x - preferredX) + Math.abs(y - preferredY) * 3;
+				if (score < bestScore) {
+					best = candidate;
+					bestScore = score;
+				}
+			}
+			if (best != null) {
+				return best;
+			}
+		}
+		final int fallbackY = Math.max(mapY + 26, Math.min(mapY + mapHeight - heightLabel - 4,
+		                                                   preferredY + occupiedLabels.size() * 11));
+		return new LabelBounds(preferredX, fallbackY, preferredX + widthLabel + 2, fallbackY + heightLabel);
+	}
+
+	private static boolean intersectsAny(final LabelBounds candidate, final ArrayList<LabelBounds> occupiedLabels) {
+		for (final LabelBounds occupied : occupiedLabels) {
+			if (candidate.intersects(occupied)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// ----- side panel -----
@@ -1591,6 +1691,16 @@ public class GuiShipNavigation extends GuiScreen {
 		    && (snapshot != null && snapshot.getBoolean("inHyperspace") || !mapObject.space);
 	}
 
+	private static boolean isSameMapStack(final MapObject mapObject1, final MapObject mapObject2) {
+		return !mapObject1.space
+		    && !mapObject1.hyperspace
+		    && !mapObject2.space
+		    && !mapObject2.hyperspace
+		    && mapObject1.parentId.equals(mapObject2.parentId)
+		    && mapObject1.mapX == mapObject2.mapX
+		    && mapObject1.mapZ == mapObject2.mapZ;
+	}
+
 	private String visibleTargetId(final String id) {
 		final MapObject mapObject = visibleTargetFor(id);
 		return mapObject == null ? "" : mapObject.id;
@@ -1618,6 +1728,18 @@ public class GuiShipNavigation extends GuiScreen {
 
 	private int toScreenY(final double z) {
 		return (int) Math.round(mapY + mapHeight * 0.5D + (z - viewCenterZ) * mapScale());
+	}
+
+	private int toObjectScreenX(final MapObject mapObject) {
+		return toScreenX(mapObject.displayMapX);
+	}
+
+	private int toObjectScreenY(final MapObject mapObject) {
+		if (mapObject.stackCount <= 1) {
+			return toScreenY(mapObject.displayMapZ);
+		}
+		final double centeredIndex = mapObject.stackIndex - (mapObject.stackCount - 1) * 0.5D;
+		return toScreenY(mapObject.displayMapZ) + (int) Math.round(centeredIndex * 28.0D);
 	}
 
 	private double fromScreenX(final int x) {
@@ -1798,6 +1920,8 @@ public class GuiShipNavigation extends GuiScreen {
 		private final float green;
 		private final float blue;
 		private final String iconTexture;
+		private int stackIndex;
+		private int stackCount = 1;
 
 		private MapObject(final NBTTagCompound tagCompound) {
 			id = tagCompound.getString("id");
@@ -1816,6 +1940,27 @@ public class GuiShipNavigation extends GuiScreen {
 			green = tagCompound.getFloat("green");
 			blue = tagCompound.getFloat("blue");
 			iconTexture = tagCompound.getString("iconTexture");
+		}
+	}
+
+	private static final class LabelBounds {
+		private final int x;
+		private final int y;
+		private final int right;
+		private final int bottom;
+
+		private LabelBounds(final int x, final int y, final int right, final int bottom) {
+			this.x = x;
+			this.y = y;
+			this.right = right;
+			this.bottom = bottom;
+		}
+
+		private boolean intersects(final LabelBounds other) {
+			return x < other.right + 2
+			    && right + 2 > other.x
+			    && y < other.bottom + 2
+			    && bottom + 2 > other.y;
 		}
 	}
 
