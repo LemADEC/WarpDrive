@@ -1138,9 +1138,12 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	@Override
 	protected void doUpdateParameters(final boolean isDirty) {
 		// compute dimensions in game coordinates
-		final int old_minX = minX, old_maxX = maxX;
-		final int old_minY = minY, old_maxY = maxY;
-		final int old_minZ = minZ, old_maxZ = maxZ;
+		final int old_minX = minX;
+		final int old_maxX = maxX;
+		final int old_minY = minY;
+		final int old_maxY = maxY;
+		final int old_minZ = minZ;
+		final int old_maxZ = maxZ;
 		if (facing.getXOffset() == 1) {
 			minX = pos.getX() - getBack();
 			maxX = pos.getX() + getFront();
