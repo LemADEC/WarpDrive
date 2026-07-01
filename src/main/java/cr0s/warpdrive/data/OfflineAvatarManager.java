@@ -122,17 +122,16 @@ public class OfflineAvatarManager {
 			return;
 		}
 		if ( uuidEntityActual == null
-		  && !entityOfflineAvatar.isManagedOfflineAvatar() ) {
-			if ( globalPositionActual == null
-			  || !bindLegacyAvatar(uuidPlayer, entityOfflineAvatar, globalPositionActual) ) {
-				if (WarpDriveConfig.LOGGING_OFFLINE_AVATAR) {
-					WarpDrive.logger.warn(String.format("Ignoring update from unmanaged EntityOfflineAvatar for %s (%s): entity %s at %s",
-					                                    entityOfflineAvatar.getPlayerName(), uuidPlayer,
-					                                    uuidEntity,
-					                                    Commons.format(entityOfflineAvatar) ));
-				}
-				return;
+		  && !entityOfflineAvatar.isManagedOfflineAvatar()
+		  && ( globalPositionActual == null
+		    || !bindLegacyAvatar(uuidPlayer, entityOfflineAvatar, globalPositionActual) ) ) {
+			if (WarpDriveConfig.LOGGING_OFFLINE_AVATAR) {
+				WarpDrive.logger.warn(String.format("Ignoring update from unmanaged EntityOfflineAvatar for %s (%s): entity %s at %s",
+				                                    entityOfflineAvatar.getPlayerName(), uuidPlayer,
+				                                    uuidEntity,
+				                                    Commons.format(entityOfflineAvatar) ));
 			}
+			return;
 		}
 		if ( uuidEntityActual == null
 		  && globalPositionActual != null ) {
