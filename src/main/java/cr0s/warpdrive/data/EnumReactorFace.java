@@ -13,8 +13,8 @@ public enum EnumReactorFace implements IStringSerializable {
 	
 	//                tier           inst name         facing             x   y   z  propertyLaser
 	UNKNOWN          (null          , -1, "unknown"  , null            ,  0,  0,  0, null            ),
-	BASIC_NORTH      (EnumTier.BASIC,  0, "north"    , EnumFacing.NORTH,  0,  0, -2, EnumFacing.SOUTH),
-	BASIC_SOUTH      (EnumTier.BASIC,  1, "south"    , EnumFacing.SOUTH,  0,  0,  2, EnumFacing.NORTH),
+	BASIC_SOUTH      (EnumTier.BASIC,  1, "south"    , EnumFacing.SOUTH,  0,  0, -2, EnumFacing.NORTH),
+	BASIC_NORTH      (EnumTier.BASIC,  0, "north"    , EnumFacing.NORTH,  0,  0,  2, EnumFacing.SOUTH),
 	BASIC_EAST       (EnumTier.BASIC,  2, "east"     , EnumFacing.EAST , -2,  0,  0, EnumFacing.WEST ),
 	BASIC_WEST       (EnumTier.BASIC,  3, "west"     , EnumFacing.WEST ,  2,  0,  0, EnumFacing.EAST ),
 	BASIC_NORTH_AIR  (EnumTier.BASIC, -1, "north_air", EnumFacing.NORTH,  0,  0, -1, null            ),

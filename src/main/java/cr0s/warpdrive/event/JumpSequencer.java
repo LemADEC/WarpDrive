@@ -186,7 +186,7 @@ public class JumpSequencer extends AbstractSequencer {
 		final JumpResult jumpResult;
 		if (!isSuccessful) {
 			jumpResult = new JumpResult(sourceWorld, ship.coreX, ship.coreY, ship.coreZ,
-			                            ship.shipCore.getShipController(), shipMovementType.getName(), false, reason);
+			                            ship.shipCore == null ? null : ship.shipCore.getShipController(), shipMovementType.getName(), false, reason);
 		} else {
 			final ChunkCoordinates coordTargetCore = transformation.apply(ship.coreX, ship.coreY, ship.coreZ);
 			final TileEntity tileEntity = targetWorld.getTileEntity(coordTargetCore.posX, coordTargetCore.posY, coordTargetCore.posZ);

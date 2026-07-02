@@ -672,7 +672,7 @@ warpdrive.video_channel.status_line.invalid=§cVideo channel %1$d is invalid.
 warpdrive.video_channel.status_line.not_loaded=§cVideo channel %1$d is invalid or camera is too far away!
 warpdrive.video_channel.status_line.undefined=§7Undefined Video channel.\n§bUse a Tuning fork§r to set it.
 
-warpdrive.cloaking_core.missing_channeling_and_projecting_coils=§cIntegrity down to %1$d%%: missing channeling coil(s) towards %2$s and projecting coil(s) towards %3$s
+warpdrive.cloaking_core.missing_channeling_and_projecting_coils=§cIntegrity down to %1$d%%:\nmissing channeling coil(s) towards %2$s and projecting coil(s) towards %3$s
 warpdrive.cloaking_core.missing_channeling_coils=§cIntegrity down to %1$d%%: missing channeling coil(s) towards %2$s
 warpdrive.cloaking_core.missing_projecting_coils=§cIntegrity down to %1$d%%: missing projecting coil(s) towards %2$s
 warpdrive.cloaking_core.valid=System is valid

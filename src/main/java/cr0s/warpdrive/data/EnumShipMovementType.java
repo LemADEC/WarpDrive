@@ -95,11 +95,19 @@ public enum EnumShipMovementType implements IStringSerializable {
 		case MANUAL:
 			final boolean toSpace = (yMove > 0) && (yMax + yMove > 255) && (!isInSpace) && (!isInHyperSpace);
 			if (toSpace) {
+				if (celestialObjectSource == null) {
+					reason.append("Unable to take off from unknown celestial object, check your configuration");
+					return null;
+				}
 				return PLANET_TAKEOFF;
 			}
 			
 			final boolean fromSpace = (yMove < 0) && (yMin + yMove < 0) && (!isInHyperSpace);
 			if (fromSpace) {
+				if (celestialObjectSource == null) {
+					reason.append("Unable to land from unknown celestial object, check your configuration");
+					return null;
+				}
 				return PLANET_LANDING;
 			}
 			

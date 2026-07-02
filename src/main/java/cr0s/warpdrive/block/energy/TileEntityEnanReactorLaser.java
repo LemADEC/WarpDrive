@@ -107,9 +107,9 @@ public class TileEntityEnanReactorLaser extends TileEntityAbstractLaser implemen
 		TileEntityEnanReactorCore reactorCore = weakReactorCore != null ? weakReactorCore.get() : null;
 		if (reactorCore == null) {
 			final TileEntity tileEntity = worldObj.getTileEntity(
-				xCoord - reactorFace.facing.getFrontOffsetX(),
-				yCoord - reactorFace.facing.getFrontOffsetY(),
-				zCoord - reactorFace.facing.getFrontOffsetZ());
+				xCoord - 2 * reactorFace.facing.getFrontOffsetX(),
+				yCoord - 2 * reactorFace.facing.getFrontOffsetY(),
+				zCoord - 2 * reactorFace.facing.getFrontOffsetZ());
 			if (tileEntity instanceof TileEntityEnanReactorCore) {
 				reactorCore = (TileEntityEnanReactorCore) tileEntity;
 				weakReactorCore = new WeakReference<>(reactorCore);
