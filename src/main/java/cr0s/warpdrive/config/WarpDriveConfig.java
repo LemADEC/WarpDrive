@@ -42,6 +42,7 @@ import cr0s.warpdrive.compat.CompatRefinedStorage;
 import cr0s.warpdrive.compat.CompatRoots;
 import cr0s.warpdrive.compat.CompatRustic;
 import cr0s.warpdrive.compat.CompatSGCraft;
+import cr0s.warpdrive.compat.CompatJSG;
 import cr0s.warpdrive.compat.CompatStorageDrawers;
 import cr0s.warpdrive.compat.CompatTConstruct;
 import cr0s.warpdrive.compat.CompatTechguns;
@@ -1725,6 +1726,11 @@ public class WarpDriveConfig {
 		final boolean isSGCraftLoaded = Loader.isModLoaded("sgcraft");
 		if (isSGCraftLoaded) {
 			CompatSGCraft.register();
+		}
+
+		final boolean isJSGLoaded = Loader.isModLoaded("jsg");
+		if (isJSGLoaded) {
+			CompatJSG.register();
 		}
 		
 		final boolean isStorageDrawersLoaded = Loader.isModLoaded("storagedrawers");
