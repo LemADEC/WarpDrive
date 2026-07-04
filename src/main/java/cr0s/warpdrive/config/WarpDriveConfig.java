@@ -19,6 +19,7 @@ import cr0s.warpdrive.compat.CompatDeepResonance;
 import cr0s.warpdrive.compat.CompatDraconicEvolution;
 import cr0s.warpdrive.compat.CompatEmbers;
 import cr0s.warpdrive.compat.CompatEnderIO;
+import cr0s.warpdrive.compat.CompatEnergyControl;
 import cr0s.warpdrive.compat.CompatEnvironmentalTech;
 import cr0s.warpdrive.compat.CompatEvilCraft;
 import cr0s.warpdrive.compat.CompatExtraUtilities2;
@@ -1573,6 +1574,11 @@ public class WarpDriveConfig {
 		if (isIndustrialCraft2Loaded) {
 			loadIC2();
 			CompatIndustrialCraft2.register();
+		}
+		
+		final boolean isEnergyControlLoaded = Loader.isModLoaded("energycontrol");
+		if (isEnergyControlLoaded) {
+			CompatEnergyControl.register();
 		}
 		
 		if (isOpenComputersLoaded) {
