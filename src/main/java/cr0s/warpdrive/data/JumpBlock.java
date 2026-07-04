@@ -354,30 +354,6 @@ public class JumpBlock {
 				nbtToDeploy.setInteger("y", target.getY());
 				nbtToDeploy.setInteger("z", target.getZ());
 				
-				/*
-				//NOTE: this was the original NuclearControl compatibility.
-				//NOTE: However this is incorrect, as it may result in flipping the screen.
-				//NOTE: See CompatEnergyControl.java in mod compat for updated implementation.
-				if (nbtToDeploy.hasKey("screenData")) {// IC2NuclearControl 2.2.5a
-					final NBTTagCompound nbtScreenData = nbtToDeploy.getCompoundTag("screenData");
-					if ( nbtScreenData.hasKey("minX") && nbtScreenData.hasKey("minY") && nbtScreenData.hasKey("minZ")
-					  && nbtScreenData.hasKey("maxX") && nbtScreenData.hasKey("maxY") && nbtScreenData.hasKey("maxZ") ) {
-						if (WarpDriveConfig.LOGGING_JUMPBLOCKS) {
-							WarpDrive.logger.info(String.format("%s deploy: TileEntity has screenData.min/maxXYZ",
-							                                    this ));
-						}
-						final BlockPos minTarget = transformation.apply(nbtScreenData.getInteger("minX"), nbtScreenData.getInteger("minY"), nbtScreenData.getInteger("minZ"));
-						nbtScreenData.setInteger("minX", minTarget.getX());
-						nbtScreenData.setInteger("minY", minTarget.getY());
-						nbtScreenData.setInteger("minZ", minTarget.getZ());
-						final BlockPos maxTarget = transformation.apply(nbtScreenData.getInteger("maxX"), nbtScreenData.getInteger("maxY"), nbtScreenData.getInteger("maxZ"));
-						nbtScreenData.setInteger("maxX", maxTarget.getX());
-						nbtScreenData.setInteger("maxY", maxTarget.getY());
-						nbtScreenData.setInteger("maxZ", maxTarget.getZ());
-						nbtToDeploy.setTag("screenData", nbtScreenData);
-					}
-				}
-				*/
 				TileEntity newTileEntity = null;
 				boolean isForgeMultipart = false;
 				if ( WarpDriveConfig.isForgeMultipartLoaded
