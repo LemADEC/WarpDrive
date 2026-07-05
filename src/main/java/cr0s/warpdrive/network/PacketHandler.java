@@ -80,7 +80,7 @@ public class PacketHandler {
 		assert world.getMinecraftServer() != null;
 		final List<EntityPlayerMP> playerEntityList = world.getMinecraftServer().getPlayerList().getPlayers();
 		final int dimensionId = world.provider.getDimension();
-		final int radius_square = radius * radius;
+		final long radius_square = (long) radius * radius;
 		for (final EntityPlayerMP entityPlayerMP : playerEntityList) {
 			// is it out of range?
 			if ( entityPlayerMP.world == null
@@ -154,7 +154,7 @@ public class PacketHandler {
 		// send particle to players in range and the same cloak
 		assert world.getMinecraftServer() != null;
 		final List<EntityPlayerMP> playerEntityList = world.getMinecraftServer().getPlayerList().getPlayers();
-		final int radius_square = radius * radius;
+		final long radius_square = (long) radius * radius;
 		for (final EntityPlayerMP entityPlayerMP : playerEntityList) {
 			// is it out of range?
 			if ( entityPlayerMP.world == null
@@ -192,7 +192,7 @@ public class PacketHandler {
 		// check both ends to send packet
 		assert world.getMinecraftServer() != null;
 		final List<EntityPlayerMP> playerEntityList = world.getMinecraftServer().getPlayerList().getPlayers();
-		final int radius_square = radius * radius;
+		final long radius_square = (long) radius * radius;
 		for (final EntityPlayerMP entityPlayerMP : playerEntityList) {
 			if ( globalPositionLocal != null
 			  && globalPositionLocal.distance2To(entityPlayerMP) < radius_square ) {

@@ -135,7 +135,7 @@ public class MessageTransporterEffect implements IMessage, IMessageHandler<Messa
 	private void handle(final World world) {
 		// adjust render distance
 		final int maxRenderDistance = Minecraft.getMinecraft().gameSettings.renderDistanceChunks * 16;
-		final int maxRenderDistance_squared = maxRenderDistance * maxRenderDistance;
+		final long maxRenderDistance_squared = (long) maxRenderDistance * maxRenderDistance;
 		
 		final EntityPlayer player = Minecraft.getMinecraft().player;
 		
