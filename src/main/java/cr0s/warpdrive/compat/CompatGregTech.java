@@ -186,7 +186,6 @@ public class CompatGregTech implements IBlockTransformer {
 	public void restoreExternals(final World world, final BlockPos blockPos,
 	                             final IBlockState blockState, final TileEntity tileEntity,
 	                             final ITransformation transformation, final NBTBase nbtBase) {
-		// refresh client @TODO
-		// (not working in SSP) world.notifyBlockUpdate(blockPos, blockState, blockState, 2);
+		// nothing to do
 	}
 }

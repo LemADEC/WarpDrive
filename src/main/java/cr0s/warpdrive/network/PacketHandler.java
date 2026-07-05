@@ -25,6 +25,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.*;
 import net.minecraft.potion.PotionEffect;
@@ -51,6 +52,7 @@ public class PacketHandler {
 		simpleNetworkManager.registerMessage(MessageSpawnParticle.class       , MessageSpawnParticle.class       , 4, Side.CLIENT);
 		simpleNetworkManager.registerMessage(MessageVideoChannel.class        , MessageVideoChannel.class        , 5, Side.CLIENT);
 		simpleNetworkManager.registerMessage(MessageTransporterEffect.class   , MessageTransporterEffect.class   , 6, Side.CLIENT);
+		simpleNetworkManager.registerMessage(MessageClientTileEntitySync.class, MessageClientTileEntitySync.class, 7, Side.CLIENT);
 		
 		simpleNetworkManager.registerMessage(MessageTargeting.class           , MessageTargeting.class           , 100, Side.SERVER);
 		simpleNetworkManager.registerMessage(MessageClientValidation.class    , MessageClientValidation.class    , 101, Side.SERVER);
@@ -203,6 +205,15 @@ public class PacketHandler {
 				simpleNetworkManager.sendTo(messageTransporterEffectRemote, entityPlayerMP);
 			}
 		}
+	}
+	
+	// Forces a full tile entity re-sync to nearby clients
+	public static void sendTileEntitySyncToClients(final World world, final BlockPos blockPos, final NBTTagCompound tagCompound) {
+		if (world.isRemote) {
+			return;
+		}
+		final MessageClientTileEntitySync message = new MessageClientTileEntitySync(blockPos, tagCompound);
+		simpleNetworkManager.sendToAllAround(message, new TargetPoint(world.provider.getDimension(), blockPos.getX(), blockPos.getY(), blockPos.getZ(), 256));
 	}
 	
 	// Monitor/Laser/Camera updating its video channel to client side
