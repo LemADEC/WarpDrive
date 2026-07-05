@@ -46,7 +46,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 
-import gregtech.api.items.IToolItem;
 
 public class TooltipHandler {
 	
@@ -436,16 +435,6 @@ public class TooltipHandler {
 		// durability
 		if (WarpDriveConfig.TOOLTIP_ADD_DURABILITY.isEnabled(isSneaking, isCreativeMode)) {
 			try {
-				if (WarpDriveConfig.isGregtechLoaded) {
-					if (itemStack.getItem() instanceof IToolItem) {
-						final IToolItem toolItem = (IToolItem) itemStack.getItem();
-						final int itemDamage = toolItem.getItemDamage(itemStack);
-						final int maxDamage = toolItem.getMaxItemDamage(itemStack);
-						Commons.addTooltip(event.getToolTip(), String.format("Durability: %d / %d",
-						                                                     maxDamage - itemDamage,
-						                                                     maxDamage));
-					}
-				}
 				if (itemStack.isItemStackDamageable()) {
 					Commons.addTooltip(event.getToolTip(), String.format("Durability: %d / %d",
 					                                                     itemStack.getMaxDamage() - itemStack.getItemDamage(),

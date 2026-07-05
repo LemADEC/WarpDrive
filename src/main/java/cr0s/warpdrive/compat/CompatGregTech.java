@@ -85,8 +85,8 @@ public class CompatGregTech implements IBlockTransformer {
 		for (final EnumFacing enumFacing : EnumFacing.HORIZONTALS) {
 			// get state for current face
 			final int indexFacingOld = enumFacing.getIndex();
-			final boolean isBlocked = (connectionsOld & (1 << indexFacingOld)) != 0;
-			if (!isBlocked) {
+			final boolean isBlockedOrConnected = (connectionsOld & (1 << indexFacingOld)) != 0;
+			if (!isBlockedOrConnected) {
 				continue;
 			}
 			// get new face
