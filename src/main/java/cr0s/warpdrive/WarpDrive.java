@@ -668,15 +668,6 @@ public class WarpDrive {
 	
 	@EventHandler
 	public void onFMLPostInitialization(final FMLPostInitializationEvent event) {
-		/* @TODO not sure why it would be needed, disabling for now
-		// load all owned dimensions at boot
-		for (final CelestialObject celestialObject : CelestialObjectManager.celestialObjects) {
-			if (celestialObject.provider.equals(CelestialObject.PROVIDER_OTHER)) {
-				DimensionManager.getWorld(celestialObject.dimensionId);
-			}
-		}
-		/**/
-		
 		WarpDriveConfig.onFMLPostInitialization();
 		
 		if (WarpDriveConfig.isComputerCraftLoaded) {

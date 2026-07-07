@@ -195,13 +195,7 @@ public class RenderSpaceSky extends IRenderHandler {
 		// Planets
 		if (celestialObject != null && celestialObject.opacityCelestialObjects > 0.0F) {
 			final Vector3 vectorPlayer = GlobalRegionManager.getUniversalCoordinates(celestialObject, vec3Player.x, vec3Player.y, vec3Player.z);
-			for (final CelestialObject celestialObjectChild : CelestialObjectManager.getRenderStack()) {
-				if (celestialObject == celestialObjectChild) {
-					continue;
-				}
-				if (!celestialObject.id.equals(celestialObjectChild.parentId)) {
-					continue;
-				}
+			for (final CelestialObject celestialObjectChild : CelestialObjectManager.getRenderChildren(celestialObject.id)) {
 				renderCelestialObject(tessellator,
 				                      celestialObjectChild,
 				                      celestialObject.opacityCelestialObjects,
