@@ -145,7 +145,7 @@ public class LivingHandler {
 			final double newAbsoluteZ = Math.min(Math.abs(relativeZ), Math.max(0.0D, celestialObject.borderRadiusZ - BORDER_BYPASS_PULL_BACK_BLOCKS));
 			final double newEntityX = celestialObject.dimensionCenterX + Math.signum(relativeX) * newAbsoluteX;
 			final double newEntityY = entityLivingBase.posY + 0.1D;
-			final double newEntityZ = celestialObject.dimensionCenterX + Math.signum(relativeZ) * newAbsoluteZ;
+			final double newEntityZ = celestialObject.dimensionCenterZ + Math.signum(relativeZ) * newAbsoluteZ;
 			// entityLivingBase.isAirBorne = true;
 			Commons.moveEntity(entityLivingBase, entityLivingBase.world, new Vector3(newEntityX, newEntityY, newEntityZ));
 			
