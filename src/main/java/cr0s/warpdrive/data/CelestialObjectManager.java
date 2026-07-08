@@ -324,12 +324,14 @@ public class CelestialObjectManager extends XmlFileManager {
 		}
 		
 		// prevent creating a portal leading outside the world border
+		// note: look up the exit object at the SCALED destination (not at (0,0)), so a multi-object target dimension
+		// validates against the zone the portal actually leads to
 		final boolean isInTheNether = world.provider.getDimension() == -1;
-		final CelestialObject celestialObjectExit = get(false, isInTheNether ? 0 : -1, 0, 0);
+		final double factor = isInTheNether ? 8.0D : 1 / 8.0D;
+		final int xExit = (int) Math.floor(blockPos.getX() * factor);
+		final int zExit = (int) Math.floor(blockPos.getZ() * factor);
+		final CelestialObject celestialObjectExit = get(false, isInTheNether ? 0 : -1, xExit, zExit);
 		if (celestialObjectExit != null) {
-			final double factor = isInTheNether ? 8.0D : 1 / 8.0D;
-			final int xExit = (int) Math.floor(blockPos.getX() * factor);
-			final int zExit = (int) Math.floor(blockPos.getZ() * factor);
 			if ( Math.abs(xExit - celestialObjectExit.dimensionCenterX) > celestialObjectExit.borderRadiusX
 			  || Math.abs(zExit - celestialObjectExit.dimensionCenterZ) > celestialObjectExit.borderRadiusZ ) {
 				final EntityPlayer entityPlayer = world.getClosestPlayer(blockPos.getX(), blockPos.getY(), blockPos.getZ(), 10.0D, false);
