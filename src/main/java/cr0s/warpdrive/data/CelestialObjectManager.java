@@ -24,8 +24,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTBase;
@@ -271,18 +273,31 @@ public class CelestialObjectManager extends XmlFileManager {
 	public static NBTBase writeClientSync(final EntityPlayerMP entityPlayerMP, final CelestialObject celestialObject) {
 		final NBTTagList nbtTagList = new NBTTagList();
 		if (celestialObject != null) {
-			// add current with all direct parents
-			CelestialObject celestialObjectParent = celestialObject;
-			while (celestialObjectParent != null) {
-				nbtTagList.appendTag(celestialObjectParent.writeToNBT(new NBTTagCompound()));
-				celestialObjectParent = celestialObjectParent.parent;
-			}
-			
-			// add all direct children
-			final List<CelestialObject> children = SERVER.registry.byParentId.get(celestialObject.id);
-			if (children != null) {
-				for (final CelestialObject celestialObjectChild : children) {
-					nbtTagList.appendTag(celestialObjectChild.writeToNBT(new NBTTagCompound()));
+			// sync every object sharing the player's current dimension (siblings), so the client can resolve
+			// get(dimensionId, x, z) by position as the player moves between same-dimension zones, without needing a
+			// re-sync on movement. For each, include its full parent chain up to hyperspace (required or the client's
+			// resolveParent() breaks) and its direct children; dedupe by id so the shared parent chain is sent once.
+			final Set<String> sentIds = new HashSet<>();
+			final List<CelestialObject> sameDimension = SERVER.registry.byDimensionId.get(celestialObject.dimensionId);
+			final List<CelestialObject> roots = sameDimension != null ? sameDimension : Collections.singletonList(celestialObject);
+			for (final CelestialObject root : roots) {
+				// the object with all its direct parents, up to hyperspace
+				CelestialObject celestialObjectParent = root;
+				while (celestialObjectParent != null) {
+					if (sentIds.add(celestialObjectParent.id)) {
+						nbtTagList.appendTag(celestialObjectParent.writeToNBT(new NBTTagCompound()));
+					}
+					celestialObjectParent = celestialObjectParent.parent;
+				}
+
+				// all its direct children
+				final List<CelestialObject> children = SERVER.registry.byParentId.get(root.id);
+				if (children != null) {
+					for (final CelestialObject celestialObjectChild : children) {
+						if (sentIds.add(celestialObjectChild.id)) {
+							nbtTagList.appendTag(celestialObjectChild.writeToNBT(new NBTTagCompound()));
+						}
+					}
 				}
 			}
 		}
