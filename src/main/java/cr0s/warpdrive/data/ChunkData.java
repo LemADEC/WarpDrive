@@ -36,6 +36,8 @@ public class ChunkData {
 	// persistent properties
 	private final int[][] dataAirSegments = new int[CHUNK_SIZE_SEGMENTS][];
 	private final byte[][] tickAirSegments = new byte[CHUNK_SIZE_SEGMENTS][];
+	private final int[] cache_countNonEmptyBlocks = new int[CHUNK_SIZE_SEGMENTS];
+	private final int[][] cache_countTickingBlocks = new int[CHUNK_SIZE_SEGMENTS][0x80];
 	
 	// computed properties
 	private int tickCurrent = (int) (Math.random() * 4096.0D);
@@ -75,6 +77,10 @@ public class ChunkData {
 		// load defaults
 		Arrays.fill(dataAirSegments, null);
 		Arrays.fill(tickAirSegments, null);
+		Arrays.fill(cache_countNonEmptyBlocks, 0);
+		for (final int[] counts : cache_countTickingBlocks) {
+			Arrays.fill(counts, 0);
+		}
 		isModified = false;
 		
 		// check version
@@ -130,6 +136,8 @@ public class ChunkData {
 						for (int indexBlock = 0; indexBlock < SEGMENT_SIZE_BLOCKS; indexBlock++) {
 							dataAirSegments[indexSegment][indexBlock] = intData[indexBlock] & StateAir.USED_MASK;
 							tickAirSegments[indexSegment][indexBlock] = (byte) (byteTick[indexBlock] & 0x7F);
+							updateCounters(indexSegment, StateAir.AIR_DEFAULT, (byte) 0,
+							               dataAirSegments[indexSegment][indexBlock], tickAirSegments[indexSegment][indexBlock]);
 							if ( WarpDrive.isDev && WarpDriveConfig.LOGGING_CHUNK_HANDLER
 							  && dataAirSegments[indexSegment][indexBlock] != 0 ) {
 								final BlockPos chunkPosition = getPositionFromDataIndex(indexSegment, indexBlock);
@@ -156,21 +164,38 @@ public class ChunkData {
 	
 	public void onBlockUpdated(final int x, final int y, final int z) {
 		final int indexData = getDataIndex(x, y, z);
+		final int indexSegment = indexData >> 12;
+		final int indexBlock = indexData & 0xFFF;
+		
 		// get segment
-		final int[] dataAirSegment = dataAirSegments[indexData >> 12];
+		final int[] dataAirSegment = dataAirSegments[indexSegment];
 		if (dataAirSegment == null) {
 			return;
 		}
-		// force update of related block cache
-		dataAirSegment[indexData & 0xFFF] = dataAirSegment[indexData & 0xFFF] & ~StateAir.BLOCK_MASK;
 		
-		// get current tick delay
-		final byte[] tickAirSegment = tickAirSegments[indexData >> 12];
-		final byte tickAir = tickAirSegment[indexData & 0xFFF];
-		final int delay = (0x80 + tickAir - tickCurrent) & 0x7F;
-		// reduce to lower than 16 ticks
-		if (delay > 15 && delay != WarpDriveConfig.BREATHING_AIR_SIMULATION_DELAY_TICKS + (dataAirSegment[indexData & 0xFFF] & StateAir.CONCENTRATION_MASK)) {
-			tickAirSegment[indexData & 0xFFF] = (byte) ((tickCurrent + delay & 0x0F) & 0x7F);
+		// capture current values before mutating so cached counters stay consistent
+		final byte[] tickAirSegment = tickAirSegments[indexSegment];
+		final int dataAirOld = dataAirSegment[indexBlock];
+		final byte tickAirOld = tickAirSegment[indexBlock];
+		
+		// force update of related block cache
+		final int dataAirNew = dataAirOld & ~StateAir.BLOCK_MASK;
+		
+		// get current tick delay, reduce to lower than 16 ticks
+		final int delay = (0x80 + tickAirOld - tickCurrent) & 0x7F;
+		final byte tickAirNew;
+		if ( delay > 15
+		  && delay != WarpDriveConfig.BREATHING_AIR_SIMULATION_DELAY_TICKS + (dataAirNew & StateAir.CONCENTRATION_MASK) ) {
+			tickAirNew = (byte) ((tickCurrent + delay & 0x0F) & 0x7F);
+		} else {
+			tickAirNew = tickAirOld;
+		}
+		
+		if ( dataAirNew != dataAirOld
+		  || tickAirNew != tickAirOld ) {
+			updateCounters(indexSegment, dataAirOld, tickAirOld, dataAirNew, tickAirNew);
+			dataAirSegment[indexBlock] = dataAirNew;
+			tickAirSegment[indexBlock] = tickAirNew;
 		}
 	}
 	
@@ -209,12 +234,9 @@ public class ChunkData {
 			// skip empty segment
 			if (dataAirSegments[indexSegment] != null) {
 				// merge data and check for purge
-				int countEmptyBlocks = 0;
-				
 				for (int indexBlock = 0; indexBlock < SEGMENT_SIZE_BLOCKS; indexBlock++) {
 					final int dataAir = dataAirSegments[indexSegment][indexBlock];
 					if (StateAir.isEmptyData(dataAir)) {
-						countEmptyBlocks++;
 						intData[indexBlock] = StateAir.AIR_DEFAULT;
 						byteTick[indexBlock] = (byte) 0;
 					} else {
@@ -231,7 +253,7 @@ public class ChunkData {
 					}
 				}
 				
-				if (countEmptyBlocks == SEGMENT_SIZE_BLOCKS) {
+				if (cache_countNonEmptyBlocks[indexSegment] == 0) {
 					countEmptySegments++;
 				} else {
 					tagCompoundInList.setIntArray(TAG_AIR_SEGMENT_DATA, intData.clone());
@@ -369,14 +391,105 @@ public class ChunkData {
 		}
 		
 		// set block
-		if (dataAirSegment[indexData & 0xFFF] != dataAirBlock) {
-			dataAirSegment[indexData & 0xFFF] = dataAirBlock;
+		final int indexSegment = indexData >> 12;
+		final int indexBlock = indexData & 0xFFF;
+		final int dataAirOld = dataAirSegment[indexBlock];
+		final byte tickAirOld = tickAirSegment[indexBlock];
+		final byte tickAirNew = (byte) ((tickCurrent + WarpDriveConfig.BREATHING_AIR_SIMULATION_DELAY_TICKS + (dataAirBlock & StateAir.CONCENTRATION_MASK)) & 0x7F);
+		if (dataAirOld != dataAirBlock || tickAirOld != tickAirNew) {
+			updateCounters(indexSegment, dataAirOld, tickAirOld, dataAirBlock, tickAirNew);
+			dataAirSegment[indexBlock] = dataAirBlock;
+			tickAirSegment[indexBlock] = tickAirNew;
 			isModified = true;
 		}
+	}
+
+	private void updateCounters(final int indexSegment,
+	                            final int dataAirOld, final byte tickAirOld,
+	                            final int dataAirNew, final byte tickAirNew) {
+		final boolean wasNonEmpty = !StateAir.isEmptyData(dataAirOld);
+		final boolean isNonEmpty = !StateAir.isEmptyData(dataAirNew);
+		if (wasNonEmpty) {
+			cache_countNonEmptyBlocks[indexSegment]--;
+			cache_countTickingBlocks[indexSegment][tickAirOld & 0x7F]--;
+			if ( cache_countNonEmptyBlocks[indexSegment] < 0
+			  || cache_countTickingBlocks[indexSegment][tickAirOld & 0x7F] < 0 ) {
+				throw new IllegalStateException(String.format("Air scheduling cache underflow in chunk %s segment %d", chunkCoordIntPair, indexSegment));
+			}
+		}
+		if (isNonEmpty) {
+			cache_countNonEmptyBlocks[indexSegment]++;
+			cache_countTickingBlocks[indexSegment][tickAirNew & 0x7F]++;
+		}
+	}
+	
+	private void verifyAndHealCounters(final int indexSegment,
+	                                   @Nonnull final int[] dataAirSegment,
+	                                   @Nonnull final byte[] tickAirSegment) {
+		final AirCounterSnapshot actual = recountCounters(dataAirSegment, tickAirSegment);
+		final int[] cache_countTickingBlocksSegment = cache_countTickingBlocks[indexSegment];
+		if (isCounterCacheValid(indexSegment, cache_countTickingBlocksSegment, actual)) {
+			return;
+		}
 		
-		// set delay
-		final byte delay = (byte) (WarpDriveConfig.BREATHING_AIR_SIMULATION_DELAY_TICKS + (dataAirBlock & StateAir.CONCENTRATION_MASK));
-		tickAirSegment[indexData & 0xFFF] = (byte) ((tickCurrent + delay) & 0x7F); 
+		logCounterCacheDrift(indexSegment, cache_countTickingBlocksSegment, actual);
+		cache_countNonEmptyBlocks[indexSegment] = actual.countNonEmptyBlocks;
+		System.arraycopy(actual.countTickingBlocks, 0, cache_countTickingBlocksSegment, 0, actual.countTickingBlocks.length);
+	}
+	
+	@Nonnull
+	private static AirCounterSnapshot recountCounters(@Nonnull final int[] dataAirSegment,
+	                                                  @Nonnull final byte[] tickAirSegment) {
+		final AirCounterSnapshot actual = new AirCounterSnapshot();
+		for (int indexBlock = 0; indexBlock < SEGMENT_SIZE_BLOCKS; indexBlock++) {
+			final int dataAir = dataAirSegment[indexBlock];
+			if (!StateAir.isEmptyData(dataAir)) {
+				actual.countNonEmptyBlocks++;
+				actual.countTickingBlocks[tickAirSegment[indexBlock] & 0x7F]++;
+			}
+		}
+		return actual;
+	}
+	
+	private boolean isCounterCacheValid(final int indexSegment,
+	                                    @Nonnull final int[] cache_countTickingBlocksSegment,
+	                                    @Nonnull final AirCounterSnapshot actual) {
+		return cache_countNonEmptyBlocks[indexSegment] == actual.countNonEmptyBlocks
+		    && Arrays.equals(cache_countTickingBlocksSegment, actual.countTickingBlocks);
+	}
+	
+	private void logCounterCacheDrift(final int indexSegment,
+	                                  @Nonnull final int[] cache_countTickingBlocksSegment,
+	                                  @Nonnull final AirCounterSnapshot actual) {
+		if (!Commons.throttleMe("ChunkData.CounterDrift")) {
+			return;
+		}
+		
+		final int indexBucketMismatch = findFirstCounterMismatch(cache_countTickingBlocksSegment, actual.countTickingBlocks);
+		int countTickingBlocksCached = -1;
+		int countTickingBlocksRecounted = -1;
+		if (indexBucketMismatch >= 0) {
+			countTickingBlocksCached = cache_countTickingBlocksSegment[indexBucketMismatch];
+			countTickingBlocksRecounted = actual.countTickingBlocks[indexBucketMismatch];
+		}
+		WarpDrive.logger.warn(String.format("Healing air counter cache drift in chunk %s segment %d: non-empty %d -> %d, first ticking bucket %d: %d -> %d",
+		                                    chunkCoordIntPair, indexSegment,
+		                                    cache_countNonEmptyBlocks[indexSegment], actual.countNonEmptyBlocks,
+		                                    indexBucketMismatch, countTickingBlocksCached, countTickingBlocksRecounted));
+	}
+	
+	private static int findFirstCounterMismatch(@Nonnull final int[] cached, @Nonnull final int[] actual) {
+		for (int index = 0; index < actual.length; index++) {
+			if (cached[index] != actual[index]) {
+				return index;
+			}
+		}
+		return -1;
+	}
+	
+	private static final class AirCounterSnapshot {
+		private int countNonEmptyBlocks;
+		private final int[] countTickingBlocks = new int[0x80];
 	}
 	
 	public StateAir getStateAir(final World world, final int x, final int y, final int z) throws ExceptionChunkNotLoaded {
@@ -386,9 +499,6 @@ public class ChunkData {
 	}
 	
 	public boolean hasAir() {
-		if (dataAirSegments == null) {
-			return false;
-		}
 		for (final int[] dataAirSegment : dataAirSegments) {
 			if (dataAirSegment == null) {
 				continue;
@@ -403,17 +513,9 @@ public class ChunkData {
 	}
 	
 	public boolean isNotEmpty() {
-		if (dataAirSegments == null) {
-			return false;
-		}
-		for (final int[] dataAirSegment : dataAirSegments) {
-			if (dataAirSegment == null) {
-				continue;
-			}
-			for (final int dataAirBlock : dataAirSegment) {
-				if (!StateAir.isEmptyData(dataAirBlock)) {
-					return true;
-				}
+		for (final int countNonEmptyBlock : cache_countNonEmptyBlocks) {
+			if (countNonEmptyBlock > 0) {
+				return true;
 			}
 		}
 		return false;
@@ -427,25 +529,39 @@ public class ChunkData {
 		
 		tickCurrent = (tickCurrent + 1) & 0xFF;
 		int countBlocks = 0;
-		int countTickingBlocks = 0;
+		int countBlocksTicked = 0;
 		for (int indexSegment = 0; indexSegment < CHUNK_SIZE_SEGMENTS; indexSegment++) {
 			final int[] dataAirSegment = dataAirSegments[indexSegment];
 			final byte[] tickAirSegment = tickAirSegments[indexSegment];
 			
 			// skip empty segments
-			if (dataAirSegment == null) {
+			if (dataAirSegment == null || cache_countNonEmptyBlocks[indexSegment] == 0) {
+				continue;
+			}
+			if (cache_countTickingBlocks[indexSegment][tickCurrent & 0x7F] <= 0) {
+				continue;
+			}
+			
+			// A full scan is already due. Recount before AirSpreader mutates this or neighboring segments,
+			// then recover from any stale derived counters without mixing pre- and post-spread state.
+			verifyAndHealCounters(indexSegment, dataAirSegment, tickAirSegment);
+			if (cache_countNonEmptyBlocks[indexSegment] == 0) {
+				dataAirSegments[indexSegment] = null;
+				tickAirSegments[indexSegment] = null;
+				Arrays.fill(cache_countTickingBlocks[indexSegment], 0);
+				continue;
+			}
+			if (cache_countTickingBlocks[indexSegment][tickCurrent & 0x7F] <= 0) {
 				continue;
 			}
 			
 			// scan all blocks
-			int countEmpty = 0;
 			countBlocks += dataAirSegment.length;
 			for (int indexBlock = 0; indexBlock < SEGMENT_SIZE_BLOCKS; indexBlock++) {
 				final int dataAirBlock = dataAirSegment[indexBlock];
 				final byte tickAirBlock = tickAirSegment[indexBlock];
 				// skip empty positions
 				if (StateAir.isEmptyData(dataAirBlock)) {
-					countEmpty++;
 					continue;
 				}
 				// increase update speed in low pressure areas 
@@ -453,7 +569,7 @@ public class ChunkData {
 					continue;
 				}
 				// update
-				countTickingBlocks++;
+				countBlocksTicked++;
 				final int x = (chunkCoordIntPair.x << 4) + ((indexBlock & 0x00F0) >> 4);
 				final int y = (indexSegment << 4) + ((indexBlock & 0x0F00) >> 8);
 				final int z = (chunkCoordIntPair.z << 4) + (indexBlock & 0x000F);
@@ -468,9 +584,10 @@ public class ChunkData {
 			}
 			
 			// clear empty segment
-			if (countEmpty == dataAirSegment.length) {
+			if (cache_countNonEmptyBlocks[indexSegment] == 0) {
 				dataAirSegments[indexSegment] = null;
 				tickAirSegments[indexSegment] = null;
+				Arrays.fill(cache_countTickingBlocks[indexSegment], 0);
 			}
 		}
 		AirSpreader.clearCache();
@@ -485,7 +602,7 @@ public class ChunkData {
 			                                    world.provider.getDimension(),
 			                                    chunkCoordIntPair.x,
 			                                    chunkCoordIntPair.z,
-			                                    countTickingBlocks,
+			                                    countBlocksTicked,
 			                                    countBlocks));
 		}
 	}
