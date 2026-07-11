@@ -430,50 +430,77 @@ public class ChunkData {
 	private void verifyAndHealCounters(final int indexSegment,
 	                                   @Nonnull final int[] dataAirSegment,
 	                                   @Nonnull final byte[] tickAirSegment) {
-		int countNonEmptyBlocksActual = 0;
-		int countAirBlocksActual = 0;
-		final int[] countTickingBlocksActual = new int[0x80];
-		for (int indexBlock = 0; indexBlock < SEGMENT_SIZE_BLOCKS; indexBlock++) {
-			final int dataAir = dataAirSegment[indexBlock];
-			if (!StateAir.isEmptyData(dataAir)) {
-				countNonEmptyBlocksActual++;
-				countTickingBlocksActual[tickAirSegment[indexBlock] & 0x7F]++;
-			}
-			if ((dataAir & StateAir.CONCENTRATION_MASK) != 0) {
-				countAirBlocksActual++;
-			}
-		}
-		
+		final AirCounterSnapshot actual = recountCounters(dataAirSegment, tickAirSegment);
 		final int[] cache_countTickingBlocksSegment = cache_countTickingBlocks[indexSegment];
-		if ( cache_countNonEmptyBlocks[indexSegment] == countNonEmptyBlocksActual
-		  && cache_countAirBlocks[indexSegment] == countAirBlocksActual
-		  && Arrays.equals(cache_countTickingBlocksSegment, countTickingBlocksActual) ) {
+		if (isCounterCacheValid(indexSegment, cache_countTickingBlocksSegment, actual)) {
 			return;
 		}
 		
-		if (Commons.throttleMe("ChunkData.CounterDrift")) {
-			int indexBucketMismatch = 0;
-			while ( indexBucketMismatch < countTickingBlocksActual.length
-			     && cache_countTickingBlocksSegment[indexBucketMismatch] == countTickingBlocksActual[indexBucketMismatch] ) {
-				indexBucketMismatch++;
+		logCounterCacheDrift(indexSegment, cache_countTickingBlocksSegment, actual);
+		cache_countNonEmptyBlocks[indexSegment] = actual.countNonEmptyBlocks;
+		cache_countAirBlocks[indexSegment] = actual.countAirBlocks;
+		System.arraycopy(actual.countTickingBlocks, 0, cache_countTickingBlocksSegment, 0, actual.countTickingBlocks.length);
+	}
+	
+	@Nonnull
+	private static AirCounterSnapshot recountCounters(@Nonnull final int[] dataAirSegment,
+	                                                  @Nonnull final byte[] tickAirSegment) {
+		final AirCounterSnapshot actual = new AirCounterSnapshot();
+		for (int indexBlock = 0; indexBlock < SEGMENT_SIZE_BLOCKS; indexBlock++) {
+			final int dataAir = dataAirSegment[indexBlock];
+			if (!StateAir.isEmptyData(dataAir)) {
+				actual.countNonEmptyBlocks++;
+				actual.countTickingBlocks[tickAirSegment[indexBlock] & 0x7F]++;
 			}
-			final int indexBucketReported = indexBucketMismatch < countTickingBlocksActual.length ? indexBucketMismatch : -1;
-			final int countTickingBlocksCached = indexBucketMismatch < countTickingBlocksActual.length
-			                                   ? cache_countTickingBlocksSegment[indexBucketMismatch]
-			                                   : -1;
-			final int countTickingBlocksRecounted = indexBucketMismatch < countTickingBlocksActual.length
-			                                      ? countTickingBlocksActual[indexBucketMismatch]
-			                                      : -1;
-			WarpDrive.logger.warn(String.format("Healing air counter cache drift in chunk %s segment %d: non-empty %d -> %d, air %d -> %d, first ticking bucket %d: %d -> %d",
-			                                    chunkCoordIntPair, indexSegment,
-			                                    cache_countNonEmptyBlocks[indexSegment], countNonEmptyBlocksActual,
-			                                    cache_countAirBlocks[indexSegment], countAirBlocksActual,
-			                                    indexBucketReported, countTickingBlocksCached, countTickingBlocksRecounted));
+			if ((dataAir & StateAir.CONCENTRATION_MASK) != 0) {
+				actual.countAirBlocks++;
+			}
+		}
+		return actual;
+	}
+	
+	private boolean isCounterCacheValid(final int indexSegment,
+	                                    @Nonnull final int[] cache_countTickingBlocksSegment,
+	                                    @Nonnull final AirCounterSnapshot actual) {
+		return cache_countNonEmptyBlocks[indexSegment] == actual.countNonEmptyBlocks
+		    && cache_countAirBlocks[indexSegment] == actual.countAirBlocks
+		    && Arrays.equals(cache_countTickingBlocksSegment, actual.countTickingBlocks);
+	}
+	
+	private void logCounterCacheDrift(final int indexSegment,
+	                                  @Nonnull final int[] cache_countTickingBlocksSegment,
+	                                  @Nonnull final AirCounterSnapshot actual) {
+		if (!Commons.throttleMe("ChunkData.CounterDrift")) {
+			return;
 		}
 		
-		cache_countNonEmptyBlocks[indexSegment] = countNonEmptyBlocksActual;
-		cache_countAirBlocks[indexSegment] = countAirBlocksActual;
-		System.arraycopy(countTickingBlocksActual, 0, cache_countTickingBlocksSegment, 0, countTickingBlocksActual.length);
+		final int indexBucketMismatch = findFirstCounterMismatch(cache_countTickingBlocksSegment, actual.countTickingBlocks);
+		int countTickingBlocksCached = -1;
+		int countTickingBlocksRecounted = -1;
+		if (indexBucketMismatch >= 0) {
+			countTickingBlocksCached = cache_countTickingBlocksSegment[indexBucketMismatch];
+			countTickingBlocksRecounted = actual.countTickingBlocks[indexBucketMismatch];
+		}
+		WarpDrive.logger.warn(String.format("Healing air counter cache drift in chunk %s segment %d: non-empty %d -> %d, air %d -> %d, first ticking bucket %d: %d -> %d",
+		                                    chunkCoordIntPair, indexSegment,
+		                                    cache_countNonEmptyBlocks[indexSegment], actual.countNonEmptyBlocks,
+		                                    cache_countAirBlocks[indexSegment], actual.countAirBlocks,
+		                                    indexBucketMismatch, countTickingBlocksCached, countTickingBlocksRecounted));
+	}
+	
+	private static int findFirstCounterMismatch(@Nonnull final int[] cached, @Nonnull final int[] actual) {
+		for (int index = 0; index < actual.length; index++) {
+			if (cached[index] != actual[index]) {
+				return index;
+			}
+		}
+		return -1;
+	}
+	
+	private static final class AirCounterSnapshot {
+		private int countNonEmptyBlocks;
+		private int countAirBlocks;
+		private final int[] countTickingBlocks = new int[0x80];
 	}
 	
 	public StateAir getStateAir(final World world, final int x, final int y, final int z) throws ExceptionChunkNotLoaded {
