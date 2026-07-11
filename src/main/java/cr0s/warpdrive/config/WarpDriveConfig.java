@@ -304,6 +304,9 @@ public class WarpDriveConfig {
 	public static int              SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS = 120;
 	public static String[]         SHIP_MASS_UNLIMITED_PLAYER_NAMES = { "notch", "someone" };
 	
+	// Jump gate
+	public static int[]            JUMP_GATE_SIZE_MAX_PER_SIDE_BY_TIER = { 127, 32, 64, 127 };
+	
 	// Biometric scanner
 	public static int              BIOMETRIC_SCANNER_DURATION_TICKS = 100;
 	public static int              BIOMETRIC_SCANNER_RANGE_BLOCKS = 3;
@@ -1054,7 +1057,7 @@ public class WarpDriveConfig {
 		SHIP_MASS_MAX_ON_PLANET_SURFACE = Commons.clamp(0, 10000000,
 		        config.get("ship", "volume_max_on_planet_surface", SHIP_MASS_MAX_ON_PLANET_SURFACE, "Maximum ship mass (in blocks) to jump on a planet").getInt());
 		SHIP_MASS_MIN_FOR_HYPERSPACE = Commons.clamp(0, 10000000,
-		        config.get("ship", "volume_min_for_hyperspace", SHIP_MASS_MIN_FOR_HYPERSPACE, "Minimum ship mass (in blocks) to enter or exit hyperspace").getInt());
+		        config.get("ship", "volume_min_for_hyperspace", SHIP_MASS_MIN_FOR_HYPERSPACE, "Minimum ship mass (in blocks) to enter or exit hyperspace without a jumpgate").getInt());
 		SHIP_MASS_UNLIMITED_PLAYER_NAMES = config.get("ship", "mass_unlimited_player_names", SHIP_MASS_UNLIMITED_PLAYER_NAMES,
 				"List of player names which have unlimited block counts to their ship").getStringList();
 		
@@ -1072,6 +1075,11 @@ public class WarpDriveConfig {
 		        config.get("ship", "volume_scan_blocks_per_tick", SHIP_VOLUME_SCAN_BLOCKS_PER_TICK, "Number of blocks to scan per tick when getting ship bounds, too high will cause lag spikes when resizing a ship").getInt());
 		SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS = Commons.clamp(0, 300,
                 config.get("ship", "volume_scan_age_tolerance", SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS, "Ship volume won't be refreshed unless it's older than that many seconds").getInt());
+		
+		// Jump gate
+		JUMP_GATE_SIZE_MAX_PER_SIDE_BY_TIER =
+				config.get("jump_gate", "size_max_per_side_by_tier", JUMP_GATE_SIZE_MAX_PER_SIDE_BY_TIER, "Maximum jump gate size on each axis in blocks, for a given tier").getIntList();
+		clampByTier(1, Integer.MAX_VALUE, JUMP_GATE_SIZE_MAX_PER_SIDE_BY_TIER);
 		
 		// Offline avatar
 		OFFLINE_AVATAR_ENABLE =

@@ -43,7 +43,7 @@ import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.text.WordUtils;
 
 /**
- * Registry of all known ships and other global regions in the world.
+ * Registry of all known ships, jumpgates, etc. in the world
  * 
  * @author LemADEC
  */
@@ -654,6 +654,9 @@ public class GlobalRegionManager {
 						break;
 					case SHIP:
 						isValid = block instanceof BlockShipCore && tileEntity != null && !tileEntity.isInvalid();
+						break;
+					case JUMP_GATE:
+						// isValid = block == WarpDrive.blockJumpGateCore && tileEntity != null && !tileEntity.isInvalid();
 						break;
 					case PLANET:
 						break;

@@ -9,6 +9,7 @@ import cr0s.warpdrive.api.WarpDriveText;
 import cr0s.warpdrive.api.computer.IMultiBlockCoreOrController;
 import cr0s.warpdrive.api.computer.IMultiBlockCore;
 import cr0s.warpdrive.block.detection.BlockWarpIsolation;
+import cr0s.warpdrive.config.Dictionary;
 import cr0s.warpdrive.config.ShipMovementCosts;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.data.BlockProperties;
@@ -21,6 +22,7 @@ import cr0s.warpdrive.data.EnumShipAutopilotStatus;
 import cr0s.warpdrive.data.EnumShipCommand;
 import cr0s.warpdrive.data.EnumShipCoreState;
 import cr0s.warpdrive.data.EnumShipMovementType;
+import cr0s.warpdrive.data.GlobalRegion;
 import cr0s.warpdrive.data.GlobalRegionManager;
 import cr0s.warpdrive.data.SoundEvents;
 import cr0s.warpdrive.data.Transformation;
@@ -37,10 +39,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.MobEffects;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
@@ -422,6 +426,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 			switch (commandCurrent) {
 			case MANUAL:
 			case HYPERDRIVE:
+			case GATE:
 				// initiating jump
 				if (WarpDriveConfig.LOGGING_JUMPBLOCKS) {
 					WarpDrive.logger.info(String.format("%s state ONLINE -> initiating jump",
@@ -1474,6 +1479,179 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		return shipMovementCosts.energyRequired;
 	}
 	
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
+	private boolean isShipInJumpgate(@Nonnull final GlobalRegion jumpGate, @Nonnull final WarpDriveText reason) {
+		assert jumpGate.type == EnumGlobalRegionType.JUMP_GATE;
+		final AxisAlignedBB aabb = jumpGate.getArea();
+		if (WarpDriveConfig.LOGGING_JUMP) {
+			WarpDrive.logger.info(this + " Jumpgate " + jumpGate.name + " AABB is " + aabb);
+		}
+		int countBlocksInside = 0;
+		int countBlocksTotal = 0;
+		
+		if ( aabb.contains(new Vec3d(minX, minY, minZ))
+		  && aabb.contains(new Vec3d(maxX, maxY, maxZ)) ) {
+			// fully inside
+			return true;
+		}
+		
+		for (int x = minX; x <= maxX; x++) {
+			for (int z = minZ; z <= maxZ; z++) {
+				for (int y = minY; y <= maxY; y++) {
+					final IBlockState blockState = world.getBlockState(new BlockPos(x, y, z));
+					
+					// Skipping vanilla air & ignored blocks
+					if (blockState.getBlock() == Blocks.AIR || Dictionary.BLOCKS_LEFTBEHIND.contains(blockState.getBlock())) {
+						continue;
+					}
+					if (Dictionary.BLOCKS_NOMASS.contains(blockState.getBlock())) {
+						continue;
+					}
+					
+					if (aabb.minX <= x && aabb.maxX >= x && aabb.minY <= y && aabb.maxY >= y && aabb.minZ <= z && aabb.maxZ >= z) {
+						countBlocksInside++;
+					}
+					countBlocksTotal++;
+				}
+			}
+		}
+		
+		float percent = 0F;
+		if (shipMass != 0) {
+			percent = Math.round((((countBlocksInside * 1.0F) / shipMass) * 100.0F) * 10.0F) / 10.0F;
+		}
+		
+		if (WarpDriveConfig.LOGGING_JUMP) {
+			if (shipMass != countBlocksTotal) {
+				WarpDrive.logger.warn(String.format("%s Ship mass has changed from %d to %d blocks",
+				                                    this, shipMass, countBlocksTotal));
+			}
+			WarpDrive.logger.info(String.format("%s Ship has %d / %d blocks (%.1f %%) in jump gate '%s'",
+			                                    this, countBlocksInside, shipMass, percent, jumpGate.name));
+		}
+		
+		// At least 80% of ship must be inside jumpgate
+		if (percent > 80F) {
+			return true;
+		} else if (percent <= 0.001) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.jumpgate_is_too_far");
+			return false;
+		} else {
+			reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.jumpgate_partially_entered",
+			              percent);
+			return false;
+		}
+	}
+	
+	private boolean isFreePlaceForShip(final int destX, final int destY, final int destZ) {
+		int newX, newZ;
+		
+		if ( destY + getUp() > 255
+		  || destY - getDown() < 5 ) {
+			return false;
+		}
+		
+		final int moveX = destX - pos.getX();
+		final int moveY = destY - pos.getY();
+		final int moveZ = destZ - pos.getZ();
+		
+		for (int x = minX; x <= maxX; x++) {
+			newX = moveX + x;
+			for (int z = minZ; z <= maxZ; z++) {
+				newZ = moveZ + z;
+				for (int y = minY; y <= maxY; y++) {
+					if (moveY + y < 0 || moveY + y > 255) {
+						return false;
+					}
+					
+					final Block blockSource = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+					final Block blockTarget = world.getBlockState(new BlockPos(newX, moveY + y, newZ)).getBlock();
+					
+					// not vanilla air nor ignored blocks at source
+					// not vanilla air nor expandable blocks are target location
+					if ( blockSource != Blocks.AIR
+					  && !Dictionary.BLOCKS_EXPANDABLE.contains(blockSource)
+					  && blockTarget != Blocks.AIR
+					  && !Dictionary.BLOCKS_EXPANDABLE.contains(blockTarget)) {
+						return false;
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	private void doGateJump() {
+		// Search nearest jump-gate
+		final String targetName = getTargetName();
+		final GlobalRegion jumpGate_target = GlobalRegionManager.getByName(EnumGlobalRegionType.JUMP_GATE, targetName);
+		
+		if (jumpGate_target == null) {
+			commandDone(false, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.jumpgate_not_defined",
+			                                     targetName));
+			return;
+		}
+		
+		// Now make jump to a beacon
+		final int gateX = jumpGate_target.x;
+		final int gateY = jumpGate_target.y;
+		final int gateZ = jumpGate_target.z;
+		int destX = gateX;
+		int destY = gateY;
+		int destZ = gateZ;
+		final GlobalRegion jumpGate_nearest = GlobalRegionManager.getNearest(EnumGlobalRegionType.JUMP_GATE, world, pos);
+		
+		final WarpDriveText reason = new WarpDriveText();
+		if (jumpGate_nearest == null || !isShipInJumpgate(jumpGate_nearest, reason)) {
+			commandDone(false, reason);
+			return;
+		}
+		
+		// If gate is blocked by obstacle
+		if (!isFreePlaceForShip(gateX, gateY, gateZ)) {
+			// Randomize destination coordinates and check for collision with obstacles around jumpgate
+			// Try to find good place for ship
+			int numTries = 10; // num tries to check for collision
+			boolean placeFound = false;
+			
+			for (; numTries > 0; numTries--) {
+				// randomize destination coordinates around jumpgate
+				destX = gateX + ((world.rand.nextBoolean()) ? -1 : 1) * (20 + world.rand.nextInt(100));
+				destZ = gateZ + ((world.rand.nextBoolean()) ? -1 : 1) * (20 + world.rand.nextInt(100));
+				destY = gateY + ((world.rand.nextBoolean()) ? -1 : 1) * (20 + world.rand.nextInt(50));
+				
+				// check for collision
+				if (isFreePlaceForShip(destX, destY, destZ)) {
+					placeFound = true;
+					break;
+				}
+			}
+			
+			if (!placeFound) {
+				commandDone(false, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.jumpgate_blocked"));
+				return;
+			}
+			
+			WarpDrive.logger.info(String.format("%s Gate exit found after %d trials.",
+			                                    this, 10 - numTries));
+		}
+		
+		// Consume energy
+		if (energy_consume(shipMovementCosts.energyRequired, false)) {
+			WarpDrive.logger.info(String.format("%s Moving ship to a place around gate '%s' (%d %d %d)",
+			                                    this, jumpGate_target.name, destX, destY, destZ));
+			final JumpSequencer jump = new JumpSequencer(this, EnumShipMovementType.GATE_ACTIVATING, targetName, 0, 0, 0, (byte) 0, destX, destY, destZ);
+			jump.enable();
+		} else {
+			final String units = WarpDriveConfig.ENERGY_DISPLAY_UNITS;
+			Commons.messageToAllPlayersInArea(this, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.insufficient_energy",
+			                                                          EnergyWrapper.format(energy_getEnergyStored(), units),
+			                                                          EnergyWrapper.format(shipMovementCosts.energyRequired, units),
+			                                                          units));
+		}
+	}
+	
 	private void doJump() {
 		
 		final int requiredEnergy = shipMovementCosts.energyRequired;
@@ -1490,14 +1668,24 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		final String shipInfo = String.format("%d blocks inside (%d %d %d) to (%d %d %d) with an actual mass of %d blocks",
 		                                      shipVolume, minX, minY, minZ, maxX, maxY, maxZ, shipMass );
 		switch (commandCurrent) {
+		case GATE:
+			WarpDrive.logger.info(this + " Performing gate jump of " + shipInfo);
+			doGateJump();
+			return;
+			
 		case HYPERDRIVE:
 			WarpDrive.logger.info(this + " Performing hyperdrive jump of " + shipInfo);
 			
 			// Check ship size for hyper-space jump
 			if (shipMass < WarpDriveConfig.SHIP_MASS_MIN_FOR_HYPERSPACE) {
-				commandDone(false, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.insufficient_mass_for_hyperspace",
-				                                     WarpDriveConfig.SHIP_MASS_MIN_FOR_HYPERSPACE, shipMass ));
-				return;
+				final GlobalRegion jumpGate_nearest = GlobalRegionManager.getNearest(EnumGlobalRegionType.JUMP_GATE, world, pos);
+				
+				final WarpDriveText reason = new WarpDriveText();
+				if (jumpGate_nearest == null || !isShipInJumpgate(jumpGate_nearest, reason)) {
+					commandDone(false, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.insufficient_mass_for_hyperspace",
+					                                     WarpDriveConfig.SHIP_MASS_MIN_FOR_HYPERSPACE, shipMass ));
+					return;
+				}
 			}
 			break;
 			

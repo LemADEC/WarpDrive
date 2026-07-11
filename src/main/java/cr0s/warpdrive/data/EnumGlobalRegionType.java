@@ -9,6 +9,7 @@ public enum EnumGlobalRegionType implements IStringSerializable {
 	
 	UNDEFINED        ("-undefined-"      , true ),
 	SHIP             ("ship"             , true ), // a ship core
+	JUMP_GATE        ("jump_gate"        , true ), // a jump gate
 	PLANET           ("planet"           , true ), // a planet (a transition plane allowing to move to another dimension)
 	STAR             ("star"             , true ), // a star
 	STRUCTURE        ("structure"        , true ), // a structure from WorldGeneration (moon, asteroid field, etc.)

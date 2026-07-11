@@ -36,6 +36,7 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	private int moveUp = 0;
 	private int moveRight = 0;
 	private byte rotationSteps = 0;
+	protected String nameTarget = "";
 	
 	protected EnumShipCommand enumShipCommand = EnumShipCommand.IDLE;
 	protected boolean isCommandConfirmed = false;
@@ -55,6 +56,7 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 				"movement",
 				"rotationSteps",
 				"state",
+				"targetName",
 				"validateMovement",
 				"validateNavigation",
 				});
@@ -76,6 +78,7 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 				tagCompound.getInteger("moveUp"),
 				tagCompound.getInteger("moveRight") );
 		setRotationSteps(tagCompound.getByte("rotationSteps"));
+		nameTarget = tagCompound.getString("nameTarget");
 		
 		final boolean isConfirmed = tagCompound.hasKey("commandConfirmed") && tagCompound.getBoolean("commandConfirmed");
 		setCommand(tagCompound.getString("commandName"), isConfirmed);
@@ -97,6 +100,7 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		tagCompound.setInteger("moveUp", moveUp);
 		tagCompound.setInteger("moveRight", moveRight);
 		tagCompound.setByte("rotationSteps", rotationSteps);
+		tagCompound.setString("nameTarget", nameTarget);
 		
 		tagCompound.setString("commandName", enumShipCommand.getName());
 		tagCompound.setBoolean("commandConfirmed", isCommandConfirmed);
@@ -145,6 +149,7 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		tagCompound.removeTag("moveUp");
 		tagCompound.removeTag("moveRight");
 		tagCompound.removeTag("rotationSteps");
+		tagCompound.removeTag("nameTarget");
 		
 		tagCompound.removeTag("commandName");
 		tagCompound.removeTag("commandConfirmed");
@@ -281,6 +286,10 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		}
 	}
 	
+	String getTargetName() {
+		return nameTarget;
+	}
+	
 	// Common OC/CC methods
 	@Override
 	abstract public Object[] getOrientation();
@@ -402,6 +411,14 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	@Override
 	abstract public Object[] state();
 	
+	@Override
+	public Object[] targetName(final Object[] arguments) {
+		if (arguments.length == 1 && arguments[0] != null) {
+			this.nameTarget = (String) arguments[0];
+		}
+		return new Object[] { nameTarget };
+	}
+	
 	// OpenComputers callback methods
 	@Callback(direct = true)
 	@Optional.Method(modid = "opencomputers")
@@ -477,6 +494,12 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	
 	@Callback(direct = true)
 	@Optional.Method(modid = "opencomputers")
+	public Object[] targetName(final Context context, final Arguments arguments) {
+		return targetName(OC_convertArgumentsAndLogCall(context, arguments));
+	}
+	
+	@Callback(direct = true)
+	@Optional.Method(modid = "opencomputers")
 	public Object[] validateMovement(final Context context, final Arguments arguments) {
 		return validateMovement(OC_convertArgumentsAndLogCall(context, arguments));
 	}
@@ -525,6 +548,9 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		
 		case "state":
 			return state();
+		
+		case "targetName":
+			return targetName(arguments);
 		
 		case "validateMovement":
 			return validateMovement(arguments);

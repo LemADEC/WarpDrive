@@ -38,7 +38,3 @@
 - Fixed stale tile entities crashing when their saved tile entity outlives the block state at the same position.
 - Fixed navigation map body icons being hidden behind opaque fallback markers.
 - Fixed overlapping navigation map labels by stacking same-location bodies and resolving label collisions.
-
-### Removed
-
-- Removed obsolete jump gate block, tile entity, scanner, and generator classes from the movement registration path.

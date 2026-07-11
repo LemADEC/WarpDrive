@@ -750,6 +750,12 @@ public class JumpSequencer extends AbstractSequencer {
 		isPluginCheckDone = false;
 		firstAdjustmentReason = null;
 		switch (shipMovementType) {
+		case GATE_ACTIVATING:
+			moveX = destX - ship.core.getX();
+			moveY = destY - ship.core.getY();
+			moveZ = destZ - ship.core.getZ();
+			break;
+			
 		case INSTANTIATE:
 		case RESTORE:
 			moveX = destX - ship.core.getX();
@@ -948,6 +954,11 @@ public class JumpSequencer extends AbstractSequencer {
 			
 		case HYPERSPACE_EXITING:
 			ship.messageToAllPlayersOnShip(new WarpDriveText(null, "warpdrive.ship.guide.leaving_hyperspace"));
+			break;
+			
+		case GATE_ACTIVATING:
+			ship.messageToAllPlayersOnShip(new WarpDriveText(null, "warpdrive.ship.guide.engaging_jumpgate_x",
+			                                                 nameTarget));
 			break;
 			
 		case INSTANTIATE:
@@ -1257,6 +1268,8 @@ public class JumpSequencer extends AbstractSequencer {
 			worldTarget = worldSource;
 			break;
 			
+		case GATE_ACTIVATING:
+			// @TODO Jumpgate reimplementation
 		default:
 			WarpDrive.logger.error(String.format("Invalid movement type %s",
 			                                     shipMovementType));
@@ -1352,6 +1365,9 @@ public class JumpSequencer extends AbstractSequencer {
 			                             new Vector3(jumpBlock.x + 0.5D, jumpBlock.y + 0.5D, jumpBlock.z + 0.5D),
 			                             new Vector3(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D),
 			                             0.6F, 0.1F, 0.7F, 30, 0, 100);
+			break;
+			
+		case GATE_ACTIVATING:
 			break;
 			
 		case INSTANTIATE:

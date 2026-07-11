@@ -28,9 +28,19 @@
 					"side"  : "warpdrive:blocks/movement/ship_controller-side_active1"
 				}
 			},
+			"autopilot": {
+				"textures": {
+					"side"  : "warpdrive:blocks/movement/ship_controller-side_active2"
+				}
+			},
 			"hyperdrive": {
 				"textures": {
 					"side"  : "warpdrive:blocks/movement/ship_controller-side_active4"
+				}
+			},
+			"gate": {
+				"textures": {
+					"side"  : "warpdrive:blocks/movement/ship_controller-side_active5"
 				}
 			},
 			"maintenance": {

@@ -23,4 +23,6 @@ public interface IShipController extends IMultiBlockCoreOrController {
 	Object[] rotationSteps(Object[] arguments);
 	
 	Object[] state();
+	
+	Object[] targetName(Object[] arguments);
 }
