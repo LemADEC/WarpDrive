@@ -2,6 +2,7 @@ package cr0s.warpdrive.block.weapon;
 
 import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.api.ICamera;
 import cr0s.warpdrive.api.IVideoChannel;
 import cr0s.warpdrive.block.TileEntityLaser;
 import cr0s.warpdrive.config.WarpDriveConfig;
@@ -18,9 +19,11 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import net.minecraftforge.fml.common.Optional;
 
-public class TileEntityLaserCamera extends TileEntityLaser implements IVideoChannel {
+public class TileEntityLaserCamera extends TileEntityLaser implements ICamera {
 	
 	private int videoChannel = -1;
+	private float cameraYaw = Float.NaN;
+	private float cameraPitch = Float.NaN;
 	
 	private static final int REGISTRY_UPDATE_INTERVAL_TICKS = 15 * 20;
 	private static final int PACKET_SEND_INTERVAL_TICKS = 60 * 20;
@@ -83,11 +86,41 @@ public class TileEntityLaserCamera extends TileEntityLaser implements IVideoChan
 			registryUpdateTicks = 0;
 		}
 	}
+
+	@Override
+	public boolean hasCameraOrientation() {
+		return Float.isFinite(cameraYaw) && Float.isFinite(cameraPitch);
+	}
+
+	@Override
+	public float getCameraYaw() {
+		return cameraYaw;
+	}
+
+	@Override
+	public float getCameraPitch() {
+		return cameraPitch;
+	}
+
+	@Override
+	public void setCameraOrientation(final float yaw, final float pitch) {
+		cameraYaw = yaw;
+		cameraPitch = pitch;
+		markDirty();
+	}
 	
 	@Override
 	public void readFromNBT(@Nonnull final NBTTagCompound tagCompound) {
 		super.readFromNBT(tagCompound);
 		setVideoChannel(tagCompound.getInteger("cameraFrequency") + tagCompound.getInteger(VIDEO_CHANNEL_TAG));
+		if ( tagCompound.hasKey(CAMERA_YAW_TAG)
+		  && tagCompound.hasKey(CAMERA_PITCH_TAG) ) {
+			cameraYaw = tagCompound.getFloat(CAMERA_YAW_TAG);
+			cameraPitch = tagCompound.getFloat(CAMERA_PITCH_TAG);
+		} else {
+			cameraYaw = Float.NaN;
+			cameraPitch = Float.NaN;
+		}
 	}
 	
 	@Nonnull
@@ -95,6 +128,10 @@ public class TileEntityLaserCamera extends TileEntityLaser implements IVideoChan
 	public NBTTagCompound writeToNBT(@Nonnull NBTTagCompound tagCompound) {
 		tagCompound = super.writeToNBT(tagCompound);
 		tagCompound.setInteger(VIDEO_CHANNEL_TAG, videoChannel);
+		if (hasCameraOrientation()) {
+			tagCompound.setFloat(CAMERA_YAW_TAG, cameraYaw);
+			tagCompound.setFloat(CAMERA_PITCH_TAG, cameraPitch);
+		}
 		return tagCompound;
 	}
 	

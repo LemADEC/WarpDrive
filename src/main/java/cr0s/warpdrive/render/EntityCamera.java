@@ -15,6 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -36,6 +37,8 @@ public final class EntityCamera extends EntityLivingBase {
 	private int cameraZ;
 	
 	private EntityPlayer player;
+	private float playerYawLast;
+	private float playerPitchLast;
 	
 	private int dx = 0, dy = 0, dz = 0;
 	
@@ -62,6 +65,8 @@ public final class EntityCamera extends EntityLivingBase {
 		cameraY = y;
 		cameraZ = z;
 		this.player = player;
+		playerYawLast = player.rotationYaw;
+		playerPitchLast = player.rotationPitch;
 	}
 		
 	@Override
@@ -91,6 +96,7 @@ public final class EntityCamera extends EntityLivingBase {
 			return;
 		}
 		
+		PacketHandler.sendCameraOrientationPacket(ClientCameraHandler.blockPosCheck1, new BlockPos(cameraX, cameraY, cameraZ), rotationYaw, rotationPitch);
 		ClientCameraHandler.resetViewpoint();
 		world.removeEntity(this);
 		isActive = false;
@@ -113,13 +119,15 @@ public final class EntityCamera extends EntityLivingBase {
 				return;
 			}
 			
+			final float deltaYaw = MathHelper.wrapDegrees(player.rotationYaw - playerYawLast);
+			final float deltaPitch = player.rotationPitch - playerPitchLast;
+			rotationYaw = MathHelper.wrapDegrees(rotationYaw + deltaYaw);
+			rotationPitch = MathHelper.clamp(rotationPitch + deltaPitch, -90.0F, 90.0F);
+			playerYawLast = player.rotationYaw;
+			playerPitchLast = player.rotationPitch;
+
 			final Block block = world.getBlockState(new BlockPos(cameraX, cameraY, cameraZ)).getBlock();
 			final Minecraft mc = Minecraft.getMinecraft();
-			if (mc.getRenderViewEntity() != null) {
-				mc.getRenderViewEntity().rotationYaw = player.rotationYaw;
-				// mc.renderViewEntity.rotationYawHead = player.rotationYawHead;
-				mc.getRenderViewEntity().rotationPitch = player.rotationPitch;
-			}
 			
 			ClientCameraHandler.overlayLoggingMessage = "Mouse " + Mouse.isButtonDown(0) + " " + Mouse.isButtonDown(1) + " " + Mouse.isButtonDown(2) + " " + Mouse.isButtonDown(3)
 			                                          + "\nBackspace " + Keyboard.isKeyDown(Keyboard.KEY_BACKSLASH)

@@ -2,6 +2,7 @@ package cr0s.warpdrive.block.detection;
 
 import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.api.ICamera;
 import cr0s.warpdrive.api.IVideoChannel;
 import cr0s.warpdrive.api.WarpDriveText;
 import cr0s.warpdrive.block.TileEntityAbstractMachine;
@@ -49,9 +50,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.common.Optional;
 
-public class TileEntityCamera extends TileEntityAbstractMachine implements IVideoChannel {
+public class TileEntityCamera extends TileEntityAbstractMachine implements ICamera {
 	
 	private int videoChannel = -1;
+	private float cameraYaw = Float.NaN;
+	private float cameraPitch = Float.NaN;
 
 	private static final int REGISTRY_UPDATE_INTERVAL_TICKS = 15 * 20;
 	private static final int PACKET_SEND_INTERVAL_TICKS = 60 * 20;
@@ -430,6 +433,28 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			registryUpdateTicks = 0;
 		}
 	}
+
+	@Override
+	public boolean hasCameraOrientation() {
+		return Float.isFinite(cameraYaw) && Float.isFinite(cameraPitch);
+	}
+
+	@Override
+	public float getCameraYaw() {
+		return cameraYaw;
+	}
+
+	@Override
+	public float getCameraPitch() {
+		return cameraPitch;
+	}
+
+	@Override
+	public void setCameraOrientation(final float yaw, final float pitch) {
+		cameraYaw = yaw;
+		cameraPitch = pitch;
+		markDirty();
+	}
 	
 	@Override
 	public void invalidate() {
@@ -454,6 +479,14 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		super.readFromNBT(tagCompound);
 		
 		videoChannel = tagCompound.getInteger("frequency") + tagCompound.getInteger(VIDEO_CHANNEL_TAG);
+		if ( tagCompound.hasKey(CAMERA_YAW_TAG)
+		  && tagCompound.hasKey(CAMERA_PITCH_TAG) ) {
+			cameraYaw = tagCompound.getFloat(CAMERA_YAW_TAG);
+			cameraPitch = tagCompound.getFloat(CAMERA_PITCH_TAG);
+		} else {
+			cameraYaw = Float.NaN;
+			cameraPitch = Float.NaN;
+		}
 		if (WarpDriveConfig.LOGGING_VIDEO_CHANNEL) {
 			WarpDrive.logger.info(this + " readFromNBT");
 		}
@@ -486,6 +519,10 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		tagCompound = super.writeToNBT(tagCompound);
 		
 		tagCompound.setInteger(VIDEO_CHANNEL_TAG, videoChannel);
+		if (hasCameraOrientation()) {
+			tagCompound.setFloat(CAMERA_YAW_TAG, cameraYaw);
+			tagCompound.setFloat(CAMERA_PITCH_TAG, cameraPitch);
+		}
 		if (WarpDriveConfig.LOGGING_VIDEO_CHANNEL) {
 			WarpDrive.logger.info(this + " writeToNBT");
 		}

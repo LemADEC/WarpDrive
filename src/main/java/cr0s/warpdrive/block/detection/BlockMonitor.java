@@ -2,6 +2,7 @@ package cr0s.warpdrive.block.detection;
 
 import cr0s.warpdrive.Commons;
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.api.ICamera;
 import cr0s.warpdrive.api.IVideoChannel;
 import cr0s.warpdrive.api.WarpDriveText;
 import cr0s.warpdrive.block.BlockAbstractRotatingContainer;
@@ -73,8 +74,12 @@ public class BlockMonitor extends BlockAbstractRotatingContainer {
 				                                                       camera.blockPos.getX(),
 				                                                       camera.blockPos.getY(),
 				                                                       camera.blockPos.getZ() ));
+				final TileEntity tileEntityCamera = world.getTileEntity(camera.blockPos);
+				final ICamera cameraTile = tileEntityCamera instanceof ICamera ? (ICamera) tileEntityCamera : null;
 				ClientCameraHandler.setupViewpoint(
-						camera.type, entityPlayer, entityPlayer.rotationYaw, entityPlayer.rotationPitch,
+						camera.type, entityPlayer,
+						cameraTile != null && cameraTile.hasCameraOrientation() ? cameraTile.getCameraYaw() : entityPlayer.rotationYaw,
+						cameraTile != null && cameraTile.hasCameraOrientation() ? cameraTile.getCameraPitch() : entityPlayer.rotationPitch,
 						blockPos, blockState,
 						camera.blockPos, world.getBlockState(camera.blockPos));
 				return true;
