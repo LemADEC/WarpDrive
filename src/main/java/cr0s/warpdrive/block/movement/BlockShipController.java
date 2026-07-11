@@ -5,6 +5,7 @@ import cr0s.warpdrive.api.WarpDriveText;
 import cr0s.warpdrive.block.BlockAbstractContainer;
 import cr0s.warpdrive.data.EnumShipCommand;
 import cr0s.warpdrive.data.EnumTier;
+import cr0s.warpdrive.network.PacketHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -14,9 +15,13 @@ import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
@@ -87,6 +92,39 @@ public class BlockShipController extends BlockAbstractContainer {
 					}
 					return false;
 				}
+			}
+		}
+		return true;
+	}
+	
+	@Override
+	public boolean onBlockActivated(@Nonnull final World world, @Nonnull final BlockPos blockPos, @Nonnull final IBlockState blockState,
+	                                @Nonnull final EntityPlayer entityPlayer, @Nonnull final EnumHand enumHand,
+	                                @Nonnull final EnumFacing enumFacing, final float hitX, final float hitY, final float hitZ) {
+		if (enumHand != EnumHand.MAIN_HAND) {
+			return super.onBlockActivated(world, blockPos, blockState, entityPlayer, enumHand, enumFacing, hitX, hitY, hitZ);
+		}
+		
+		final ItemStack itemStackHeld = entityPlayer.getHeldItem(enumHand);
+		if (!itemStackHeld.isEmpty() || entityPlayer.isSneaking()) {
+			return super.onBlockActivated(world, blockPos, blockState, entityPlayer, enumHand, enumFacing, hitX, hitY, hitZ);
+		}
+		
+		final TileEntity tileEntity = world.getTileEntity(blockPos);
+		if (!(tileEntity instanceof TileEntityShipController)) {
+			return super.onBlockActivated(world, blockPos, blockState, entityPlayer, enumHand, enumFacing, hitX, hitY, hitZ);
+		}
+		
+		if (!world.isRemote) {
+			final TileEntityShipCore tileEntityShipCore = ((TileEntityShipController) tileEntity).getLinkedShipCoreRefresh();
+			if (tileEntityShipCore == null) {
+				Commons.addChatMessage(entityPlayer, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.navigation.no_core"));
+			} else if (!tileEntityShipCore.isCrewMember((EntityPlayerMP) entityPlayer)) {
+				Commons.addChatMessage(entityPlayer, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.navigation.denied"));
+			} else {
+				PacketHandler.sendShipNavigationMapPacket((EntityPlayerMP) entityPlayer, ShipNavigationHelper.buildStaticMapSnapshot(), true);
+				final NBTTagCompound tagCompound = ShipNavigationHelper.buildSnapshot((EntityPlayerMP) entityPlayer, tileEntityShipCore, blockPos, "");
+				PacketHandler.sendShipNavigationPacket((EntityPlayerMP) entityPlayer, tagCompound);
 			}
 		}
 		return true;

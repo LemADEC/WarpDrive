@@ -13,15 +13,18 @@ import cr0s.warpdrive.config.Dictionary;
 import cr0s.warpdrive.config.ShipMovementCosts;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.data.BlockProperties;
+import cr0s.warpdrive.data.CelestialObject;
 import cr0s.warpdrive.data.CelestialObjectManager;
 import cr0s.warpdrive.data.EnergyWrapper;
 import cr0s.warpdrive.data.EnumGlobalRegionType;
+import cr0s.warpdrive.data.EnumShipAutopilotMode;
+import cr0s.warpdrive.data.EnumShipAutopilotStatus;
 import cr0s.warpdrive.data.EnumShipCommand;
 import cr0s.warpdrive.data.EnumShipCoreState;
 import cr0s.warpdrive.data.EnumShipMovementType;
+import cr0s.warpdrive.data.GlobalRegion;
 import cr0s.warpdrive.data.GlobalRegionManager;
 import cr0s.warpdrive.data.SoundEvents;
-import cr0s.warpdrive.data.GlobalRegion;
 import cr0s.warpdrive.data.Transformation;
 import cr0s.warpdrive.data.Vector3;
 import cr0s.warpdrive.data.VectorI;
@@ -92,13 +95,36 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	private ShipScanner shipScanner = null;
 	public int shipMass;
 	public int shipVolume;
+	private int shipScanSignature = 0;
+	private VectorI shipScanSecurityStationLocal = null;
 	private BlockPos posSecurityStation = null;
 	private WeakReference<TileEntitySecurityStation> weakTileEntitySecurityStation = null;
 	private boolean isShipScanValid = false;
-	protected WarpDriveText textShipScanIssues = VALIDITY_ISSUES_UNKNOWN;
+	protected WarpDriveText textShipScanIssues = new WarpDriveText();
 	
 	private EnumShipMovementType shipMovementType;
 	private ShipMovementCosts shipMovementCosts;
+	private String navigationTargetId = "";
+	private String navigationEngagedTargetId = "";
+	private String navigationHeavyCacheKey = "";
+	private NBTTagCompound navigationHeavyCache = null;
+
+	// live status totals (for client warmup/cooldown progress bars)
+	private int warmupTotal_ticks = 0;
+	private int cooldownTotal_ticks = 0;
+
+	// autopilot
+	private static final int AUTOPILOT_MAX_RETRIES = 3;
+	private static final int AUTOPILOT_MAX_LEGS = 64;
+	private static final int AUTOPILOT_BACKOFF_TICKS = 40;
+	private static final int AUTOPILOT_ENERGY_RECHECK_TICKS = 20;
+	private EnumShipAutopilotMode autopilotMode = EnumShipAutopilotMode.SAFETY_STOPS;
+	private EnumShipAutopilotStatus autopilotStatus = EnumShipAutopilotStatus.IDLE;
+	private long autopilotWaitUntilTick = 0L;
+	private int autopilotRetryCount = 0;
+	private int autopilotLegsExecuted = 0;
+	private String autopilotLastErrorKey = "";
+	private boolean autopilotSingleStep = false;
 	
 	private long distanceSquared = 0;
 	private boolean isCooldownReported = false;
@@ -154,7 +180,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		
 		// target location
 		final VectorI vMovement = getMovement();
-		if (vMovement.getMagnitudeSquared() > 0) {
+		if (vMovement.getMagnitudeSquared() > 0L) {
 			final VectorI movement = getMovement();
 			final VectorI shipSize = new VectorI(getFront() + 1 + getBack(),
 			                                     getUp()    + 1 + getDown(),
@@ -192,7 +218,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 					                        0.3F, 0.8F, 1.0F, BOUNDING_BOX_INTERVAL_TICKS + 1) );
 		}
 	}
-	
+
 	@Override
 	protected void onConstructed() {
 		super.onConstructed();
@@ -275,6 +301,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 			  && getDown() == 0 && getUp() == 0 ) {
 				textShipScanIssues = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.no_dimension_set");
 				isShipScanValid = false;
+				shipScanSignature = 0;
 				return;
 			}
 			if ( (getBack() + getFront()) > WarpDriveConfig.SHIP_SIZE_MAX_PER_SIDE_BY_TIER[enumTier.getIndex()]
@@ -283,6 +310,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 				textShipScanIssues = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.too_large_side_for_tier",
 				                                       WarpDriveConfig.SHIP_SIZE_MAX_PER_SIDE_BY_TIER[enumTier.getIndex()]);
 				isShipScanValid = false;
+				shipScanSignature = 0;
 				return;
 			}
 			
@@ -330,6 +358,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 					textShipScanIssues = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.too_much_mass_for_planet",
 					                                       WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE, shipMass );
 					isShipScanValid = false;
+					shipScanSignature = 0;
 					if (isEnabled) {
 						commandDone(false, textShipScanIssues);
 					}
@@ -340,6 +369,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 					textShipScanIssues = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.insufficient_mass_for_hyperspace",
 					                                       WarpDriveConfig.SHIP_MASS_MIN_FOR_HYPERSPACE, shipMass );
 					isShipScanValid = false;
+					shipScanSignature = 0;
 					if (isEnabled) {
 						commandDone(false, textShipScanIssues);
 					}
@@ -349,6 +379,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 					textShipScanIssues = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.insufficient_mass_for_tier",
 					                                       WarpDriveConfig.SHIP_MASS_MIN_BY_TIER[enumTier.getIndex()], shipMass );
 					isShipScanValid = false;
+					shipScanSignature = 0;
 					if (isEnabled) {
 						commandDone(false, textShipScanIssues);
 					}
@@ -358,6 +389,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 					textShipScanIssues = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.too_much_mass_for_tier",
 					                                       WarpDriveConfig.SHIP_MASS_MAX_BY_TIER[enumTier.getIndex()], shipMass );
 					isShipScanValid = false;
+					shipScanSignature = 0;
 					if (isEnabled) {
 						commandDone(false, textShipScanIssues);
 					}
@@ -366,6 +398,9 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 			}
 			textShipScanIssues = new WarpDriveText();
 			isShipScanValid = true;
+			shipScanSignature = computeShipScanSignature();
+			shipScanSecurityStationLocal = posSecurityStation == null ? null : toLocalOffset(posSecurityStation);
+			invalidateNavigationCache();
 		}
 		
 		// skip state handling while cooling down
@@ -425,6 +460,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 				
 				stateCurrent = EnumShipCoreState.WARMING_UP;
 				warmupTime_ticks = shipMovementCosts.warmup_seconds * 20 + randomWarmupAddition_ticks;
+				warmupTotal_ticks = Math.max(1, warmupTime_ticks);
 				isMotionSicknessApplied = false;
 				isSoundPlayed = false;
 				isWarmupReported = false;
@@ -520,8 +556,10 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		default:
 			break;
 		}
+
+		autopilotTick();
 	}
-	
+
 	public boolean isOffline() {
 		return !isEnabled
 		    || enumShipCommand == EnumShipCommand.OFFLINE;
@@ -531,15 +569,415 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		return isEnabled
 		    && enumShipCommand == EnumShipCommand.MAINTENANCE;
 	}
+
+	private int computeShipScanSignature() {
+		int hash = enumTier == null ? 0 : enumTier.getIndex();
+		hash = 31 * hash + getFront();
+		hash = 31 * hash + getBack();
+		hash = 31 * hash + getRight();
+		hash = 31 * hash + getLeft();
+		hash = 31 * hash + getUp();
+		hash = 31 * hash + getDown();
+		return hash;
+	}
+
+	private VectorI toLocalOffset(@Nonnull final BlockPos blockPos) {
+		if (facing == null) {
+			return new VectorI(blockPos.getX() - pos.getX(), blockPos.getY() - pos.getY(), blockPos.getZ() - pos.getZ());
+		}
+		final int deltaX = blockPos.getX() - pos.getX();
+		final int deltaZ = blockPos.getZ() - pos.getZ();
+		final int offsetFront = facing.getXOffset() * deltaX + facing.getZOffset() * deltaZ;
+		final int offsetRight = -facing.getZOffset() * deltaX + facing.getXOffset() * deltaZ;
+		return new VectorI(offsetFront, blockPos.getY() - pos.getY(), offsetRight);
+	}
+
+	private BlockPos fromLocalOffset(@Nonnull final VectorI offset) {
+		if (facing == null) {
+			return pos.add(offset.x, offset.y, offset.z);
+		}
+		final int deltaX = facing.getXOffset() * offset.x - facing.getZOffset() * offset.z;
+		final int deltaZ = facing.getZOffset() * offset.x + facing.getXOffset() * offset.z;
+		return pos.add(deltaX, offset.y, deltaZ);
+	}
+
+	private void restoreSecurityStationFromScanCache() {
+		if (posSecurityStation == null && shipScanSecurityStationLocal != null) {
+			posSecurityStation = fromLocalOffset(shipScanSecurityStationLocal);
+			weakTileEntitySecurityStation = null;
+		}
+	}
+
+	private void invalidateShipScanCache() {
+		shipMass = 0;
+		shipVolume = 0;
+		shipScanSignature = 0;
+		shipScanSecurityStationLocal = null;
+		posSecurityStation = null;
+		weakTileEntitySecurityStation = null;
+		cache_aabbArea = null;
+		isShipScanValid = false;
+		textShipScanIssues = new WarpDriveText();
+		timeLastShipScanDone = -1L;
+		invalidateNavigationCache();
+	}
+
+	public int getShipScanSignature() {
+		return shipScanSignature;
+	}
+
+	public void invalidateNavigationCache() {
+		navigationHeavyCacheKey = "";
+		navigationHeavyCache = null;
+	}
+
+	@Nullable
+	public NBTTagCompound getNavigationHeavyCache(@Nonnull final String cacheKey) {
+		if (navigationHeavyCache == null || !navigationHeavyCacheKey.equals(cacheKey)) {
+			return null;
+		}
+		return navigationHeavyCache.copy();
+	}
+
+	public void setNavigationHeavyCache(@Nonnull final String cacheKey, @Nonnull final NBTTagCompound tagCompound) {
+		navigationHeavyCacheKey = cacheKey;
+		navigationHeavyCache = tagCompound.copy();
+	}
+
+	public String getNavigationTargetId() {
+		return navigationTargetId;
+	}
+
+	public void setNavigationTargetId(final String navigationTargetId) {
+		final String navigationTargetIdNew = navigationTargetId == null ? "" : navigationTargetId;
+		if (!this.navigationTargetId.equals(navigationTargetIdNew)) {
+			this.navigationTargetId = navigationTargetIdNew;
+			invalidateNavigationCache();
+			markDirty();
+		}
+	}
+
+	public void clearNavigationTarget() {
+		setNavigationTargetId("");
+	}
+
+	public String getNavigationEngagedTargetId() {
+		return navigationEngagedTargetId;
+	}
+
+	public void setNavigationEngagedTargetId(final String navigationEngagedTargetId) {
+		this.navigationEngagedTargetId = navigationEngagedTargetId == null ? "" : navigationEngagedTargetId;
+		markDirty();
+	}
+
+	public void clearNavigationEngagedTargetId() {
+		navigationEngagedTargetId = "";
+		markDirty();
+	}
+
+	// ----- autopilot -----
+
+	public EnumShipAutopilotMode getAutopilotMode() {
+		return autopilotMode;
+	}
+
+	public void setAutopilotMode(final EnumShipAutopilotMode mode) {
+		autopilotMode = mode == null ? EnumShipAutopilotMode.OFF : mode;
+		if (autopilotMode == EnumShipAutopilotMode.OFF) {
+			autopilotStatus = EnumShipAutopilotStatus.IDLE;
+		}
+		invalidateNavigationCache();
+		markDirty();
+	}
+
+	public EnumShipAutopilotStatus getAutopilotStatus() {
+		return autopilotStatus;
+	}
+
+	public String getAutopilotLastErrorKey() {
+		return autopilotLastErrorKey;
+	}
+
+	public int getAutopilotLegsExecuted() {
+		return autopilotLegsExecuted;
+	}
+
+	public void startAutopilotRun(final boolean singleStep) {
+		// a fresh route (not a confirmation of a paused leg) resets the per-route oscillation counter
+		if (!autopilotStatus.isActive() && autopilotStatus != EnumShipAutopilotStatus.WAITING_CONFIRM) {
+			autopilotLegsExecuted = 0;
+		}
+		autopilotSingleStep = singleStep;
+		autopilotRetryCount = 0;
+		autopilotLastErrorKey = "";
+		autopilotStatus = EnumShipAutopilotStatus.RUNNING;
+		markDirty();
+	}
+
+	public void cancelAutopilot() {
+		autopilotStatus = EnumShipAutopilotStatus.IDLE;
+		autopilotLegsExecuted = 0;
+		autopilotRetryCount = 0;
+		autopilotSingleStep = false;
+		autopilotLastErrorKey = "";
+		autopilotWaitUntilTick = 0L;
+		clearNavigationEngagedTargetId();
+	}
+
+	public void pauseAutopilot() {
+		if (autopilotStatus.isActive() || autopilotStatus == EnumShipAutopilotStatus.WAITING_CONFIRM) {
+			autopilotStatus = EnumShipAutopilotStatus.PAUSED;
+			markDirty();
+		}
+	}
+
+	public void resumeAutopilot() {
+		if (autopilotStatus == EnumShipAutopilotStatus.PAUSED) {
+			autopilotStatus = EnumShipAutopilotStatus.RUNNING;
+			autopilotWaitUntilTick = 0L;
+			markDirty();
+		}
+	}
+
+	// invoked by JumpSequencer on the success branch, with the destination that was engaged
+	public void onNavigationMovementCompleted(@Nonnull final String navigationEngagedTargetId) {
+		if (navigationEngagedTargetId.isEmpty() || navigationTargetId.isEmpty()) {
+			return;
+		}
+		if (!this.navigationEngagedTargetId.equals(navigationEngagedTargetId)) {
+			return;
+		}
+		final CelestialObject celestialObjectCurrent = CelestialObjectManager.get(world, pos.getX(), pos.getZ());
+		final CelestialObject celestialObjectTarget = CelestialObjectManager.get(false, navigationTargetId);
+		if (ShipNavigationHelper.isAtNavigationDestination(this, celestialObjectCurrent, celestialObjectTarget)) {
+			onAutopilotArrived();
+			return;
+		}
+		refreshShipScanCacheTimestamp();
+		// an intermediate leg landed - decide whether to chain the next one
+		if (autopilotMode == EnumShipAutopilotMode.OFF) {
+			clearNavigationEngagedTargetId();
+			autopilotStatus = EnumShipAutopilotStatus.IDLE;
+			return;
+		}
+		if (autopilotSingleStep || autopilotMode == EnumShipAutopilotMode.ASSISTED) {
+			autopilotSingleStep = false;
+			autopilotStatus = EnumShipAutopilotStatus.WAITING_CONFIRM;
+			markDirty();
+			return;
+		}
+		// SAFETY_STOPS / FULL_AUTO: keep going once cooldown elapses (the pump re-gates risky legs)
+		autopilotStatus = EnumShipAutopilotStatus.WAITING_COOLDOWN;
+		autopilotWaitUntilTick = world.getTotalWorldTime() + ticksCooldown;
+		markDirty();
+	}
+
+	// invoked by JumpSequencer on the failure branch (asynchronous block-move abort)
+	public void onNavigationMovementAborted(@Nonnull final String navigationEngagedTargetId) {
+		if (!this.navigationEngagedTargetId.equals(navigationEngagedTargetId)) {
+			return;
+		}
+		clearNavigationEngagedTargetId();
+		autopilotRetry("warpdrive.navigation.autopilot.leg_failed");
+	}
+
+	private void autopilotRetry(final String reasonKey) {
+		if ( autopilotMode == EnumShipAutopilotMode.OFF
+		  || navigationTargetId.isEmpty()
+		  || !(autopilotStatus.isActive() || autopilotStatus == EnumShipAutopilotStatus.WAITING_CONFIRM) ) {
+			return;
+		}
+		autopilotRetryCount++;
+		if (autopilotRetryCount > AUTOPILOT_MAX_RETRIES) {
+			autopilotFail(reasonKey);
+		} else {
+			autopilotLastErrorKey = reasonKey == null ? "" : reasonKey;
+			autopilotStatus = EnumShipAutopilotStatus.WAITING_COOLDOWN;
+			autopilotWaitUntilTick = world.getTotalWorldTime() + (long) AUTOPILOT_BACKOFF_TICKS * autopilotRetryCount + ticksCooldown;
+		}
+	}
+
+	private void onAutopilotArrived() {
+		clearNavigationTarget();
+		clearNavigationEngagedTargetId();
+		autopilotStatus = EnumShipAutopilotStatus.ARRIVED;
+		autopilotLegsExecuted = 0;
+		autopilotRetryCount = 0;
+		autopilotSingleStep = false;
+		autopilotLastErrorKey = "";
+		Commons.messageToAllPlayersInArea(this, new WarpDriveText(Commons.getStyleCorrect(), "warpdrive.navigation.arrived"));
+		sendEvent("shipAutopilotArrived");
+	}
+
+	private void autopilotFail(final String reasonKey) {
+		autopilotStatus = EnumShipAutopilotStatus.ABORTED;
+		autopilotLastErrorKey = reasonKey == null ? "" : reasonKey;
+		autopilotSingleStep = false;
+		clearNavigationEngagedTargetId();
+		Commons.messageToAllPlayersInArea(this, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.navigation.autopilot.aborted",
+		                                                          new WarpDriveText(null, autopilotLastErrorKey)));
+		sendEvent("shipAutopilotAborted", autopilotLastErrorKey);
+	}
+
+	// runs once per server tick from update(); commits the next leg of a running route when the core is free
+	@SuppressWarnings("PMD.NPathComplexity")
+	private void autopilotTick() {
+		if ( autopilotMode == EnumShipAutopilotMode.OFF
+		  || !autopilotStatus.isActive() ) {
+			return;
+		}
+		if (navigationTargetId.isEmpty()) {
+			autopilotStatus = EnumShipAutopilotStatus.IDLE;
+			return;
+		}
+		if ( isBusy()
+		  || stateCurrent != EnumShipCoreState.IDLE
+		  || isCommandConfirmed ) {
+			return; // a jump is in flight, wait for it to land
+		}
+		final long worldTime = world.getTotalWorldTime();
+		if (worldTime < autopilotWaitUntilTick) {
+			return;
+		}
+
+		final CelestialObject celestialObjectCurrent = CelestialObjectManager.get(world, pos.getX(), pos.getZ());
+		final CelestialObject celestialObjectTarget = CelestialObjectManager.get(false, navigationTargetId);
+		if (ShipNavigationHelper.isAtNavigationDestination(this, celestialObjectCurrent, celestialObjectTarget)) {
+			onAutopilotArrived();
+			return;
+		}
+
+		final ShipNavigationHelper.Leg leg = ShipNavigationHelper.computeNextLeg(this);
+		if (leg == null) {
+			autopilotFail("warpdrive.navigation.autopilot.no_route");
+			return;
+		}
+
+		// safety gating: pause before risky legs (hyperspace folds, landing) and before every leg in assisted mode
+		if ( autopilotMode == EnumShipAutopilotMode.ASSISTED
+		  || (autopilotMode == EnumShipAutopilotMode.SAFETY_STOPS && leg.requiresConfirmation) ) {
+			autopilotStatus = EnumShipAutopilotStatus.WAITING_CONFIRM;
+			autopilotLastErrorKey = "";
+			Commons.messageToAllPlayersInArea(this, new WarpDriveText(null, "warpdrive.navigation.autopilot.awaiting_confirmation",
+			                                                          new WarpDriveText(null, leg.type.getTitleKey())));
+			return;
+		}
+
+		final ShipMovementPreview preview = leg.preview == null
+		                                  ? previewMovement(leg.command, leg.moveFront, leg.moveUp, leg.moveRight, (byte) 0)
+		                                  : leg.preview;
+		if (!preview.canEngage) {
+			if ("warpdrive.navigation.blocker.insufficient_energy".equals(preview.blockerKey)) {
+				autopilotStatus = EnumShipAutopilotStatus.WAITING_ENERGY;
+				autopilotLastErrorKey = preview.blockerKey;
+				autopilotWaitUntilTick = worldTime + AUTOPILOT_ENERGY_RECHECK_TICKS;
+				return;
+			}
+			if ( "warpdrive.navigation.blocker.busy".equals(preview.blockerKey)
+			  || "warpdrive.navigation.blocker.stale_scan".equals(preview.blockerKey) ) {
+				if ("warpdrive.navigation.blocker.stale_scan".equals(preview.blockerKey)) {
+					requestShipScan();
+				}
+				autopilotStatus = EnumShipAutopilotStatus.WAITING_COOLDOWN;
+				autopilotWaitUntilTick = worldTime + AUTOPILOT_BACKOFF_TICKS;
+				return;
+			}
+			autopilotFail(preview.blockerKey.isEmpty() ? "warpdrive.navigation.autopilot.no_route" : preview.blockerKey);
+			return;
+		}
+
+		if (autopilotLegsExecuted >= AUTOPILOT_MAX_LEGS) {
+			autopilotFail("warpdrive.navigation.autopilot.too_many_legs");
+			return;
+		}
+
+		ShipNavigationHelper.commitLeg(this, navigationTargetId, leg);
+		autopilotLegsExecuted++;
+		autopilotRetryCount = 0;
+		autopilotLastErrorKey = "";
+		autopilotStatus = EnumShipAutopilotStatus.RUNNING;
+	}
+
+	// ----- live drive status getters (for the navigation GUI) -----
+
+	public String getDriveStateName() {
+		return stateCurrent.getName();
+	}
+
+	public int getWarmupRemainingTicks() {
+		return warmupTime_ticks;
+	}
+
+	public int getWarmupTotalTicks() {
+		return warmupTotal_ticks;
+	}
+
+	public int getCooldownRemainingTicks() {
+		return ticksCooldown;
+	}
+
+	public int getCooldownTotalTicks() {
+		return cooldownTotal_ticks;
+	}
+
+	public boolean isJumpInProgress() {
+		return stateCurrent == EnumShipCoreState.WARMING_UP
+		    || stateCurrent == EnumShipCoreState.EXECUTE;
+	}
+
+	@Nonnull
+	public String getShipMovementTypeName() {
+		return shipMovementType == null ? "" : shipMovementType.getName();
+	}
 	
 	public boolean isBusy() {
 		return timeLastShipScanDone < 0 || shipScanner != null
 		    || isCooling()
 		    || stateCurrent == EnumShipCoreState.WARMING_UP;
 	}
+
+	public boolean isShipScanStale() {
+		return !world.isRemote
+		    && isShipScanValid
+		    && shipScanner == null
+		    && timeLastShipScanDone > 0L
+		    && timeLastShipScanDone + WarpDriveConfig.SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS * 20L < world.getTotalWorldTime();
+	}
+
+	public boolean isShipScanReady() {
+		return !world.isRemote
+		    && isShipScanValid
+		    && shipScanner == null
+		    && timeLastShipScanDone > 0L
+		    && !isShipScanStale();
+	}
+
+	public void requestShipScan() {
+		if (world.isRemote || shipScanner != null || timeLastShipScanDone < 0L) {
+			return;
+		}
+		invalidateShipScanCache();
+		markDirty();
+	}
+
+	public boolean requestShipScanIfStale() {
+		if (!isShipScanStale()) {
+			return false;
+		}
+		requestShipScan();
+		return true;
+	}
+
+	public void refreshShipScanCacheTimestamp() {
+		if (!world.isRemote && isShipScanValid && shipScanner == null && timeLastShipScanDone > 0L) {
+			timeLastShipScanDone = world.getTotalWorldTime();
+			markDirty();
+		}
+	}
 	
 	private void setCooldown(final int ticksCooldown) {
 		this.ticksCooldown = Math.max(1, Math.max(this.ticksCooldown, ticksCooldown));
+		this.cooldownTotal_ticks = this.ticksCooldown;
 		isCooldownReported = false;
 	}
 	
@@ -595,9 +1033,12 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		}
 		super.commandDone(success, reason);
 		if (!success) {
+			clearNavigationEngagedTargetId();
 			Commons.messageToAllPlayersInArea(this, reason);
 			stateCurrent = EnumShipCoreState.IDLE;
 			sendEvent("shipCommandFailure", reason.getUnformattedText());
+			// a leg of an active autopilot route failed validation: retry with backoff, then give up
+			autopilotRetry("warpdrive.navigation.autopilot.leg_failed");
 		}
 		for (final BlockPos blockPos : blockPosShipControllers) {
 			if (!world.isBlockLoaded(blockPos, false)) {
@@ -639,12 +1080,14 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	
 	@Override
 	protected boolean doScanAssembly(final boolean isDirty, final WarpDriveText textReason) {
-		final boolean isValid = super.doScanAssembly(isDirty, textReason)
-		                     && isShipScanValid;
-		textReason.append(textShipScanIssues);
+		final boolean isValid = super.doScanAssembly(isDirty, textReason);
+		if (!isShipScanValid && !textShipScanIssues.isEmpty()) {
+			textReason.append(textShipScanIssues);
+		}
 		
 		// refresh cache
 		facing = world.getBlockState(pos).getValue(BlockProperties.FACING_HORIZONTAL);
+		restoreSecurityStationFromScanCache();
 		
 		// Search block in cube around core
 		final int xMin = pos.getX() - WarpDriveConfig.RADAR_MAX_ISOLATION_RANGE;
@@ -696,9 +1139,12 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	@Override
 	protected void doUpdateParameters(final boolean isDirty) {
 		// compute dimensions in game coordinates
-		final int old_minX = minX, old_maxX = maxX;
-		final int old_minY = minY, old_maxY = maxY;
-		final int old_minZ = minZ, old_maxZ = maxZ;
+		final int old_minX = minX;
+		final int old_maxX = maxX;
+		final int old_minY = minY;
+		final int old_maxY = maxY;
+		final int old_minZ = minZ;
+		final int old_maxZ = maxZ;
 		if (facing.getXOffset() == 1) {
 			minX = pos.getX() - getBack();
 			maxX = pos.getX() + getFront();
@@ -743,10 +1189,11 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		
 		// request new ship scan
 		if (isDirty || isDirty2) {
-			shipMass = 0;
-			shipVolume = 0;
 			cache_aabbArea = null;
-			timeLastShipScanDone = -1;
+			invalidateNavigationCache();
+			if (!isShipScanValid || shipScanSignature != computeShipScanSignature()) {
+				invalidateShipScanCache();
+			}
 		}
 	}
 	
@@ -786,7 +1233,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 				                                    this, posSecurityStation, tileEntity ));
 			}
 			// force a refresh
-			timeLastShipScanDone = -1;
+			invalidateShipScanCache();
 			return TileEntitySecurityStation.DUMMY;
 		}
 		if (weakTileEntitySecurityStation == null) {
@@ -872,10 +1319,11 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 			return false;
 		}
 		
-		// compute movement costs
-		shipMovementCosts = new ShipMovementCosts(world, pos,
-		                                          this, shipMovementType,
-		                                          shipMass, (int) Math.ceil(Math.sqrt(distanceSquared)));
+		// compute movement costs, then clamp the requested vector to the calculated ship max range
+		final MovementResolution movementResolution = resolveMovement(commandCurrent, shipMovementType, getMovement());
+		setMovement(movementResolution.movement.x, movementResolution.movement.y, movementResolution.movement.z);
+		distanceSquared = movementResolution.movement.getMagnitudeSquared();
+		shipMovementCosts = movementResolution.costs;
 		
 		// allow other mods to validate too
 		final PreJump preJump;
@@ -888,7 +1336,116 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		
 		return true;
 	}
+
+	private MovementResolution resolveMovement(@Nonnull final EnumShipCommand command,
+	                                           @Nonnull final EnumShipMovementType movementType,
+	                                           @Nonnull final VectorI requestedMovement) {
+		VectorI effectiveMovement = requestedMovement.clone();
+		ShipMovementCosts movementCosts = computeMovementCosts(movementType, effectiveMovement);
+		if ( command == EnumShipCommand.HYPERDRIVE
+		  || movementType == EnumShipMovementType.NONE ) {
+			return new MovementResolution(effectiveMovement, movementCosts);
+		}
+
+		int distancePrevious = -1;
+		for (int guard = 0; guard < 16; guard++) {
+			effectiveMovement = requestedMovement.limitedToMagnitude(movementCosts.maximumDistance_blocks);
+			final int distanceCurrent = getDistance(effectiveMovement);
+			final ShipMovementCosts movementCostsCurrent = computeMovementCosts(movementType, effectiveMovement);
+			if ( distanceCurrent == distancePrevious
+			  && distanceCurrent <= movementCostsCurrent.maximumDistance_blocks ) {
+				return new MovementResolution(effectiveMovement, movementCostsCurrent);
+			}
+			distancePrevious = distanceCurrent;
+			movementCosts = movementCostsCurrent;
+		}
+		return new MovementResolution(effectiveMovement, movementCosts);
+	}
+
+	private ShipMovementCosts computeMovementCosts(@Nonnull final EnumShipMovementType movementType,
+	                                               @Nonnull final VectorI movement) {
+		return new ShipMovementCosts(world, pos, this, movementType, shipMass, getDistance(movement));
+	}
+
+	private static int getDistance(@Nonnull final VectorI movement) {
+		return (int) Math.ceil(Math.sqrt(movement.getMagnitudeSquared()));
+	}
+
+	private static final class MovementResolution {
+		private final VectorI movement;
+		private final ShipMovementCosts costs;
+
+		private MovementResolution(@Nonnull final VectorI movement, @Nonnull final ShipMovementCosts costs) {
+			this.movement = movement;
+			this.costs = costs;
+		}
+	}
 	
+	@Nonnull
+	@SuppressWarnings("PMD.NPathComplexity")
+	public ShipMovementPreview previewMovement(@Nonnull final EnumShipCommand command,
+	                                           final int moveFront, final int moveUp, final int moveRight,
+	                                           final byte rotationSteps) {
+		final WarpDriveText reason = new WarpDriveText();
+		// defensively clamp the requested movement: this method is reachable directly from computer scripts
+		// (validateMovement) with arbitrary arguments, and an unclamped Integer.MIN_VALUE would break Math.abs() below
+		final int clampedFront = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveFront);
+		final int clampedUp    = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveUp);
+		final int clampedRight = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveRight);
+		final VectorI requestedMovement = new VectorI(clampedFront, clampedUp, clampedRight);
+		EnumShipMovementType previewMovementType = EnumShipMovementType.compute(world, pos.getX(), minY, maxY, pos.getZ(),
+		                                                                        command, clampedUp, reason);
+		String blockerKey = "";
+		String blockerMessage = "";
+		if (previewMovementType == null || previewMovementType == EnumShipMovementType.NONE) {
+			previewMovementType = EnumShipMovementType.NONE;
+			blockerKey = "warpdrive.navigation.blocker.invalid_command";
+			blockerMessage = Commons.removeFormatting(reason.getUnformattedText());
+		} else if (!getIsEnabled() || isOffline()) {
+			blockerKey = "warpdrive.navigation.blocker.offline";
+			blockerMessage = "Ship core is offline.";
+		} else if (isUnderMaintenance()) {
+			blockerKey = "warpdrive.navigation.blocker.maintenance";
+			blockerMessage = "Ship core is under maintenance.";
+		} else if (isBusy()) {
+			blockerKey = "warpdrive.navigation.blocker.busy";
+			blockerMessage = "Ship core is busy, cooling down, or scanning.";
+		} else if (!isAssemblyValid) {
+			blockerKey = "warpdrive.navigation.blocker.invalid_assembly";
+			blockerMessage = Commons.removeFormatting(textValidityIssues.getUnformattedText());
+		} else if (!isShipScanValid) {
+			blockerKey = "warpdrive.navigation.blocker.invalid_scan";
+			blockerMessage = Commons.removeFormatting(textShipScanIssues.getUnformattedText());
+		} else if (timeLastShipScanDone + WarpDriveConfig.SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS * 20L < world.getTotalWorldTime()) {
+			blockerKey = "warpdrive.navigation.blocker.stale_scan";
+			blockerMessage = "Ship scan is stale.";
+		}
+
+		final int requestedDistance = getDistance(requestedMovement);
+		final MovementResolution movementResolution = previewMovementType == EnumShipMovementType.NONE
+		                                           ? null
+		                                           : resolveMovement(command, previewMovementType, requestedMovement);
+		final VectorI effectiveMovement = movementResolution == null ? new VectorI() : movementResolution.movement;
+		final int effectiveDistance = getDistance(effectiveMovement);
+		final ShipMovementCosts previewMovementCosts = movementResolution == null ? null : movementResolution.costs;
+		final int maximumDistance = previewMovementCosts == null ? 0 : previewMovementCosts.maximumDistance_blocks;
+		final int energyRequired = previewMovementCosts == null ? 0 : previewMovementCosts.energyRequired;
+		if ( blockerKey.isEmpty()
+		  && energy_getEnergyStored() < energyRequired ) {
+			blockerKey = "warpdrive.navigation.blocker.insufficient_energy";
+			blockerMessage = "Insufficient energy in core.";
+		}
+		final boolean wouldBeClamped = effectiveMovement.x != requestedMovement.x
+		                            || effectiveMovement.y != requestedMovement.y
+		                            || effectiveMovement.z != requestedMovement.z;
+
+		return new ShipMovementPreview(command, previewMovementType, requestedMovement, effectiveMovement,
+		                               (byte) ((rotationSteps + 4) % 4),
+		                               requestedDistance, effectiveDistance, maximumDistance, energyRequired,
+		                               energy_getEnergyStored(), blockerKey.isEmpty(), wouldBeClamped,
+		                               blockerKey, blockerMessage);
+	}
+
 	// Computer interface are running independently of updateTicks, hence doing local computations getMaxJumpDistance() and getEnergyRequired()
 	protected int getMaxJumpDistance(final EnumShipCommand command, final WarpDriveText reason) {
 		final EnumShipMovementType shipMovementType = EnumShipMovementType.compute(world, pos.getX(), minY, maxY, pos.getZ(), command, getMovement().y, reason);
@@ -1157,19 +1714,11 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		
 		if (commandCurrent != EnumShipCommand.HYPERDRIVE) {
 			final VectorI movement = getMovement();
-			final VectorI shipSize = new VectorI(getFront() + 1 + getBack(),
-			                                     getUp()    + 1 + getDown(),
-			                                     getRight() + 1 + getLeft());
 			final int maxDistance = shipMovementCosts.maximumDistance_blocks;
-			if (Math.abs(movement.x) - shipSize.x > maxDistance) {
-				movement.x = (int) Math.signum(movement.x) * (shipSize.x + maxDistance);
-			}
-			if (Math.abs(movement.y) - shipSize.y > maxDistance) {
-				movement.y = (int) Math.signum(movement.y) * (shipSize.y + maxDistance);
-			}
-			if (Math.abs(movement.z) - shipSize.z > maxDistance) {
-				movement.z = (int) Math.signum(movement.z) * (shipSize.z + maxDistance);
-			}
+			final VectorI limitedMovement = movement.limitedToMagnitude(maxDistance);
+			movement.x = limitedMovement.x;
+			movement.y = limitedMovement.y;
+			movement.z = limitedMovement.z;
 			moveX = facing.getXOffset() * movement.x - facing.getZOffset() * movement.z;
 			moveY = movement.y;
 			moveZ = facing.getZOffset() * movement.x + facing.getXOffset() * movement.z;
@@ -1180,7 +1729,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		}
 		final JumpSequencer jump = new JumpSequencer(this, shipMovementType, null,
 				moveX, moveY, moveZ, getRotationSteps(),
-				0, 0, 0);
+				0, 0, 0, navigationEngagedTargetId);
 		jump.enable();
 	}
 	
@@ -1189,7 +1738,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		    || axisalignedbb.minY > y || axisalignedbb.maxY < y
 		    || axisalignedbb.minZ > z || axisalignedbb.maxZ < z;
 	}
-	
+
 	@Override
 	public WarpDriveText getStatus() {
 		final WarpDriveText textStatus = super.getStatus();
@@ -1235,6 +1784,36 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		ticksCooldown = tagCompound.getInteger("cooldownTime");
 		warmupTime_ticks = tagCompound.getInteger("warmupTime");
 		jumpCount = tagCompound.getInteger("jumpCount");
+		shipMass = tagCompound.getInteger("shipMass");
+		shipVolume = tagCompound.getInteger("shipVolume");
+		shipScanSignature = tagCompound.getInteger("shipScanSignature");
+		isShipScanValid = tagCompound.getBoolean("isShipScanValid")
+		               && shipMass > 0
+		               && shipVolume > 0;
+		if (isShipScanValid) {
+			timeLastShipScanDone = tagCompound.hasKey("shipScanTime") ? tagCompound.getLong("shipScanTime") : 1L;
+			textShipScanIssues = new WarpDriveText();
+			if (tagCompound.hasKey("shipScanSecurityStationLocal")) {
+				final NBTTagCompound tagSecurityStation = tagCompound.getCompoundTag("shipScanSecurityStationLocal");
+				shipScanSecurityStationLocal = new VectorI(tagSecurityStation.getInteger("front"),
+				                                           tagSecurityStation.getInteger("up"),
+				                                           tagSecurityStation.getInteger("right"));
+			} else {
+				shipScanSecurityStationLocal = null;
+			}
+		} else {
+			invalidateShipScanCache();
+		}
+		navigationTargetId = tagCompound.getString("navigationTargetId");
+		navigationEngagedTargetId = tagCompound.getString("navigationEngagedTargetId");
+		autopilotMode = EnumShipAutopilotMode.get(tagCompound.getString("autopilotMode"));
+		// never blind-resume a half-flown route across a reload: keep the destination, but require a fresh Engage.
+		// the leg counter is preserved so the per-route oscillation cap survives the serialize/deserialize a jump performs.
+		autopilotStatus = EnumShipAutopilotStatus.IDLE;
+		autopilotLegsExecuted = tagCompound.getInteger("autopilotLegs");
+		autopilotRetryCount = 0;
+		autopilotSingleStep = tagCompound.getBoolean("autopilotSingleStep");
+		autopilotLastErrorKey = "";
 	}
 	
 	@Nonnull
@@ -1246,7 +1825,24 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		tagCompound.setInteger("cooldownTime", ticksCooldown);
 		tagCompound.setInteger("warmupTime", warmupTime_ticks);
 		tagCompound.setInteger("jumpCount", jumpCount);
-		
+		tagCompound.setInteger("shipMass", shipMass);
+		tagCompound.setInteger("shipVolume", shipVolume);
+		tagCompound.setInteger("shipScanSignature", shipScanSignature);
+		tagCompound.setBoolean("isShipScanValid", isShipScanValid);
+		tagCompound.setLong("shipScanTime", timeLastShipScanDone);
+		if (shipScanSecurityStationLocal != null) {
+			final NBTTagCompound tagSecurityStation = new NBTTagCompound();
+			tagSecurityStation.setInteger("front", shipScanSecurityStationLocal.x);
+			tagSecurityStation.setInteger("up", shipScanSecurityStationLocal.y);
+			tagSecurityStation.setInteger("right", shipScanSecurityStationLocal.z);
+			tagCompound.setTag("shipScanSecurityStationLocal", tagSecurityStation);
+		}
+		tagCompound.setString("navigationTargetId", navigationTargetId);
+		tagCompound.setString("navigationEngagedTargetId", navigationEngagedTargetId);
+		tagCompound.setString("autopilotMode", autopilotMode.getName());
+		tagCompound.setInteger("autopilotLegs", autopilotLegsExecuted);
+		tagCompound.setBoolean("autopilotSingleStep", autopilotSingleStep);
+
 		return tagCompound;
 	}
 	
@@ -1330,6 +1926,20 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	// Common OC/CC methods
 	@Override
 	public Object[] getOrientation() {
+		if (facing == null) {
+			try {
+				final IBlockState blockState = world == null ? null : world.getBlockState(pos);
+				if ( blockState != null
+				  && blockState.getProperties().containsKey(BlockProperties.FACING_HORIZONTAL) ) {
+					facing = blockState.getValue(BlockProperties.FACING_HORIZONTAL);
+				}
+			} catch (final RuntimeException exception) {
+				// Fall back below; snapshots can query orientation while a moved core is still settling.
+			}
+		}
+		if (facing == null) {
+			facing = EnumFacing.NORTH;
+		}
 		return new Object[] { facing.getXOffset(), 0, facing.getZOffset() };
 	}
 	
@@ -1371,6 +1981,48 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		return new Object[] { true, maximumDistance_blocks };
 	}
 	
+	@Override
+	public Object[] validateMovement(final Object[] arguments) {
+		try {
+			if ( arguments == null
+			  || arguments.length < 4
+			  || arguments[0] == null ) {
+				return new Object[] { false, "warpdrive.navigation.blocker.invalid_arguments", "Expected command, moveFront, moveUp, moveRight[, rotationSteps]" };
+			}
+			final EnumShipCommand command = parseShipCommand(arguments[0].toString());
+			if (command == null) {
+				return new Object[] { false, "warpdrive.navigation.blocker.invalid_command", "Unknown ship command" };
+			}
+			final byte rotationSteps = arguments.length >= 5 ? (byte) Commons.toInt(arguments[4]) : 0;
+			return previewMovement(command,
+			                       Commons.toInt(arguments[1]),
+			                       Commons.toInt(arguments[2]),
+			                       Commons.toInt(arguments[3]),
+			                       rotationSteps).toObjectArray();
+		} catch (final Exception exception) {
+			return new Object[] { false, "warpdrive.navigation.blocker.invalid_arguments", exception.getMessage() };
+		}
+	}
+
+	@Override
+	public Object[] validateNavigation() {
+		final ShipMovementPreview preview = ShipNavigationHelper.previewNavigation(this);
+		if (preview == null) {
+			return new Object[] { false, "warpdrive.navigation.no_route", "No route is available from the current position." };
+		}
+		return preview.toObjectArray();
+	}
+
+	private static EnumShipCommand parseShipCommand(final String name) {
+		for (final EnumShipCommand command : EnumShipCommand.values()) {
+			if ( command.name().equalsIgnoreCase(name)
+			  || command.getName().equalsIgnoreCase(name) ) {
+				return command;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public Object[] state() {
 		final String units = energy_getDisplayUnits();

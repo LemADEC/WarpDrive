@@ -17,6 +17,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameType;
@@ -33,6 +34,14 @@ public class CommonProxy {
 	
 	public boolean isDedicatedServer() {
 		return true;
+	}
+	
+	public void openShipNavigationGui(final NBTTagCompound tagCompound) {
+		// client-side only
+	}
+	
+	public void updateShipNavigationMap(final NBTTagCompound tagCompound) {
+		// client-side only
 	}
 	
 	@Nullable

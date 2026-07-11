@@ -50,6 +50,21 @@ public class TileEntityShipController extends TileEntityAbstractShipController {
 		}
 	}
 	
+	public TileEntityShipCore getLinkedShipCore() {
+		return tileEntityShipCoreWeakReference == null ? null : tileEntityShipCoreWeakReference.get();
+	}
+	
+	public TileEntityShipCore getLinkedShipCoreRefresh() {
+		TileEntityShipCore tileEntityShipCore = getLinkedShipCore();
+		if (tileEntityShipCore != null && !tileEntityShipCore.isInvalid()) {
+			return tileEntityShipCore;
+		}
+		final WarpDriveText textReason = new WarpDriveText();
+		doScanAssembly(true, textReason);
+		tileEntityShipCore = getLinkedShipCore();
+		return tileEntityShipCore == null || tileEntityShipCore.isInvalid() ? null : tileEntityShipCore;
+	}
+	
 	@Override
 	protected boolean doScanAssembly(final boolean isDirty, final WarpDriveText textReason) {
 		final boolean isValid = super.doScanAssembly(isDirty, textReason);
@@ -267,6 +282,24 @@ public class TileEntityShipController extends TileEntityAbstractShipController {
 	}
 	
 	@Override
+	public Object[] validateMovement(final Object[] arguments) {
+		final TileEntityShipCore tileEntityShipCore = tileEntityShipCoreWeakReference == null ? null : tileEntityShipCoreWeakReference.get();
+		if (tileEntityShipCore == null) {
+			return new Object[] { false, "warpdrive.navigation.no_core", "No ship core detected" };
+		}
+		return tileEntityShipCore.validateMovement(arguments);
+	}
+	
+	@Override
+	public Object[] validateNavigation() {
+		final TileEntityShipCore tileEntityShipCore = tileEntityShipCoreWeakReference == null ? null : tileEntityShipCoreWeakReference.get();
+		if (tileEntityShipCore == null) {
+			return new Object[] { false, "warpdrive.navigation.no_core", "No ship core detected" };
+		}
+		return tileEntityShipCore.validateNavigation();
+	}
+	
+	@Override
 	public Object[] rotationSteps(final Object[] arguments) {
 		final TileEntityShipCore tileEntityShipCore = tileEntityShipCoreWeakReference == null ? null : tileEntityShipCoreWeakReference.get();
 		if (tileEntityShipCore == null) {
@@ -282,15 +315,6 @@ public class TileEntityShipController extends TileEntityAbstractShipController {
 			return new Object[] { "No ship core detected", false, "-NotDetected-", 0 };
 		}
 		return tileEntityShipCore.state();
-	}
-	
-	@Override
-	public Object[] targetName(final Object[] arguments) {
-		final TileEntityShipCore tileEntityShipCore = tileEntityShipCoreWeakReference == null ? null : tileEntityShipCoreWeakReference.get();
-		if (tileEntityShipCore == null) {
-			return super.targetName(arguments); // return current local values
-		}
-		return tileEntityShipCore.targetName(arguments);
 	}
 	
 	@Override

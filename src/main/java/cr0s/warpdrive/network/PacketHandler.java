@@ -15,6 +15,8 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -43,6 +45,7 @@ public class PacketHandler {
 	
 	private static final SimpleNetworkWrapper simpleNetworkManager = NetworkRegistry.INSTANCE.newSimpleChannel(WarpDrive.MODID);
 	private static Method EntityTrackerEntry_getPacketForThisEntity;
+	private static final ConcurrentHashMap<UUID, Integer> shipNavigationMapVersions = new ConcurrentHashMap<>();
 	
 	public static void init() {
 		// Forge packets
@@ -53,10 +56,13 @@ public class PacketHandler {
 		simpleNetworkManager.registerMessage(MessageVideoChannel.class        , MessageVideoChannel.class        , 5, Side.CLIENT);
 		simpleNetworkManager.registerMessage(MessageTransporterEffect.class   , MessageTransporterEffect.class   , 6, Side.CLIENT);
 		simpleNetworkManager.registerMessage(MessageClientTileEntitySync.class, MessageClientTileEntitySync.class, 7, Side.CLIENT);
+		simpleNetworkManager.registerMessage(MessageShipNavigation.class      , MessageShipNavigation.class      , 8, Side.CLIENT);
+		simpleNetworkManager.registerMessage(MessageShipNavigationMap.class   , MessageShipNavigationMap.class   , 9, Side.CLIENT);
 		
 		simpleNetworkManager.registerMessage(MessageTargeting.class           , MessageTargeting.class           , 100, Side.SERVER);
 		simpleNetworkManager.registerMessage(MessageClientValidation.class    , MessageClientValidation.class    , 101, Side.SERVER);
 		simpleNetworkManager.registerMessage(MessageClientUnseating.class     , MessageClientUnseating.class     , 102, Side.SERVER);
+		simpleNetworkManager.registerMessage(MessageShipNavigationAction.class, MessageShipNavigationAction.class, 103, Side.SERVER);
 		
 		// Entity packets for 'uncloaking' entities
 		try {
@@ -253,6 +259,55 @@ public class PacketHandler {
 		}
 		final MessageClientSync messageClientSync = new MessageClientSync(entityPlayerMP, celestialObject);
 		simpleNetworkManager.sendTo(messageClientSync, entityPlayerMP);
+	}
+	
+	public static void sendShipNavigationPacket(final EntityPlayerMP entityPlayerMP, final NBTTagCompound tagCompound) {
+		final MessageShipNavigation messageShipNavigation = new MessageShipNavigation(tagCompound);
+		simpleNetworkManager.sendTo(messageShipNavigation, entityPlayerMP);
+	}
+	
+	public static void sendShipNavigationMapPacket(final EntityPlayerMP entityPlayerMP, final NBTTagCompound tagCompound) {
+		sendShipNavigationMapPacket(entityPlayerMP, tagCompound, false);
+	}
+	
+	public static void sendShipNavigationMapPacket(final EntityPlayerMP entityPlayerMP, final NBTTagCompound tagCompound, final boolean force) {
+		final int mapVersion = tagCompound.getInteger("mapVersion");
+		final Integer mapVersionPrevious = force ? null : shipNavigationMapVersions.put(entityPlayerMP.getUniqueID(), mapVersion);
+		if (!force && mapVersionPrevious != null && mapVersionPrevious == mapVersion) {
+			return;
+		}
+		if (force) {
+			shipNavigationMapVersions.put(entityPlayerMP.getUniqueID(), mapVersion);
+		}
+		final MessageShipNavigationMap messageShipNavigationMap = new MessageShipNavigationMap(tagCompound);
+		simpleNetworkManager.sendTo(messageShipNavigationMap, entityPlayerMP);
+	}
+
+	// Build and send the static celestial map only when this player's cached version is stale.
+	// Cheap to call on every action/refresh: getMapVersion() is a small hash, the full snapshot is only built on a miss.
+	public static void sendShipNavigationMapIfChanged(final EntityPlayerMP entityPlayerMP) {
+		final int mapVersion = cr0s.warpdrive.block.movement.ShipNavigationHelper.getMapVersion();
+		final Integer mapVersionPrevious = shipNavigationMapVersions.get(entityPlayerMP.getUniqueID());
+		if (mapVersionPrevious != null && mapVersionPrevious == mapVersion) {
+			return;
+		}
+		shipNavigationMapVersions.put(entityPlayerMP.getUniqueID(), mapVersion);
+		final MessageShipNavigationMap messageShipNavigationMap = new MessageShipNavigationMap(cr0s.warpdrive.block.movement.ShipNavigationHelper.buildStaticMapSnapshot());
+		simpleNetworkManager.sendTo(messageShipNavigationMap, entityPlayerMP);
+	}
+
+	public static void sendShipNavigationAction(final byte action, final int dimensionId,
+	                                            final BlockPos blockPosCore, final BlockPos blockPosAccess,
+	                                            final String targetId) {
+		final MessageShipNavigationAction messageShipNavigationAction = new MessageShipNavigationAction(action, dimensionId, blockPosCore, blockPosAccess, targetId);
+		simpleNetworkManager.sendToServer(messageShipNavigationAction);
+	}
+	
+	public static void sendShipNavigationAction(final byte action, final int dimensionId,
+	                                            final BlockPos blockPosCore, final BlockPos blockPosAccess,
+	                                            final NBTTagCompound payload) {
+		final MessageShipNavigationAction messageShipNavigationAction = new MessageShipNavigationAction(action, dimensionId, blockPosCore, blockPosAccess, payload);
+		simpleNetworkManager.sendToServer(messageShipNavigationAction);
 	}
 	
 	public static Packet<?> getPacketForThisEntity(final Entity entity) {
