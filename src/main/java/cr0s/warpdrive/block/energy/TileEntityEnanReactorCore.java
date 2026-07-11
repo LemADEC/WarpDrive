@@ -512,7 +512,11 @@ public class TileEntityEnanReactorCore extends TileEntityEnanReactorController i
 		final int instabilityNibble = (int) Math.max(0, Math.min(3, Math.round(maxInstability / 25.0D)));
 		final int energyNibble = (int) Math.max(0, Math.min(3, Math.round(4.0D * containedEnergy / energyStored_max)));
 		
-		final IBlockState blockStateNew = getBlockType().getDefaultState()
+		final IBlockState blockState = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState, BlockEnanReactorCore.class, BlockEnanReactorCore.ENERGY, BlockEnanReactorCore.INSTABILITY)) {
+			return;
+		}
+		final IBlockState blockStateNew = blockState.getBlock().getDefaultState()
 		                                                .withProperty(BlockEnanReactorCore.ENERGY, energyNibble)
 		                                                .withProperty(BlockEnanReactorCore.INSTABILITY, instabilityNibble);
 		updateBlockState(null, blockStateNew);

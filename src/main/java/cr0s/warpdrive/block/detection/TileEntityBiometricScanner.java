@@ -53,17 +53,20 @@ public class TileEntityBiometricScanner extends TileEntityAbstractMachine {
 		super.onFirstUpdateTick();
 		
 		final IBlockState blockState = world.getBlockState(pos);
-		if (blockState.getBlock() instanceof BlockBiometricScanner) {
-			final EnumFacing enumFacing = blockState.getValue(BlockProperties.FACING);
-			final float radius = WarpDriveConfig.BIOMETRIC_SCANNER_RANGE_BLOCKS / 2.0F;
-			final Vector3 v3Center = new Vector3(
-					pos.getX() + 0.5F + (radius + 0.5F) * enumFacing.getXOffset(),
-					pos.getY() + 0.5F + (radius + 0.5F) * enumFacing.getYOffset(),
-					pos.getZ() + 0.5F + (radius + 0.5F) * enumFacing.getZOffset() );
-			aabbRange = new AxisAlignedBB(
-					v3Center.x - radius, v3Center.y - radius, v3Center.z - radius,
-					v3Center.x + radius, v3Center.y + radius, v3Center.z + radius );
+		if (isInvalidBlockState(blockState, BlockBiometricScanner.class, BlockProperties.FACING)) {
+			tickScanning = -1;
+			aabbRange = null;
+			return;
 		}
+		final EnumFacing enumFacing = blockState.getValue(BlockProperties.FACING);
+		final float radius = WarpDriveConfig.BIOMETRIC_SCANNER_RANGE_BLOCKS / 2.0F;
+		final Vector3 v3Center = new Vector3(
+				pos.getX() + 0.5F + (radius + 0.5F) * enumFacing.getXOffset(),
+				pos.getY() + 0.5F + (radius + 0.5F) * enumFacing.getYOffset(),
+				pos.getZ() + 0.5F + (radius + 0.5F) * enumFacing.getZOffset() );
+		aabbRange = new AxisAlignedBB(
+				v3Center.x - radius, v3Center.y - radius, v3Center.z - radius,
+				v3Center.x + radius, v3Center.y + radius, v3Center.z + radius );
 	}
 	
 	@Override
@@ -84,6 +87,12 @@ public class TileEntityBiometricScanner extends TileEntityAbstractMachine {
 		
 		if ( isEnabled
 		  && tickScanning >= 0 ) {
+			if (aabbRange == null) {
+				tickScanning = -1;
+				uuidLastPlayer = null;
+				nameLastPlayer = "";
+				return;
+			}
 			tickScanning--;
 			
 			// check for exclusive player presence

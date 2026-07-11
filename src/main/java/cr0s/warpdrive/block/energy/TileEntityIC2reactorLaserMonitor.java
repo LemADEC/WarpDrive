@@ -144,7 +144,11 @@ public class TileEntityIC2reactorLaserMonitor extends TileEntityAbstractLaser {
 	}
 	
 	private void updateBlockState() {
-		final IBlockState blockStateNew = getBlockType().getDefaultState()
+		final IBlockState blockState = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState, BlockIC2reactorLaserCooler.class, BlockProperties.ACTIVE, BlockProperties.FACING)) {
+			return;
+		}
+		final IBlockState blockStateNew = blockState.getBlock().getDefaultState()
 		                                                .withProperty(BlockProperties.ACTIVE, isValid)
 		                                                .withProperty(BlockProperties.FACING, facing != null ? facing : EnumFacing.DOWN);
 		updateBlockState(blockStateNew, null, null);

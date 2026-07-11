@@ -385,14 +385,20 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		super.doUpdateParameters(isDirty);
 		
 		final IBlockState blockState = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState, BlockCamera.class, BlockProperties.ACTIVE, BlockProperties.FACING)) {
+			hasImageRecognition = false;
+			vCamera = null;
+			aabbRange = null;
+			results.clear();
+			return;
+		}
 		updateBlockState(blockState, BlockProperties.ACTIVE, isEnabled);
 		
 		final int range = WarpDriveConfig.CAMERA_RANGE_BASE_BLOCKS
 		                + WarpDriveConfig.CAMERA_RANGE_UPGRADE_BLOCKS * getUpgradeCount(upgradeSlotRecognitionRange);
 		hasImageRecognition = range > 0;
 		
-		if ( hasImageRecognition
-		  && blockState.getBlock() instanceof BlockCamera ) {
+		if (hasImageRecognition) {
 			final EnumFacing enumFacing = blockState.getValue(BlockProperties.FACING);
 			final float radius = range / 2.0F;
 			// Optical center of the camera where line of sight computation starts
