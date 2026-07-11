@@ -60,7 +60,8 @@ public class Dictionary {
 	public static HashMap<Block, Integer> BLOCKS_PLACE = null;
 	public static HashSet<Block> BLOCKS_NOCAMOUFLAGE = null;
 	public static HashSet<Block> BLOCKS_NOBLINK = null;
-	
+	public static HashSet<Block> BLOCKS_TRANSPARENT = null;
+
 	private static HashSet<Block> cache_blocks_logsAndStackings = null;
 	private static HashSet<Block> cache_blocks_logsLeavesAndStackings = null;
 	
@@ -105,7 +106,8 @@ public class Dictionary {
 					+ "- PlaceLater: this block will be placed fairly late (default: IC2 Reactor core).\n"
 					+ "- PlaceLatest: this block will be removed first and placed last (default: IC2 Reactor chamber).\n"
 					+ "- NoCamouflage: this block isn't valid for camouflage.\n"
-					+ "- NoBlink: this block will prevent teleportation through it (default: bedrock, force fields)");
+					+ "- NoBlink: this block will prevent teleportation through it (default: bedrock, force fields).\n"
+					+ "- Transparent: this block is considered transparent for camera entity detection (default: iron bars)");
 			
 			final ConfigCategory categoryBlockTags = config.getCategory("block_tags");
 			
@@ -121,6 +123,7 @@ public class Dictionary {
 			config.get("block_tags", "minecraft:pumpkin"                                    , "Log").getString();
 			config.get("block_tags", "minecraft:reeds"                                      , "StackingPlant").getString();
 			config.get("block_tags", "minecraft:cactus"                                     , "StackingPlant").getString();
+			config.get("block_tags", "minecraft:iron_bars"                                  , "Transparent").getString();
 			
 			config.get("block_tags", "ic2:rubber_wood"                                      , "Log").getString(); // IC2 Experimental
 			config.get("block_tags", "ic2:blockrubwood"                                     , "Log").getString(); // IC2 Classic
@@ -573,6 +576,7 @@ public class Dictionary {
 		BLOCKS_PLACE = new HashMap<>(taggedBlocks.size());
 		BLOCKS_NOCAMOUFLAGE = new HashSet<>(taggedBlocks.size());
 		BLOCKS_NOBLINK = new HashSet<>(taggedBlocks.size());
+		BLOCKS_TRANSPARENT = new HashSet<>(taggedBlocks.size());
 		cache_blocks_logsAndStackings = null;
 		cache_blocks_logsLeavesAndStackings = null;
 		for (final Entry<String, String> taggedBlock : taggedBlocks.entrySet()) {
@@ -601,6 +605,7 @@ public class Dictionary {
 				case "PlaceLatest"  : BLOCKS_PLACE.put(block, 4); break;
 				case "NoCamouflage" : BLOCKS_NOCAMOUFLAGE.add(block); break;
 				case "NoBlink"      : BLOCKS_NOBLINK.add(block); break;
+				case "Transparent"  : BLOCKS_TRANSPARENT.add(block); break;
 				default:
 					WarpDrive.logger.error(String.format("Unsupported tag %s for block %s", tag, block));
 					break;

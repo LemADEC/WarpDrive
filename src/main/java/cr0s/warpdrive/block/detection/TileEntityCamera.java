@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -216,12 +217,9 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 				                                                                        && ( !(entity instanceof EntityPlayer)
 				                                                                          || !((EntityPlayer) entity).isSpectator() ) );
 				for (final Entity entity : entitiesInRange) {
-					// check for line of sight
-					final Vec3d vEntity = new Vec3d(entity.posX,
-					                                entity.posY,
-					                                entity.posZ );
-					final RayTraceResult rayTraceResult = world.rayTraceBlocks(vCamera, vEntity);
-					if (rayTraceResult != null) {
+					// check for line of sight, seeing through transparent blocks (glass/ice/water), sampling
+					// head/torso/feet so a partially-hidden entity is still detected, like the monitor shows it
+					if (!hasLineOfSightToEntity(entity)) {
 						continue;
 					}
 					
@@ -254,6 +252,54 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 				}
 			}
 		}
+	}
+	
+	// True if any of head/torso/feet has a clear line of sight from the camera, accounting for transparent blocks
+	private boolean hasLineOfSightToEntity(@Nonnull final Entity entity) {
+		final double[] offsetsY = { entity.getEyeHeight(), entity.height * 0.5D, entity.height * 0.1D };
+		for (final double offsetY : offsetsY) {
+			if (hasLineOfSight(new Vec3d(entity.posX, entity.posY + offsetY, entity.posZ))) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	// Line of sight from the camera to a point, blocked only by opaque blocks.
+	// Non-opaque blocks (glass, ice, water, leaves) are seen through.
+	// Block collision geometry is respected (slabs/stairs).
+	private boolean hasLineOfSight(@Nonnull final Vec3d vTarget) {
+		// Tiny nudge to resume just past each hit face WITHOUT skipping any block: a larger step could jump over the
+		// entry-face hit of the block right behind a transparent one (leaking through slabs/stairs on a sloped ray)
+		final Vec3d vNudge = vTarget.subtract(vCamera).normalize().scale(0.001D);
+		Vec3d vStart = vCamera;
+		// Cap the traversal to the ray length (itself bounded by the camera range): each crossed block costs at most
+		// ~2 steps (entry+exit of a transparent block), and a length-L ray crosses at most ~1.8*L blocks on a diagonal;
+		// x4 covers both with a slight margin. Reaching the cap means the ray never resolved within range -> not visible.
+		final int maxSteps = (int) Math.ceil(vCamera.distanceTo(vTarget)) * 4 + 8;
+		for (int step = 0; step < maxSteps; step++) {
+			final RayTraceResult rayTraceResult = world.rayTraceBlocks(vStart, vTarget, false, true, false);
+			if (rayTraceResult == null || rayTraceResult.typeOfHit != RayTraceResult.Type.BLOCK) {
+				return true; // reached the target, no opaque block in the way
+			}
+			final IBlockState blockState = world.getBlockState(rayTraceResult.getBlockPos());
+			final Block block = blockState.getBlock();
+			final boolean isOwnBlock = rayTraceResult.getBlockPos().equals(pos); // the camera must not occlude itself
+			// Blocks vision only if it is a solid opaque obstruction; see through the own block, non-opaque materials
+			// (glass/water/ice/leaves) and blocks tagged Transparent in the dictionary
+			final boolean blocksVision = !isOwnBlock
+			                          && blockState.getMaterial().isOpaque()
+			                          && !Dictionary.BLOCKS_TRANSPARENT.contains(block);
+			if (blocksVision) {
+				return false; // Solid opaque block whose collision box the ray actually hit
+			}
+			// Nudge just past the hit face and keep tracing
+			vStart = rayTraceResult.hitVec.add(vNudge);
+			if (vCamera.squareDistanceTo(vStart) >= vCamera.squareDistanceTo(vTarget)) {
+				return true; // Nudged past the target
+			}
+		}
+		return false; // Exceeded the ray-length traversal budget (out of range / occluded)
 	}
 	
 	private boolean getCrewStatus(final Entity entity) {
@@ -309,10 +355,12 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		  && blockState.getBlock() instanceof BlockCamera ) {
 			final EnumFacing enumFacing = blockState.getValue(BlockProperties.FACING);
 			final float radius = range / 2.0F;
+			// Optical center of the camera where line of sight computation starts
 			vCamera = new Vec3d(
-					pos.getX() + 0.5F + 0.6F * enumFacing.getXOffset(),
-					pos.getY() + 0.5F + 0.6F * enumFacing.getYOffset(),
-					pos.getZ() + 0.5F + 0.6F * enumFacing.getZOffset() );
+					pos.getX() + 0.5D,
+					pos.getY() + 0.5D,
+					pos.getZ() + 0.5D );
+			// Observable area
 			final Vec3d vCenter = new Vec3d(
 					pos.getX() + 0.5F + (radius + 0.5F) * enumFacing.getXOffset(),
 					pos.getY() + 0.5F + (radius + 0.5F) * enumFacing.getYOffset(),
