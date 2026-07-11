@@ -658,19 +658,19 @@ public final class ShipNavigationHelper {
 	                                      @Nonnull final EnumShipNavigationLegType legType,
 	                                      final int moveX, final int moveY, final int moveZ) {
 		final VectorI remaining = toLocalMovement(shipCore, moveX, moveY, moveZ);
-		if (remaining.getMagnitudeSquaredLong() <= 0L) {
+		if (remaining.getMagnitudeSquared() <= 0L) {
 			return;
 		}
 		final EnumShipMovementType movementType = movementTypeForEstimate(legType);
-		for (int guard = 0; guard < 100000 && remaining.getMagnitudeSquaredLong() > 0L; guard++) {
+		for (int guard = 0; guard < 100000 && remaining.getMagnitudeSquared() > 0L; guard++) {
 			final ShipMovementPreview preview = shipCore.previewMovement(legType.getCommand(),
 			                                                             remaining.x, remaining.y, remaining.z,
 			                                                             (byte) 0);
 			final VectorI step = preview.effectiveMovement;
-			if (step.getMagnitudeSquaredLong() <= 0L) {
+			if (step.getMagnitudeSquared() <= 0L) {
 				break;
 			}
-			final int stepDistance = Math.max(1, (int) Math.ceil(Math.sqrt(step.getMagnitudeSquaredLong())));
+			final int stepDistance = Math.max(1, (int) Math.ceil(Math.sqrt(step.getMagnitudeSquared())));
 			final ShipMovementCosts stepCosts = new ShipMovementCosts(shipCore.getWorld(), shipCore.getPos(), shipCore,
 			                                                          movementType, shipCore.shipMass, stepDistance);
 			estimate.addLeg(stepDistance, stepCosts);
@@ -1005,7 +1005,7 @@ public final class ShipNavigationHelper {
 		                                                                 (byte) 0);
 		final int stepDistance = (int) Math.ceil(Math.sqrt(step.x * (double) step.x + step.y * (double) step.y + step.z * (double) step.z));
 		final String warningKey;
-		if (movement.getMagnitudeSquaredLong() <= 0L) {
+		if (movement.getMagnitudeSquared() <= 0L) {
 			warningKey = "warpdrive.navigation.route.already_aligned";
 		} else if (routePreview.wouldBeClamped || stepDistance < remainingDistance) {
 			warningKey = "warpdrive.navigation.route.cruise_split";

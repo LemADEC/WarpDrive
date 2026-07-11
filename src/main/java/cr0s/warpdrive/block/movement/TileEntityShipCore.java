@@ -176,7 +176,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		
 		// target location
 		final VectorI vMovement = getMovement();
-		if (vMovement.getMagnitudeSquaredLong() > 0L) {
+		if (vMovement.getMagnitudeSquared() > 0L) {
 			final VectorI movement = getMovement();
 			final VectorI shipSize = new VectorI(getFront() + 1 + getBack(),
 			                                     getUp()    + 1 + getDown(),
@@ -429,7 +429,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 				}
 				
 				// compute distance
-				distanceSquared = getMovement().getMagnitudeSquaredLong();
+				distanceSquared = getMovement().getMagnitudeSquared();
 				// rescan ship mass/volume if it's too old
 				if (timeLastShipScanDone + WarpDriveConfig.SHIP_VOLUME_SCAN_AGE_TOLERANCE_SECONDS * 20L < world.getTotalWorldTime()) {
 					timeLastShipScanDone = -1;
@@ -1321,7 +1321,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		// compute movement costs, then clamp the requested vector to the calculated ship max range
 		final MovementResolution movementResolution = resolveMovement(commandCurrent, shipMovementType, getMovement());
 		setMovement(movementResolution.movement.x, movementResolution.movement.y, movementResolution.movement.z);
-		distanceSquared = movementResolution.movement.getMagnitudeSquaredLong();
+		distanceSquared = movementResolution.movement.getMagnitudeSquared();
 		shipMovementCosts = movementResolution.costs;
 		
 		// allow other mods to validate too
@@ -1367,7 +1367,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	}
 
 	private static int getDistance(@Nonnull final VectorI movement) {
-		return (int) Math.ceil(Math.sqrt(movement.getMagnitudeSquaredLong()));
+		return (int) Math.ceil(Math.sqrt(movement.getMagnitudeSquared()));
 	}
 
 	private static final class MovementResolution {

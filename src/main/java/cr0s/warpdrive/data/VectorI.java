@@ -296,15 +296,11 @@ public class VectorI implements Cloneable {
 		return (long) x * x + (long) y * y + (long) z * z;
 	}
 
-	public long getMagnitudeSquaredLong() {
-		return (long) x * x + (long) y * y + (long) z * z;
-	}
-
 	public VectorI limitedToMagnitude(final int maximumMagnitude) {
 		if (maximumMagnitude <= 0) {
 			return new VectorI();
 		}
-		final long magnitudeSquared = getMagnitudeSquaredLong();
+		final long magnitudeSquared = getMagnitudeSquared();
 		final long maximumMagnitudeSquared = (long) maximumMagnitude * maximumMagnitude;
 		if (magnitudeSquared <= maximumMagnitudeSquared) {
 			return clone();
