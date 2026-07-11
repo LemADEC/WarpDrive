@@ -5,6 +5,7 @@ import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.IBlockBase;
 import cr0s.warpdrive.api.IItemBase;
 import cr0s.warpdrive.block.breathing.BlockColorAirShield;
+import cr0s.warpdrive.client.gui.GuiShipNavigation;
 import cr0s.warpdrive.entity.EntityNPC;
 import cr0s.warpdrive.entity.EntityOfflineAvatar;
 import cr0s.warpdrive.entity.EntityParticleBunch;
@@ -34,6 +35,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
@@ -47,6 +49,16 @@ public class ClientProxy extends CommonProxy {
 	@Override
 	public boolean isDedicatedServer() {
 		return false;
+	}
+	
+	@Override
+	public void openShipNavigationGui(final NBTTagCompound tagCompound) {
+		Minecraft.getMinecraft().addScheduledTask(() -> GuiShipNavigation.open(tagCompound));
+	}
+	
+	@Override
+	public void updateShipNavigationMap(final NBTTagCompound tagCompound) {
+		Minecraft.getMinecraft().addScheduledTask(() -> GuiShipNavigation.updateStaticMap(tagCompound));
 	}
 	
 	@Override
