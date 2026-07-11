@@ -80,10 +80,6 @@ public class TileEntityLift extends TileEntityAbstractEnergyConsumer implements 
 	
 	@Override
 	public void update() {
-		if (world == null) {
-			return;
-		}
-
 		final IBlockState blockState = world.getBlockState(pos);
 		if (isInvalidBlockState(blockState, BlockLift.class, BlockLift.MODE)) {
 			return;

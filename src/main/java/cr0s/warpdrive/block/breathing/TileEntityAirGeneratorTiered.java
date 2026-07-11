@@ -45,9 +45,6 @@ public class TileEntityAirGeneratorTiered extends TileEntityAbstractEnergyConsum
 	
 	@Override
 	public void update() {
-		if (world == null) {
-			return;
-		}
 		final IBlockState blockState = world.getBlockState(pos);
 		if (isInvalidBlockState(blockState, BlockAirGeneratorTiered.class, BlockProperties.ACTIVE, BlockProperties.FACING)) {
 			return;

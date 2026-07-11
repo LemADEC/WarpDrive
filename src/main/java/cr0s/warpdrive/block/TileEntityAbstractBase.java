@@ -39,6 +39,7 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.Style;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -156,7 +157,7 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 		}
 
 		if (!world.isRemote) {
-			final TileEntity tileEntityActual = world.getTileEntity(pos);
+			final TileEntity tileEntityActual = world.getChunk(pos).getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
 			if (Commons.throttleMe("InvalidBlockState " + getClass().getName())) {
 				WarpDrive.logger.warn(String.format("%s orphaned tile entity %s at %s, found block state %s: %s",
 				                                    tileEntityActual == this ? "Removing" : "Invalidating",
@@ -165,6 +166,8 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 			if (tileEntityActual == this) {
 				world.removeTileEntity(pos);
 			} else {
+				// Forge's invalid-TE sweep removes a chunk entry only when it still points to this exact instance,
+				// so invalidating a detached stale TE cannot evict a replacement TE at the same position.
 				invalidate();
 			}
 		}
