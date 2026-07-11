@@ -13,6 +13,7 @@ import net.minecraft.world.World;
 import org.lwjgl.input.Keyboard;
 
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 
@@ -163,6 +164,13 @@ public class ClientCameraHandler {
 	public void onEvent(final MouseEvent event) {
 		if ( isOverlayEnabled
 		  && (event.getButton() == 0 || event.getButton() == 1) ) {
+			event.setCanceled(true);
+		}
+	}
+
+	@SubscribeEvent
+	public void onEvent(final RenderHandEvent event) {
+		if (isOverlayEnabled) {
 			event.setCanceled(true);
 		}
 	}
