@@ -34,6 +34,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.monster.IMob;
+import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -71,6 +73,44 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 	private int tickSensing = 0;
 	
 	
+	private enum Category {
+		PLAYER("player"), MONSTER("monster"), ANIMAL("animal"), UNKNOWN("unknown");
+		
+		private final String label;
+		
+		Category(@Nonnull final String label) {
+			this.label = label;
+		}
+		
+		String getLabel() {
+			return label;
+		}
+		
+		// coarse identity from the entity's base vanilla class
+		private static Category of(@Nonnull final Entity entity) {
+			if (entity instanceof EntityPlayer) {
+				return PLAYER;
+			}
+			if (entity instanceof IMob) {
+				return MONSTER;
+			}
+			if (entity instanceof EntityAnimal) {
+				return ANIMAL;
+			}
+			return UNKNOWN;
+		}
+		
+		// parse a persisted label, defaulting to UNKNOWN so a corrupt or outdated NBT value is sanitized
+		private static Category fromLabel(final String label) {
+			for (final Category category : values()) {
+				if (category.label.equals(label)) {
+					return category;
+				}
+			}
+			return UNKNOWN;
+		}
+	}
+	
 	private static final class Result {
 		
 		public Vector3 position;
@@ -78,21 +118,26 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		public String type;
 		public UUID uniqueId;
 		public String name;
+		public Category category;
 		public boolean isCrewMember;
+		public int identificationLevel; // 1 = face visible (full ID), 0 = only body visible (category)
 		private boolean isUpdated;
 		
 		Result(@Nonnull final Vector3 position, @Nonnull final Vector3 motion, @Nonnull final String type,
-		       @Nonnull final UUID uniqueId, @Nonnull final String name, final boolean isCrewMember) {
+		       @Nonnull final UUID uniqueId, @Nonnull final String name, @Nonnull final Category category,
+		       final boolean isCrewMember, final int identificationLevel) {
 			this.position = position;
 			this.motion = motion;
 			this.type = type;
 			this.uniqueId = uniqueId;
 			this.name = name;
+			this.category = category;
 			this.isCrewMember = isCrewMember;
+			this.identificationLevel = identificationLevel;
 			this.isUpdated = false;
 		}
 		
-		Result(@Nonnull final Entity entity, final boolean isCrewMember) {
+		Result(@Nonnull final Entity entity, final boolean isCrewMember, final int identificationLevel) {
 			this(new Vector3(entity.posX,
 			                 entity.posY + entity.getEyeHeight(),
 			                 entity.posZ ),
@@ -102,7 +147,9 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			     Dictionary.getId(entity),
 			     entity.getUniqueID(),
 			     entity.getName(),
-			     isCrewMember );
+			     Category.of(entity),
+			     isCrewMember,
+			     identificationLevel );
 			// since it was created from an entity, it's already updated
 			isUpdated = true;
 		}
@@ -111,7 +158,8 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			isUpdated = false;
 		}
 		
-		void update(@Nonnull final Entity entity) {
+		void update(@Nonnull final Entity entity, final boolean isCrewMember, final int identificationLevel) {
+			// full refresh: identity can change (rename, crew membership, reload...), so never assume it is stable
 			uniqueId = entity.getUniqueID();
 			position.x = entity.posX;
 			position.y = entity.posY + entity.getEyeHeight();
@@ -119,6 +167,11 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			motion.x = entity.motionX;
 			motion.y = entity.motionY;
 			motion.z = entity.motionZ;
+			type = Dictionary.getId(entity);
+			name = entity.getName();
+			category = Category.of(entity);
+			this.isCrewMember = isCrewMember;
+			this.identificationLevel = identificationLevel;
 			isUpdated = true;
 		}
 		
@@ -126,34 +179,16 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			return isUpdated;
 		}
 		
-		@Override
-		public boolean equals(final Object object) {
-			if (this == object) {
-				return true;
-			}
-			if (object == null) {
-				return false;
-			}
-			if (object instanceof Entity) {
-				final Entity entity = (Entity) object;
-				// note: getting an entity type is fairly slow, so we do it as late as possible
-				return (uniqueId == null || entity.getUniqueID().equals(uniqueId))
-				       && entity.getName().equals(name)
-				       && Dictionary.getId(entity).equals(type);
-			}
-			if (getClass() != object.getClass()) {
-				return false;
-			}
-			final Result that = (Result) object;
-			return (uniqueId == null || that.uniqueId == null || that.uniqueId.equals(uniqueId))
-			       && that.name.equals(name)
-			       && that.type.equals(type);
+		// matches the given entity by its immutable identity: persistent random uuid + type. The uuid is distinct from
+		// getEntityId() (the reusable index that a later entity may reuse), so a changing name/crew/level is an update of
+		// the same result rather than a remove + add. This is the ONLY identity lookup: Result is a unique mutable object
+		// and is intentionally not value-comparable, so equals()/hashCode() are left as Object's identity defaults
+		// (verified 2026-07 at runtime: nothing calls them - the results list only uses add/get/iteration and matches()).
+		boolean matches(@Nonnull final Entity entity) {
+			return uniqueId != null && uniqueId.equals(entity.getUniqueID())
+			    && type.equals(Dictionary.getId(entity));
 		}
 		
-		@Override
-		public int hashCode() {
-			return type.hashCode() + name.hashCode();
-		}
 	}
 	
 	public TileEntityCamera() {
@@ -219,15 +254,17 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 				for (final Entity entity : entitiesInRange) {
 					// check for line of sight, seeing through transparent blocks (glass/ice/water), sampling
 					// head/torso/feet so a partially-hidden entity is still detected, like the monitor shows it
-					if (!hasLineOfSightToEntity(entity)) {
+					final int identificationLevel = getIdentificationLevel(entity);
+					if (identificationLevel < 0) {
 						continue;
 					}
 					
 					// check for existing results
+					final boolean isCrewMember = identificationLevel >= 1 && getCrewStatus(entity);
 					boolean isNew = true;
 					for (final Result result : results) {
-						if (result.equals(entity)) {
-							result.update(entity);
+						if (result.matches(entity)) {
+							result.update(entity, isCrewMember, identificationLevel);
 							isNew = false;
 							break;
 						}
@@ -236,8 +273,7 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 					// add new result
 					if (isNew) {
 						countAdded++;
-						final boolean isCrewMember = getCrewStatus(entity);
-						results.add(new Result(entity, isCrewMember));
+						results.add(new Result(entity, isCrewMember, identificationLevel));
 					}
 				}
 				
@@ -254,15 +290,19 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		}
 	}
 	
-	// True if any of head/torso/feet has a clear line of sight from the camera, accounting for transparent blocks
-	private boolean hasLineOfSightToEntity(@Nonnull final Entity entity) {
-		final double[] offsetsY = { entity.getEyeHeight(), entity.height * 0.5D, entity.height * 0.1D };
-		for (final double offsetY : offsetsY) {
-			if (hasLineOfSight(new Vec3d(entity.posX, entity.posY + offsetY, entity.posZ))) {
-				return true;
-			}
+	// highest visible body region from the camera (through transparent blocks): 1 = face -> full ID, 0 = only body
+	// (torso/feet) -> category only, -1 = fully hidden. A single occluding block (e.g. a slab at head height) legitimately
+	// drops a distant entity to category-only from that camera's angle, while another camera with a clear face line reports
+	// full ID; this per-camera, per-body-region grading is intended.
+	private int getIdentificationLevel(@Nonnull final Entity entity) {
+		if (hasLineOfSight(new Vec3d(entity.posX, entity.posY + entity.getEyeHeight(), entity.posZ))) {
+			return 1; // the face (head/eyes) is visible -> full identification
 		}
-		return false;
+		if ( hasLineOfSight(new Vec3d(entity.posX, entity.posY + entity.height * 0.5D, entity.posZ))
+		  || hasLineOfSight(new Vec3d(entity.posX, entity.posY + entity.height * 0.1D, entity.posZ)) ) {
+			return 0; // only the body (torso/feet) is visible -> category only
+		}
+		return -1; // fully hidden
 	}
 	
 	// Line of sight from the camera to a point, blocked only by opaque blocks.
@@ -428,7 +468,9 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 						tagCompoundResult.getString("type"),
 						Objects.requireNonNull(tagCompoundResult.getUniqueId("uniqueId")),
 						tagCompoundResult.getString("name"),
-						tagCompoundResult.getBoolean("isCrewMember") );
+						Category.fromLabel(tagCompoundResult.getString("category")),
+						tagCompoundResult.getBoolean("isCrewMember"),
+						tagCompoundResult.getInteger("identificationLevel") );
 				results.add(result);
 			} catch (final Exception exception) {
 				WarpDrive.logger.error(String.format("%s Exception while reading previous result %s",
@@ -465,7 +507,9 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 				if (result.name != null) {
 					tagCompoundResult.setString("name", result.name);
 				}
+				tagCompoundResult.setString("category", result.category.getLabel());
 				tagCompoundResult.setBoolean("isCrewMember", result.isCrewMember);
+				tagCompoundResult.setInteger("identificationLevel", result.identificationLevel);
 				tagList.appendTag(tagCompoundResult);
 			}
 			tagCompound.setTag("results", tagList);
@@ -515,12 +559,16 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		final Object[] objectResults = new Object[results.size()];
 		int index = 0;
 		for (final Result result : results) {
+			// full identity (type/name/crew) is only exported when the face was seen; category is always available
+			final boolean isFullyIdentified = result.identificationLevel >= 1;
 			objectResults[index++] = new Object[] {
-					result.type,
-					result.name == null ? "" : result.name,
+					isFullyIdentified ? result.type : "",
+					isFullyIdentified && result.name != null ? result.name : "",
+					result.category.getLabel(),
 					result.position.x, result.position.y, result.position.z,
 					result.motion.x, result.motion.y, result.motion.z,
-					result.isCrewMember };
+					isFullyIdentified && result.isCrewMember,
+					result.identificationLevel };
 		}
 		return objectResults;
 	}
@@ -538,22 +586,25 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			try {
 				index = Commons.toInt(arguments[0]);
 			} catch(final Exception exception) {
-				return new Object[] { false, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, 0, 0, 0, 0, 0, 0, false };
+				return new Object[] { false, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, 0, 0, 0, 0, 0, 0, false, -1 };
 			}
 			if (index >= 0 && index < results.size()) {
 				final Result result = results.get(index);
+				final boolean isFullyIdentified = result != null && result.identificationLevel >= 1;
 				if (result != null) {
 					return new Object[] {
 							true,
-							result.type,
-							result.name == null ? "" : result.name,
+							isFullyIdentified ? result.type : "",
+							isFullyIdentified && result.name != null ? result.name : "",
+							result.category.getLabel(),
 							result.position.x, result.position.y, result.position.z,
 							result.motion.x, result.motion.y, result.motion.z,
-							result.isCrewMember };
+							isFullyIdentified && result.isCrewMember,
+							result.identificationLevel };
 				}
 			}
 		}
-		return new Object[] { false, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, 0, 0, 0, 0, 0, 0, false };
+		return new Object[] { false, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, 0, 0, 0, 0, 0, 0, false, -1 };
 	}
 	
 	// OpenComputers callback methods
