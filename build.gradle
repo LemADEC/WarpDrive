@@ -3,7 +3,6 @@ import net.minecraftforge.gradle.common.task.SignJar
 
 buildscript {
     repositories {
-        jcenter()
         maven {
             name = "forge"
             url = "https://files.minecraftforge.net/maven"
@@ -163,17 +162,9 @@ repositories {
         name 'DVS1 Maven FS'
         url 'http://dvs1.progwml6.com/files/maven'
     }
-    maven { // JEI fallback
-        name = "ModMaven"
-        url = "https://modmaven.k-4u.nl"
-    }
     maven { // CCC/NEI (for WAILA)
         name 'CB Repo'
         url "http://chickenbones.net/maven/"
-    }
-    maven { // WAILA
-        name "ProfMobius Maven FS"
-        url "http://mobiusstrip.eu/maven"
     }
     maven { // OpenComputers
         name "OpenComputers"
@@ -185,11 +176,7 @@ repositories {
     }
     maven { // CraftTweaker (aka MineTweaker3), Immersive Engineering, Patchouli
         name 'jared maven'
-        url "http://blamejared.com/maven"
-    }
-    maven { // MCMultiPart
-        name 'amadornes maven'
-        url "http://maven.amadornes.com/"
+        url "https://maven.blamejared.com/"
     }
     maven {
         name = "CoFH Maven"
@@ -199,28 +186,10 @@ repositories {
         name = "EngineHub maven"
         url = "https://maven.enginehub.org/repo/"
     }
-//    maven {
-//        name = "dmod's BuildBroken maven"
-//        url = "http://api.dmodoomsirius.me"
-//    }
-    maven {
-        name = "CurseForge"
-        url = "https://minecraft.curseforge.com/api/maven/"
-    }
     maven {
         // other projects seems to replicated here, so we keep it at the end for now
         name = "SquidDev CC Tweaked"
         url = "https://squiddev.cc/maven/"
-    }
-    ivy {
-        name "GalacticraftCore"
-        url "https://micdoodle8.com/new-builds/"
-        layout 'pattern', {
-            artifact "[organization]/${config.Galacticraft_build}/[module]-[revision].jar"
-        }
-        metadataSources {
-            artifact()
-        }
     }
 //    mavenLocal()
 }
