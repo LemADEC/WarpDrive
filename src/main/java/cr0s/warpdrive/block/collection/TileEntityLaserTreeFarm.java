@@ -49,6 +49,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IWorldReader;
 
 import net.minecraftforge.common.IPlantable;
+import net.minecraft.block.IGrowable;
+import net.minecraft.block.material.Material;
+import net.minecraft.world.World;
 
 public class TileEntityLaserTreeFarm extends TileEntityAbstractMiner {
 	
@@ -391,10 +394,8 @@ public class TileEntityLaserTreeFarm extends TileEntityAbstractMiner {
 					continue;
 				}
 				final Block blockFromItem;
-				if (itemStackPlant.getItem() instanceof ItemBlock) {
+				if (itemStackPlant.getItem() instanceof BlockItem) {
 					blockFromItem = Block.getBlockFromItem(itemStackPlant.getItem());
-				} else if (itemStackPlant.getItem() instanceof ItemBlockSpecial) {
-					blockFromItem = ((ItemBlockSpecial) itemStackPlant.getItem()).getBlock();
 				} else {
 					blockFromItem = null;
 				}
@@ -766,23 +767,23 @@ public class TileEntityLaserTreeFarm extends TileEntityAbstractMiner {
 						}
 					}
 					if (block instanceof IGrowable) {
-						if (((IGrowable) block).canGrow((World) blockAccess, mutableBlockPos, blockState, false)) {
+						if (((IGrowable) block).canGrow((World) worldReader, mutableBlockPos, blockState, false)) {
 							continue;
 						}
 						if (WarpDriveConfig.LOGGING_COLLECTION) {
 							WarpDrive.logger.info(String.format("Found grown crop %s",
-							                                    Commons.format(blockAccess, mutableBlockPos) ));
+							                                    Commons.format(worldReader, mutableBlockPos) ));
 						}
 						cropBlockStatePositions.add(new BlockStatePos(mutableBlockPos, blockState));
 					}
 					// note: mutableBlockPos value may change from here
 					if (Dictionary.isStackingPlant(block)) {
 						mutableBlockPos.setPos(x, y + 1, z);
-						final IBlockState blockStateAbove = isSafeThread ? blockAccess.getBlockState(mutableBlockPos) : Commons.getBlockState_noChunkLoading(blockAccess, mutableBlockPos);
+						final BlockState blockStateAbove = isSafeThread ? worldReader.getBlockState(mutableBlockPos) : Commons.getBlockState_noChunkLoading(worldReader, mutableBlockPos);
 						if (blockState.equals(blockStateAbove)) {
 							if (WarpDriveConfig.LOGGING_COLLECTION) {
 								WarpDrive.logger.info(String.format("Found stacked reed or cactus %s",
-								                                    Commons.format(blockAccess, mutableBlockPos) ));
+								                                    Commons.format(worldReader, mutableBlockPos) ));
 							}
 							logPositions.add(mutableBlockPos.toImmutable());
 						}

@@ -23,6 +23,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -127,7 +130,7 @@ public final class EntityCamera extends LivingEntity {
 			}
 			
 			final Block block = world.getBlockState(new BlockPos(cameraX, cameraY, cameraZ)).getBlock();
-			final Minecraft mc = Minecraft.getMinecraft();
+			final Minecraft mc = Minecraft.getInstance();
 			if (mc.getRenderViewEntity() != null) {
 				mc.getRenderViewEntity().rotationYaw = player.rotationYaw;
 				// mc.renderViewEntity.rotationYawHead = player.rotationYawHead;

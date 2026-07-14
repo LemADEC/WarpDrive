@@ -136,14 +136,14 @@ public class PacketHandler {
 		final CloakedArea cloakedArea = CloakManager.getContainingArea(world, v3Source.getBlockPos(), v3Target.getBlockPos());
 		
 		// send beam from both ends
-		assert world.getMinecraftServer() != null;
-		final List<EntityPlayerMP> playerEntityList = world.getMinecraftServer().getPlayerList().getPlayers();
-		final int dimensionId = world.provider.getDimension();
+		assert world.getServer() != null;
+		final List<ServerPlayerEntity> playerEntityList = world.getServer().getPlayerList().getPlayers();
+		final DimensionType dimensionId = world.getDimension().getType();
 		final int radius_square = radius * radius;
-		for (final EntityPlayerMP entityPlayerMP : playerEntityList) {
+		for (final ServerPlayerEntity entityPlayerMP : playerEntityList) {
 			// is it out of range?
 			if ( entityPlayerMP.world == null
-			  || entityPlayerMP.world.provider.getDimension() != dimensionId
+			  || entityPlayerMP.world.getDimension().getType() != dimensionId
 			  || ( v3Source.distanceTo_square(entityPlayerMP) > radius_square
 			    && v3Target.distanceTo_square(entityPlayerMP) > radius_square ) ) {
 				continue;
@@ -153,7 +153,7 @@ public class PacketHandler {
 			  && !cloakedArea.isBlockWithinArea(entityPlayerMP.getPosition()) ) {
 				continue;
 			}
-			simpleNetworkManager.sendTo(messageBeamEffect, entityPlayerMP);
+			sendToPlayer(messageBeamEffect, entityPlayerMP);
 		}
 	}
 	
@@ -212,13 +212,13 @@ public class PacketHandler {
 		final CloakedArea cloakedArea = CloakManager.getContainingArea(world, origin.getBlockPos(), null);
 		
 		// send particle to players in range and the same cloak
-		assert world.getMinecraftServer() != null;
-		final List<EntityPlayerMP> playerEntityList = world.getMinecraftServer().getPlayerList().getPlayers();
+		assert world.getServer() != null;
+		final List<ServerPlayerEntity> playerEntityList = world.getServer().getPlayerList().getPlayers();
 		final int radius_square = radius * radius;
-		for (final EntityPlayerMP entityPlayerMP : playerEntityList) {
+		for (final ServerPlayerEntity entityPlayerMP : playerEntityList) {
 			// is it out of range?
 			if ( entityPlayerMP.world == null
-			  || entityPlayerMP.world.provider.getDimension() != world.provider.getDimension()
+			  || entityPlayerMP.world.getDimension().getType() != world.getDimension().getType()
 			  || origin.distanceTo_square(entityPlayerMP) > radius_square ) {
 				continue;
 			}
@@ -227,7 +227,7 @@ public class PacketHandler {
 			  && !cloakedArea.isBlockWithinArea(entityPlayerMP.getPosition()) ) {
 				continue;
 			}
-			simpleNetworkManager.sendTo(messageSpawnParticle, entityPlayerMP);
+			sendToPlayer(messageSpawnParticle, entityPlayerMP);
 		}
 		
 		if (WarpDriveConfig.LOGGING_EFFECTS) {

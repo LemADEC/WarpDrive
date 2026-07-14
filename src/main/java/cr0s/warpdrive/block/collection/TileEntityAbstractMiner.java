@@ -31,6 +31,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 
 import net.minecraftforge.common.IPlantable;
+import net.minecraft.block.IGrowable;
 
 public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 	
@@ -80,7 +81,7 @@ public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 			world.playEvent(2001, blockPos, Block.getStateId(blockState));
 			
 			// remove while updating neighbours
-			world.setBlockToAir(blockPos); // setBlockState(blockPos, Blocks.AIR.getDefaultState(), 3);
+			world.removeBlock(blockPos, false); // setBlockState(blockPos, Blocks.AIR.getDefaultState(), 3);
 			
 			// try to replant the crop
 			if ( itemStackDrops != null
@@ -88,18 +89,18 @@ public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 				for (final ItemStack itemStackPlant : itemStackDrops) {
 					if (itemStackPlant.getItem() instanceof IPlantable) {
 						final IPlantable plantable = (IPlantable) itemStackPlant.getItem();
-						final IBlockState blockStatePlant = plantable.getPlant(world, blockPos);
+						final BlockState blockStatePlant = plantable.getPlant(world, blockPos);
 						if (WarpDriveConfig.LOGGING_COLLECTION) {
 							WarpDrive.logger.info(String.format("Drop includes %s which is plantable %s as block %s",
 							                                    itemStackPlant, plantable, blockStatePlant ));
 						}
 						final BlockPos blockPosSoil = blockPos.down();
-						final IBlockState blockStateSoil = getWorld().getBlockState(blockPosSoil);
-						if (!blockStateSoil.getBlock().canSustainPlant(blockStateSoil, world, blockPosSoil, EnumFacing.UP, plantable)) {
+						final BlockState blockStateSoil = getWorld().getBlockState(blockPosSoil);
+						if (!blockStateSoil.getBlock().canSustainPlant(blockStateSoil, world, blockPosSoil, Direction.UP, plantable)) {
 							continue;
 						}
 						
-						if (!blockStatePlant.getBlock().canPlaceBlockAt(world, blockPos)) {
+						if (!blockStatePlant.isValidPosition(world, blockPos)) {
 							continue;
 						}
 						

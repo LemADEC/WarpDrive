@@ -4,16 +4,22 @@ import cr0s.warpdrive.CommonProxy;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.IBlockBase;
 import cr0s.warpdrive.api.IItemBase;
+import cr0s.warpdrive.entity.EntityLaserExploder;
 import cr0s.warpdrive.entity.EntityNPC;
 import cr0s.warpdrive.entity.EntityOfflineAvatar;
 import cr0s.warpdrive.entity.EntityParticleBunch;
+import cr0s.warpdrive.entity.EntitySeat;
 import cr0s.warpdrive.event.ClientHandler;
 import cr0s.warpdrive.event.ModelHandler;
 import cr0s.warpdrive.event.TooltipHandler;
 import cr0s.warpdrive.render.ClientCameraHandler;
+import cr0s.warpdrive.render.EntityCamera;
+import cr0s.warpdrive.render.RenderEntityInvisible;
 import cr0s.warpdrive.render.RenderEntityNPC;
 import cr0s.warpdrive.render.RenderEntityOfflineAvatar;
 import cr0s.warpdrive.render.RenderEntityParticleBunch;
+import cr0s.warpdrive.world.EntitySphereGen;
+import cr0s.warpdrive.world.EntityStarCore;
 import cr0s.warpdrive.render.RenderOverlayAir;
 import cr0s.warpdrive.render.RenderOverlayCamera;
 import cr0s.warpdrive.render.RenderOverlayLocation;
@@ -69,6 +75,13 @@ public class ClientProxy extends CommonProxy {
 				return new RenderEntityParticleBunch(manager);
 			}
 		});
+		
+		// non-visual entities still need a renderer in 1.15+ (else "No renderer registered for ...") — render nothing
+		RenderingRegistry.registerEntityRenderingHandler(EntitySphereGen.TYPE, manager -> new RenderEntityInvisible<EntitySphereGen>(manager));
+		RenderingRegistry.registerEntityRenderingHandler(EntityStarCore.TYPE, manager -> new RenderEntityInvisible<EntityStarCore>(manager));
+		RenderingRegistry.registerEntityRenderingHandler(EntitySeat.TYPE, manager -> new RenderEntityInvisible<EntitySeat>(manager));
+		RenderingRegistry.registerEntityRenderingHandler(EntityLaserExploder.TYPE, manager -> new RenderEntityInvisible<EntityLaserExploder>(manager));
+		RenderingRegistry.registerEntityRenderingHandler(EntityCamera.TYPE, manager -> new RenderEntityInvisible<EntityCamera>(manager));
 		
 		// Key bindings (skipped during data generation run)
 		if (Minecraft.getInstance() != null) {

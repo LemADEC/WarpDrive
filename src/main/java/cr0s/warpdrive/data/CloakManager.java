@@ -144,7 +144,7 @@ public class CloakManager {
 	@Nullable
 	public static CloakedArea getContainingArea(@Nonnull final World world, @Nonnull final BlockPos blockPos1, @Nullable final BlockPos blockPos2) {
 		for (final CloakedArea area : cloaks) {
-			if ( area.dimensionId == world.provider.getDimension()
+			if ( area.dimensionType == world.getDimension().getType()
 			  && area.isBlockWithinArea(blockPos1) ) {
 				return blockPos2 == null || area.isBlockWithinArea(blockPos2) ? area : null;
 			}

@@ -365,7 +365,7 @@ public class TooltipHandler {
 				}
 				if (itemStack.isDamageable()) {
 					Commons.addTooltip(event.getToolTip(), String.format("Durability: %d / %d",
-					                                                     itemStack.getMaxDamage() - itemStack.getItemDamage(),
+					                                                     itemStack.getMaxDamage() - itemStack.getDamage(),
 					                                                     itemStack.getMaxDamage() ));
 				}
 			} catch (final Exception exception) {

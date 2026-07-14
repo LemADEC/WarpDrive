@@ -594,7 +594,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 		if (!success) {
 			Commons.messageToAllPlayersInArea(this, reason);
 			stateCurrent = EnumShipCoreState.IDLE;
-			sendEvent("shipCommandFailure", reason.getUnformattedText());
+			sendEvent("shipCommandFailure", reason.getString());
 		}
 		assert world != null;
 		for (final BlockPos blockPos : blockPosShipControllers) {

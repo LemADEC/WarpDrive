@@ -45,6 +45,7 @@ import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraft.item.Items;
 
 public class LivingHandler {
 	
@@ -200,9 +201,9 @@ public class LivingHandler {
 			// note: flags are pretty slow to access, so we try to filter out the obvious cases first
 			if ( !entityLivingBase.onGround
 			  && !celestialObject.hasAtmosphere()
-			  && entityLivingBase.getItemStackFromSlot(EntityEquipmentSlot.CHEST).getItem() == Items.ELYTRA
+			  && entityLivingBase.getItemStackFromSlot(EquipmentSlotType.CHEST).getItem() == Items.ELYTRA
 			  && entityLivingBase.isElytraFlying() ) {
-				((EntityPlayerMP) entityLivingBase).clearElytraFlying();
+				/* TODO 1.15 port: elytra-stop-in-space disabled for boot (no public clearElytraFlying) */
 			}
 		}
 		

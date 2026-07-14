@@ -57,6 +57,7 @@ import net.minecraft.world.Explosion.Mode;
 import net.minecraft.world.World;
 
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraft.block.RedstoneWireBlock;
 
 public class JumpSequencer extends AbstractSequencer {
 	
@@ -1251,7 +1252,7 @@ public class JumpSequencer extends AbstractSequencer {
 					if (WarpDriveConfig.G_ENABLE_EXPERIMENTAL_UNLOAD) {
 						final TileEntity tileEntity = worldSource.getTileEntity(blockPos);
 						if (tileEntity != null) {
-							tileEntity.onChunkUnload();
+							tileEntity.onChunkUnloaded();
 							worldSource.removeTileEntity(blockPos);
 						}
 					} else {
@@ -1282,8 +1283,8 @@ public class JumpSequencer extends AbstractSequencer {
 			final BlockPos target = transformation.apply(jumpBlock.x, jumpBlock.y, jumpBlock.z);
 			
 			// TODO: add a proper tag on 1.15+
-			if (jumpBlock.block instanceof BlockRedstoneWire) {
-				worldTarget.setBlockState(target, jumpBlock.block.getStateFromMeta(jumpBlock.blockMeta));
+			if (jumpBlock.blockState.getBlock() instanceof RedstoneWireBlock) {
+				worldTarget.setBlockState(target, jumpBlock.blockState);
 			}
 			
 			JumpBlock.refreshBlockStateOnClient(worldTarget, target);
