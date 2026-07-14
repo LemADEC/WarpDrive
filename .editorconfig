@@ -1,0 +1,47 @@
+# Translated from .idea/codeStyles/Project.xml so the project code style is versioned and portable
+# (.idea is gitignored). IntelliJ-only options use the ij_* extension keys; other editors ignore them.
+# NOTE: this governs EditorConfig-aware tools/IDEs only - the Claude Code Edit tool reads neither this
+# file nor the IntelliJ code style, so it still strips blank-line indentation (fix by hand / shell).
+# For a guaranteed-faithful export, use IntelliJ: Settings > Code Style > gear > Export to EditorConfig File.
+root = true
+
+[*.java]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+max_line_length = 180
+ij_smart_tabs = true
+ij_java_use_relative_indents = true
+ij_java_label_indent_absolute = true
+ij_java_keep_indents_on_empty_lines = true
+ij_java_keep_blank_lines_before_rbrace = 1
+ij_java_blank_lines_after_class_header = 1
+ij_java_indent_case_from_switch = false
+ij_java_align_multiline_chained_methods = true
+ij_java_align_multiline_parameters_in_calls = true
+ij_java_align_multiline_binary_operation = true
+ij_java_align_multiline_assignment = true
+ij_java_align_multiline_ternary_operation = true
+ij_java_align_multiline_throws_list = true
+ij_java_align_multiline_extends_list = true
+ij_java_align_multiline_method_parentheses = true
+ij_java_align_multiline_array_initializer_expression = true
+ij_java_align_multiline_annotation_parameters = true
+ij_java_space_within_array_initializer_braces = true
+ij_java_space_before_array_initializer_lbrace = true
+ij_java_insert_inner_class_imports = true
+ij_java_class_count_to_use_import_on_demand = 500
+ij_java_names_count_to_use_import_on_demand = 300
+ij_java_imports_layout = cr0s.**,dan200.computercraft.**,li.cil.oc.**,|,javax.**,java.**,|,net.minecraft.**,org.lwjgl.**,|,cpw.**,net.minecraftforge.**,|,*,|,$*
+
+[*.lua]
+indent_style = space
+indent_size = 2
+tab_width = 2
+ij_lua_keep_indents_on_empty_lines = true
+
+# CC/OC scripts are extensionless Lua files under lua.ComputerCraft / lua.OpenComputers
+[**/lua.{ComputerCraft,OpenComputers}/**]
+indent_style = space
+indent_size = 2
+tab_width = 2
