@@ -189,6 +189,7 @@ public class WarpDriveConfig {
 	public static int                  G_REGISTRY_UPDATE_INTERVAL_TICKS = 20 * WarpDriveConfig.G_REGISTRY_UPDATE_INTERVAL_SECONDS;
 	public static boolean              G_ENFORCE_VALID_CELESTIAL_OBJECTS = true;
 	public static int                  G_BLOCKS_PER_TICK = 3500;
+	public static int                  G_CHUNKS_PER_TICK = 4;
 	public static boolean              G_ENABLE_FAST_SET_BLOCKSTATE = false;
 	public static boolean              G_ENABLE_PROTECTION_CHECKS = true;
 	public static boolean              G_ENABLE_EXPERIMENTAL_REFRESH = false;
@@ -861,6 +862,9 @@ public class WarpDriveConfig {
 		G_BLOCKS_PER_TICK = Commons.clamp(100, 100000,
 				config.get("general", "blocks_per_tick", G_BLOCKS_PER_TICK,
 				           "Number of blocks to move per ticks, too high will cause lag spikes on ship jumping or deployment, too low may break the ship wirings").getInt());
+		G_CHUNKS_PER_TICK = Commons.clamp(1, 1000,
+				config.get("general", "chunks_per_tick", G_CHUNKS_PER_TICK,
+				           "Number of target chunks to load or generate per tick before a ship jump, too high will cause lag spikes or watchdog kills when jumping to ungenerated areas, too low will delay the jump").getInt());
 		G_ENABLE_FAST_SET_BLOCKSTATE = config.get("general", "enable_fast_set_blockstate", G_ENABLE_FAST_SET_BLOCKSTATE,
 		                                          "Enable fast blockstate placement, skipping light computation. Disable if you have world implementations conflicts").getBoolean(G_ENABLE_FAST_SET_BLOCKSTATE);
 		G_ENABLE_PROTECTION_CHECKS = config.get("general", "enable_protection_checks", G_ENABLE_PROTECTION_CHECKS,

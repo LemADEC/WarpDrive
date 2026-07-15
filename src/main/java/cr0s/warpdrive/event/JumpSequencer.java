@@ -100,6 +100,9 @@ public class JumpSequencer extends AbstractSequencer {
 	protected final JumpShip ship;
 	private boolean betweenWorlds;
 	private boolean isPluginCheckDone = false;
+	private boolean isJumpDistanceCheckPending = false;
+	private ArrayList<ChunkPos> chunksToPreload;
+	private int indexPreloadChunk = 0;
 	private WarpDriveText firstAdjustmentReason = null;
 	
 	private long msCounter = 0;
@@ -300,6 +303,12 @@ public class JumpSequencer extends AbstractSequencer {
 		case GET_INITIAL_VECTOR:
 			state_getInitialVector();
 			if (isEnabled) {
+				enumJumpSequencerState = EnumJumpSequencerState.PRELOAD_TARGET_CHUNKS;
+			}
+			break;
+			
+		case PRELOAD_TARGET_CHUNKS:
+			if (state_preloadTargetChunks() && isEnabled) {
 				enumJumpSequencerState = EnumJumpSequencerState.ADJUST_JUMP_VECTOR;
 			}
 			break;
@@ -688,7 +697,8 @@ public class JumpSequencer extends AbstractSequencer {
 			final int rangeX = Math.abs(moveX) - (ship.maxX - ship.minX);
 			final int rangeZ = Math.abs(moveZ) - (ship.maxZ - ship.minZ);
 			if (Math.max(rangeX, rangeZ) < 256) {
-				firstAdjustmentReason = getPossibleJumpDistance();
+				// delayed until the path is loaded, see state_preloadTargetChunks()
+				isJumpDistanceCheckPending = true;
 				isPluginCheckDone = true;
 			}
 			break;
@@ -704,6 +714,70 @@ public class JumpSequencer extends AbstractSequencer {
 		transformation = new Transformation(ship, worldTarget, moveX, moveY, moveZ, rotationSteps);
 		
 		LocalProfiler.stop();
+	}
+	
+	@Nonnull
+	private ArrayList<ChunkPos> getChunksToPreload() {
+		// Cover the target position, plus the source position when a vector adjustment is pending:
+		// the movement is linear, so intermediate positions are within the union of both boxes.
+		// A diagonal move loads corner chunks the ship won't touch, and a rotating ship may reach
+		// a few chunks outside the envelope which will lazy load as before: both are perf only.
+		final BlockPos targetMin = transformation.apply(ship.minX, ship.minY, ship.minZ);
+		final BlockPos targetMax = transformation.apply(ship.maxX, ship.maxY, ship.maxZ);
+		int minX = Math.min(targetMin.getX(), targetMax.getX());
+		int maxX = Math.max(targetMin.getX(), targetMax.getX());
+		int minZ = Math.min(targetMin.getZ(), targetMax.getZ());
+		int maxZ = Math.max(targetMin.getZ(), targetMax.getZ());
+		if (isJumpDistanceCheckPending && worldTarget == worldSource) {
+			minX = Math.min(minX, ship.minX);
+			maxX = Math.max(maxX, ship.maxX);
+			minZ = Math.min(minZ, ship.minZ);
+			maxZ = Math.max(maxZ, ship.maxZ);
+		}
+		final int chunkMinX = minX >> 4;
+		final int chunkMaxX = maxX >> 4;
+		final int chunkMinZ = minZ >> 4;
+		final int chunkMaxZ = maxZ >> 4;
+		final ArrayList<ChunkPos> chunkPositions = new ArrayList<>((chunkMaxX - chunkMinX + 1) * (chunkMaxZ - chunkMinZ + 1));
+		for (int xChunk = chunkMinX; xChunk <= chunkMaxX; xChunk++) {
+			for (int zChunk = chunkMinZ; zChunk <= chunkMaxZ; zChunk++) {
+				chunkPositions.add(new ChunkPos(xChunk, zChunk));
+			}
+		}
+		return chunkPositions;
+	}
+	
+	protected boolean state_preloadTargetChunks() {
+		LocalProfiler.start("Jump.preloadTargetChunks");
+		
+		if (chunksToPreload == null) {
+			chunksToPreload = getChunksToPreload();
+			if (WarpDriveConfig.LOGGING_JUMP) {
+				WarpDrive.logger.info(String.format("%s Preloading %d chunks at target, %d per tick",
+				                                    this, chunksToPreload.size(), WarpDriveConfig.G_CHUNKS_PER_TICK));
+			}
+		}
+		
+		// getChunk will load or generate the chunk: this is the expensive part, hence the tick budget
+		final int indexLastChunk = Math.min(chunksToPreload.size(), indexPreloadChunk + WarpDriveConfig.G_CHUNKS_PER_TICK);
+		for (; indexPreloadChunk < indexLastChunk; indexPreloadChunk++) {
+			final ChunkPos chunkPos = chunksToPreload.get(indexPreloadChunk);
+			worldTarget.getChunk(chunkPos.x, chunkPos.z);
+		}
+		if (indexPreloadChunk < chunksToPreload.size()) {
+			LocalProfiler.stop();
+			return false;
+		}
+		
+		// run the delayed vector adjustment now that the whole path is loaded
+		if (isJumpDistanceCheckPending) {
+			isJumpDistanceCheckPending = false;
+			firstAdjustmentReason = getPossibleJumpDistance();
+			transformation = new Transformation(ship, worldTarget, moveX, moveY, moveZ, rotationSteps);
+		}
+		
+		LocalProfiler.stop();
+		return true;
 	}
 	
 	protected void state_adjustJumpVector() {
@@ -1490,7 +1564,7 @@ public class JumpSequencer extends AbstractSequencer {
 		}
 		
 		// inform players on board
-
+		
 		final double rx = Math.round(min.x + worldSource.rand.nextInt(Math.max(1, (int) (max.x - min.x))));
 		final double ry = Math.round(min.y + worldSource.rand.nextInt(Math.max(1, (int) (max.y - min.y))));
 		final double rz = Math.round(min.z + worldSource.rand.nextInt(Math.max(1, (int) (max.z - min.z))));
