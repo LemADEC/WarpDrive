@@ -23,7 +23,11 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraftforge.fml.common.Optional;
 
 public abstract class TileEntityAbstractShipController extends TileEntityAbstractEnergyCoreOrController implements IShipController {
-	
+
+	// Defensive cap on a single movement component. Gameplay range is enforced by ShipMovementCosts;
+	// this only rejects pathological GUI/computer/NBT values before they reach world-coordinate math.
+	protected static final int SHIP_MOVEMENT_INPUT_LIMIT = 30000000;
+
 	// persistent properties
 	private int front, right, up;
 	private int back, left, down;
@@ -53,6 +57,8 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 				"rotationSteps",
 				"state",
 				"targetName",
+				"validateMovement",
+				"validateNavigation",
 				});
 	}
 	
@@ -239,9 +245,11 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	}
 	
 	protected void setMovement(final int moveFront, final int moveUp, final int moveRight) {
-		this.moveFront = moveFront;
-		this.moveUp = moveUp;
-		this.moveRight = moveRight;
+		// clamp at the single chokepoint so neither the GUI nor a computer can push a value that
+		// overflows the downstream Math.abs()/magnitude arithmetic (e.g. Integer.MIN_VALUE)
+		this.moveFront = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveFront);
+		this.moveUp    = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveUp);
+		this.moveRight = Commons.clamp(-SHIP_MOVEMENT_INPUT_LIMIT, SHIP_MOVEMENT_INPUT_LIMIT, moveRight);
 		markDirty();
 	}
 	
@@ -357,6 +365,10 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 	@Override
 	abstract public Object[] getMaxJumpDistance();
 	
+	abstract public Object[] validateMovement(final Object[] arguments);
+	
+	abstract public Object[] validateNavigation();
+	
 	@Override
 	public Object[] rotationSteps(final Object[] arguments) {
 		try {
@@ -460,6 +472,19 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		return targetName(OC_convertArgumentsAndLogCall(context, arguments));
 	}
 	
+	@Callback(direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] validateMovement(final Context context, final Arguments arguments) {
+		return validateMovement(OC_convertArgumentsAndLogCall(context, arguments));
+	}
+	
+	@Callback(direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] validateNavigation(final Context context, final Arguments arguments) {
+		OC_convertArgumentsAndLogCall(context, arguments);
+		return validateNavigation();
+	}
+	
 	// ComputerCraft IPeripheral methods
 	@Override
 	@Optional.Method(modid = "computercraft")
@@ -500,6 +525,12 @@ public abstract class TileEntityAbstractShipController extends TileEntityAbstrac
 		
 		case "targetName":
 			return targetName(arguments);
+		
+		case "validateMovement":
+			return validateMovement(arguments);
+		
+		case "validateNavigation":
+			return validateNavigation();
 		}
 		
 		return super.CC_callMethod(methodName, arguments);

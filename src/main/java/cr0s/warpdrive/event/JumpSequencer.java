@@ -71,6 +71,7 @@ public class JumpSequencer extends AbstractSequencer {
 	private int moveX, moveY, moveZ;
 	private final byte rotationSteps;
 	private final String nameTarget;
+	private final String navigationEngagedTargetId;
 	protected final int destX;
 	protected final int destY;
 	protected final int destZ;
@@ -108,6 +109,12 @@ public class JumpSequencer extends AbstractSequencer {
 	public JumpSequencer(@Nonnull final TileEntityShipCore shipCore, final EnumShipMovementType shipMovementType, final String nameTarget,
 	                     final int moveX, final int moveY, final int moveZ, final byte rotationSteps,
 	                     final int destX, final int destY, final int destZ) {
+		this(shipCore, shipMovementType, nameTarget, moveX, moveY, moveZ, rotationSteps, destX, destY, destZ, "");
+	}
+
+	public JumpSequencer(@Nonnull final TileEntityShipCore shipCore, final EnumShipMovementType shipMovementType, final String nameTarget,
+	                     final int moveX, final int moveY, final int moveZ, final byte rotationSteps,
+	                     final int destX, final int destY, final int destZ, final String navigationEngagedTargetId) {
 		this.worldSource = shipCore.getWorld();
 		this.ship = new JumpShip();
 		this.ship.world = worldSource;
@@ -127,6 +134,7 @@ public class JumpSequencer extends AbstractSequencer {
 		this.moveZ = moveZ;
 		this.rotationSteps = rotationSteps;
 		this.nameTarget = nameTarget;
+		this.navigationEngagedTargetId = navigationEngagedTargetId == null ? "" : navigationEngagedTargetId;
 		this.destX = destX;
 		this.destY = destY;
 		this.destZ = destZ;
@@ -150,6 +158,7 @@ public class JumpSequencer extends AbstractSequencer {
 		this.shipMovementType = enumShipMovementType;
 		this.rotationSteps = rotationSteps;
 		this.nameTarget = null;
+		this.navigationEngagedTargetId = "";
 		this.destX = destX;
 		this.destY = destY;
 		this.destZ = destZ;
@@ -215,12 +224,18 @@ public class JumpSequencer extends AbstractSequencer {
 		
 		final JumpResult jumpResult;
 		if (!isSuccessful) {
+			if (ship.shipCore != null) {
+				ship.shipCore.onNavigationMovementAborted(navigationEngagedTargetId);
+			}
 			jumpResult = new JumpResult(worldSource, ship.core,
 			                            ship.shipCore, shipMovementType.getName(), false, reason);
 		} else {
 			final BlockPos blockPosCoreTarget = transformation.apply(ship.core);
 			final TileEntity tileEntity = worldTarget.getTileEntity(blockPosCoreTarget);
 			final IShipController shipController = tileEntity instanceof TileEntityShipCore ? ((TileEntityShipCore) tileEntity) : null;
+			if (shipController instanceof TileEntityShipCore) {
+				((TileEntityShipCore) shipController).onNavigationMovementCompleted(navigationEngagedTargetId);
+			}
 			jumpResult = new JumpResult(worldTarget, blockPosCoreTarget,
 			                            shipController, shipMovementType.getName(), true, reason);
 		}
@@ -868,6 +883,105 @@ public class JumpSequencer extends AbstractSequencer {
 		}
 	}
 	
+	private CelestialObject getStrictNavigationTarget(final WarpDriveText reason) {
+		if (navigationEngagedTargetId.isEmpty()) {
+			return null;
+		}
+		final CelestialObject celestialObject = CelestialObjectManager.get(false, navigationEngagedTargetId);
+		if (celestialObject == null) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.invalid_target");
+			return null;
+		}
+		if (celestialObject.isVirtual()) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.virtual_target", celestialObject.getDisplayName());
+			return null;
+		}
+		return celestialObject;
+	}
+
+	private CelestialObject getSpaceFor(final CelestialObject celestialObject) {
+		if (celestialObject == null) {
+			return null;
+		}
+		if (celestialObject.isSpace()) {
+			return celestialObject;
+		}
+		CelestialObject celestialObjectParent = celestialObject.parent;
+		while (celestialObjectParent != null) {
+			if (celestialObjectParent.isSpace()) {
+				return celestialObjectParent;
+			}
+			celestialObjectParent = celestialObjectParent.parent;
+		}
+		return null;
+	}
+
+	private CelestialObject getStrictHyperspaceExitTarget(final WarpDriveText reason) {
+		final CelestialObject celestialObjectTarget = getStrictNavigationTarget(reason);
+		if (celestialObjectTarget == null) {
+			return null;
+		}
+		final CelestialObject celestialObjectSpace = getSpaceFor(celestialObjectTarget);
+		if (celestialObjectSpace == null) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.target_not_space_reachable",
+			              celestialObjectTarget.getDisplayName());
+			return null;
+		}
+		return celestialObjectSpace;
+	}
+
+	private CelestialObject getStrictLandingTarget(final WarpDriveText reason) {
+		final CelestialObject celestialObjectTarget = getStrictNavigationTarget(reason);
+		if (celestialObjectTarget == null) {
+			return null;
+		}
+		if ( celestialObjectTarget.isSpace()
+		  || celestialObjectTarget.isHyperspace() ) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.target_not_landable",
+			              celestialObjectTarget.getDisplayName());
+			return null;
+		}
+		return celestialObjectTarget;
+	}
+
+	private boolean isStrictHyperspaceEnteringAllowed(final CelestialObject celestialObjectSource, final WarpDriveText reason) {
+		if (navigationEngagedTargetId.isEmpty()) {
+			return true;
+		}
+		final CelestialObject celestialObjectTarget = getStrictNavigationTarget(reason);
+		if (celestialObjectTarget == null) {
+			return false;
+		}
+		if (celestialObjectTarget.isHyperspace()) {
+			return true;
+		}
+		final CelestialObject celestialObjectTargetSpace = getSpaceFor(celestialObjectTarget);
+		if ( celestialObjectTargetSpace == null
+		  || celestialObjectSource == null
+		  || celestialObjectTargetSpace == celestialObjectSource ) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.target_not_hyperspace_reachable",
+			              celestialObjectTarget.getDisplayName());
+			return false;
+		}
+		return true;
+	}
+
+	private boolean isStrictPlanetTakeoffAllowed(final CelestialObject celestialObjectSource, final WarpDriveText reason) {
+		if (navigationEngagedTargetId.isEmpty()) {
+			return true;
+		}
+		final CelestialObject celestialObjectTarget = getStrictNavigationTarget(reason);
+		if (celestialObjectTarget == null) {
+			return false;
+		}
+		if (celestialObjectSource == null || celestialObjectTarget == celestialObjectSource) {
+			reason.append(Commons.getStyleWarning(), "warpdrive.navigation.blocker.target_not_takeoff_reachable",
+			              celestialObjectTarget.getDisplayName());
+			return false;
+		}
+		return true;
+	}
+
 	protected boolean computeTargetWorld(final CelestialObject celestialObjectSource, @Nonnull final EnumShipMovementType shipMovementType, final WarpDriveText reason) {
 		switch (shipMovementType) {
 		case INSTANTIATE:
@@ -876,18 +990,24 @@ public class JumpSequencer extends AbstractSequencer {
 			break;
 			
 		case HYPERSPACE_EXITING: {
-			final CelestialObject celestialObject = CelestialObjectManager.getClosestChild(worldSource, ship.core.getX(), ship.core.getZ());
+			final CelestialObject celestialObject = getStrictHyperspaceExitTarget(reason);
+			if (celestialObject == null && !navigationEngagedTargetId.isEmpty()) {
+				return false;
+			}
+			final CelestialObject celestialObjectEffective = celestialObject == null
+			                                              ? CelestialObjectManager.getClosestChild(worldSource, ship.core.getX(), ship.core.getZ())
+			                                              : celestialObject;
 			// anything defined?
-			if (celestialObject == null) {
+			if (celestialObjectEffective == null) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.no_celestial_object_in_hyperspace",
 				              Commons.format(worldSource), worldSource.provider.getDimension());
 				return false;
 			}
 			
 			// are we clear for transit?
-			final double distanceSquared = celestialObject.getSquareDistanceInParent(worldSource.provider.getDimension(), ship.core.getX(), ship.core.getZ());
+			final double distanceSquared = celestialObjectEffective.getSquareDistanceInParent(worldSource.provider.getDimension(), ship.core.getX(), ship.core.getZ());
 			if (distanceSquared > 0.0D) {
-				final AxisAlignedBB axisAlignedBB = celestialObject.getAreaInParent();
+				final AxisAlignedBB axisAlignedBB = celestialObjectEffective.getAreaInParent();
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.no_star_system_in_range",
 				              (int) Math.sqrt(distanceSquared),
 				              (int) axisAlignedBB.minX, (int) axisAlignedBB.minY, (int) axisAlignedBB.minZ,
@@ -896,7 +1016,7 @@ public class JumpSequencer extends AbstractSequencer {
 			}
 			
 			// is world available?
-			final int dimensionIdSpace = celestialObject.dimensionId;
+			final int dimensionIdSpace = celestialObjectEffective.dimensionId;
 			worldTarget = Commons.getOrCreateWorldServer(dimensionIdSpace);
 			if (worldTarget == null) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.exception_loading_dimension",
@@ -905,13 +1025,16 @@ public class JumpSequencer extends AbstractSequencer {
 			}
 			
 			// update movement vector
-			final VectorI vEntry = celestialObject.getEntryOffset();
+			final VectorI vEntry = celestialObjectEffective.getEntryOffset();
 			moveX = vEntry.x;
 			moveZ = vEntry.z;
 		}
 		break;
 		
 		case HYPERSPACE_ENTERING: {
+			if (!isStrictHyperspaceEnteringAllowed(celestialObjectSource, reason)) {
+				return false;
+			}
 			// anything defined?
 			if ( celestialObjectSource == null
 			  || celestialObjectSource.parent == null ) {
@@ -938,6 +1061,9 @@ public class JumpSequencer extends AbstractSequencer {
 		break;
 		
 		case PLANET_TAKEOFF: {
+			if (!isStrictPlanetTakeoffAllowed(celestialObjectSource, reason)) {
+				return false;
+			}
 			// anything defined?
 			if ( celestialObjectSource == null
 			  || celestialObjectSource.parent == null ) {
@@ -974,18 +1100,24 @@ public class JumpSequencer extends AbstractSequencer {
 		break;
 		
 		case PLANET_LANDING: {
-			final CelestialObject celestialObject = CelestialObjectManager.getClosestChild(worldSource, ship.core.getX(), ship.core.getZ());
+			final CelestialObject celestialObject = getStrictLandingTarget(reason);
+			if (celestialObject == null && !navigationEngagedTargetId.isEmpty()) {
+				return false;
+			}
+			final CelestialObject celestialObjectEffective = celestialObject == null
+			                                              ? CelestialObjectManager.getClosestChild(worldSource, ship.core.getX(), ship.core.getZ())
+			                                              : celestialObject;
 			// anything defined?
-			if (celestialObject == null) {
+			if (celestialObjectEffective == null) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.no_celestial_object_in_space",
 				              Commons.format(worldSource), worldSource.provider.getDimension());
 				return false;
 			}
 			
 			// are we in orbit?
-			final double distanceSquared = celestialObject.getSquareDistanceInParent(worldSource.provider.getDimension(), ship.core.getX(), ship.core.getZ());
+			final double distanceSquared = celestialObjectEffective.getSquareDistanceInParent(worldSource.provider.getDimension(), ship.core.getX(), ship.core.getZ());
 			if (distanceSquared > 0.0D) {
-				final AxisAlignedBB axisAlignedBB = celestialObject.getAreaInParent();
+				final AxisAlignedBB axisAlignedBB = celestialObjectEffective.getAreaInParent();
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.unable_to_land_outside_orbit",
 				              (int) Math.sqrt(distanceSquared),
 				              (int) axisAlignedBB.minX, (int) axisAlignedBB.minY, (int) axisAlignedBB.minZ,
@@ -994,22 +1126,22 @@ public class JumpSequencer extends AbstractSequencer {
 			}
 			
 			// is it defined?
-			if (celestialObject.isVirtual()) {
+			if (celestialObjectEffective.isVirtual()) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.unable_to_land_virtual_planet",
-				              celestialObject.getDisplayName());
+				              celestialObjectEffective.getDisplayName());
 				return false;
 			}
 			
 			// validate world availability
-			worldTarget = Commons.getOrCreateWorldServer(celestialObject.dimensionId);
+			worldTarget = Commons.getOrCreateWorldServer(celestialObjectEffective.dimensionId);
 			if (worldTarget == null) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.exception_loading_dimension",
-				              celestialObject.getDisplayName(), celestialObject.dimensionId);
+				              celestialObjectEffective.getDisplayName(), celestialObjectEffective.dimensionId);
 				return false;
 			}
 			
 			// update movement vector
-			final VectorI vEntry = celestialObject.getEntryOffset();
+			final VectorI vEntry = celestialObjectEffective.getEntryOffset();
 			moveX = vEntry.x;
 			moveZ = vEntry.z;
 		}

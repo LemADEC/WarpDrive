@@ -10,6 +10,7 @@ import cr0s.warpdrive.data.EnumComponentType;
 import cr0s.warpdrive.data.EnumTier;
 import cr0s.warpdrive.data.SoundEvents;
 import cr0s.warpdrive.item.ItemComponent;
+import cr0s.warpdrive.network.PacketHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,7 +23,9 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -151,7 +154,13 @@ public class BlockShipCore extends BlockAbstractContainer {
 				
 			} else if ( !world.isRemote
 			         && !entityPlayer.isSneaking() ) {
-				Commons.addChatMessage(entityPlayer, tileEntityShipCore.getStatus());
+				if (!tileEntityShipCore.isCrewMember((EntityPlayerMP) entityPlayer)) {
+					Commons.addChatMessage(entityPlayer, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.navigation.denied"));
+					return true;
+				}
+				PacketHandler.sendShipNavigationMapPacket((EntityPlayerMP) entityPlayer, ShipNavigationHelper.buildStaticMapSnapshot(), true);
+				final NBTTagCompound tagCompound = ShipNavigationHelper.buildSnapshot((EntityPlayerMP) entityPlayer, tileEntityShipCore, blockPos, "");
+				PacketHandler.sendShipNavigationPacket((EntityPlayerMP) entityPlayer, tagCompound);
 				return true;
 			}
 		}
