@@ -512,9 +512,16 @@ public class JumpShip {
 	public boolean save(final WarpDriveText reason) {
 		BlockPos blockPos = new BlockPos(0, -1, 0);
 		try {
+			// pre-size from the last ship scan when available, falling back to a ratio of the bounding box:
+			// growing from an empty list would reallocate over a dozen times on a medium sized ship
 			final int estimatedVolume = (maxX - minX + 1) * (maxY - minY + 1) * (maxZ - minZ + 1);
-			final JumpBlock[][] placeTimeJumpBlocks = { new JumpBlock[estimatedVolume], new JumpBlock[estimatedVolume], new JumpBlock[estimatedVolume], new JumpBlock[estimatedVolume], new JumpBlock[estimatedVolume] };
-			final int[] placeTimeIndexes = { 0, 0, 0, 0, 0 };
+			final int estimatedBlocks = shipCore != null && shipCore.shipVolume > 0 ? shipCore.shipVolume
+			                                                                        : Math.max(16, estimatedVolume / 5);
+			@SuppressWarnings("unchecked")
+			final ArrayList<JumpBlock>[] placeTimeJumpBlocks = new ArrayList[5];
+			for (int placeTime = 0; placeTime < placeTimeJumpBlocks.length; placeTime++) {
+				placeTimeJumpBlocks[placeTime] = new ArrayList<>(estimatedBlocks);
+			}
 			
 			int actualVolume = 0;
 			int newMass = 0;
@@ -536,9 +543,10 @@ public class JumpShip {
 							for (int z = z1; z <= z2; z++) {
 								blockPos = new BlockPos(x, y, z);
 								final IBlockState blockState = world.getBlockState(blockPos);
+								final Block block = blockState.getBlock();
 								
 								// Skipping vanilla air & ignored blocks
-								if (blockState.getBlock() == Blocks.AIR || Dictionary.BLOCKS_LEFTBEHIND.contains(blockState.getBlock())) {
+								if (block == Blocks.AIR || Dictionary.BLOCKS_LEFTBEHIND.contains(block)) {
 									continue;
 								}
 								actualVolume++;
@@ -548,14 +556,14 @@ public class JumpShip {
 									                                    x, y, z, blockState, blockState.getBlock().getMetaFromState(blockState)));
 								}
 								
-								if (!Dictionary.BLOCKS_NOMASS.contains(blockState.getBlock())) {
+								if (!Dictionary.BLOCKS_NOMASS.contains(block)) {
 									newMass++;
 								}
 								
 								// Stop on non-movable blocks
-								if (Dictionary.BLOCKS_ANCHOR.contains(blockState.getBlock())) {
+								if (Dictionary.BLOCKS_ANCHOR.contains(block)) {
 									reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.anchor_block_detected",
-									              blockState.getBlock().getLocalizedName(),
+									              block.getLocalizedName(),
 									              x, y, z);
 									return false;
 								}
@@ -578,7 +586,7 @@ public class JumpShip {
 								}
 								
 								// default priority is 2 for block, 3 for tile entities
-								Integer placeTime = Dictionary.BLOCKS_PLACE.get(blockState.getBlock());
+								Integer placeTime = Dictionary.BLOCKS_PLACE.get(block);
 								if (placeTime == null) {
 									if (tileEntity == null) {
 										placeTime = 2;
@@ -587,8 +595,7 @@ public class JumpShip {
 									}
 								}
 								
-								placeTimeJumpBlocks[placeTime][placeTimeIndexes[placeTime]] = jumpBlock;
-								placeTimeIndexes[placeTime]++;
+								placeTimeJumpBlocks[placeTime].add(jumpBlock);
 							}
 						}
 					}
@@ -598,8 +605,8 @@ public class JumpShip {
 			jumpBlocks = new JumpBlock[actualVolume];
 			int indexShip = 0;
 			for (int placeTime = 0; placeTime < 5; placeTime++) {
-				for (int placeTimeIndex = 0; placeTimeIndex < placeTimeIndexes[placeTime]; placeTimeIndex++) {
-					jumpBlocks[indexShip] = placeTimeJumpBlocks[placeTime][placeTimeIndex];
+				for (final JumpBlock jumpBlock : placeTimeJumpBlocks[placeTime]) {
+					jumpBlocks[indexShip] = jumpBlock;
 					indexShip++;
 				}
 			}
