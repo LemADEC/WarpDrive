@@ -65,6 +65,7 @@ public class PacketHandler {
 		} catch (final Exception exception) {
 			throw new RuntimeException(exception);
 		}
+		simpleNetworkManager.registerMessage(MessageCameraOrientation.class   , MessageCameraOrientation.class   , 104, Side.SERVER);
 	}
 	
 	// Beam effect sent to client side
@@ -234,6 +235,11 @@ public class PacketHandler {
 			WarpDrive.logger.info(String.format("Sent targeting packet (%d %d %d) yaw %.3f pitch %.3f",
 			                                    x, y, z, yaw, pitch));
 		}
+	}
+
+	public static void sendCameraOrientationPacket(final BlockPos blockPosMonitor, final BlockPos blockPosCamera,
+	                                               final float yaw, final float pitch) {
+		simpleNetworkManager.sendToServer(new MessageCameraOrientation(blockPosMonitor, blockPosCamera, yaw, pitch));
 	}
 	
 	// Sending cloaking area definition (server -> client)
