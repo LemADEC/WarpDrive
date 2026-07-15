@@ -17,6 +17,7 @@ import cr0s.warpdrive.compat.CompatDeepResonance;
 import cr0s.warpdrive.compat.CompatDraconicEvolution;
 import cr0s.warpdrive.compat.CompatEmbers;
 import cr0s.warpdrive.compat.CompatEnderIO;
+import cr0s.warpdrive.compat.CompatEnergyControl;
 import cr0s.warpdrive.compat.CompatEnvironmentalTech;
 import cr0s.warpdrive.compat.CompatEvilCraft;
 import cr0s.warpdrive.compat.CompatExtraUtilities2;
@@ -39,6 +40,7 @@ import cr0s.warpdrive.compat.CompatRefinedStorage;
 import cr0s.warpdrive.compat.CompatRoots;
 import cr0s.warpdrive.compat.CompatRustic;
 import cr0s.warpdrive.compat.CompatSGCraft;
+import cr0s.warpdrive.compat.CompatJSG;
 import cr0s.warpdrive.compat.CompatStorageDrawers;
 import cr0s.warpdrive.compat.CompatTConstruct;
 import cr0s.warpdrive.compat.CompatTechguns;
@@ -411,6 +413,7 @@ public class WarpDriveConfig {
 	private static DoubleValue                      mining_laser_mine_silktouch_energy_factor;
 	private static IntValue                         mining_laser_mine_silktouch_deuterium_mB;
 	private static DoubleValue                      mining_laser_fortune_energy_factor;
+	private static BooleanValue                     mining_laser_pump_upgrade_harvest_fluid;
 	
 	// Offline avatar
 	private static BooleanValue                     offline_avatar_enable;
@@ -712,6 +715,7 @@ public class WarpDriveConfig {
 	public static double           MINING_LASER_MINE_SILKTOUCH_ENERGY_FACTOR = 1.5;
 	public static int              MINING_LASER_MINE_SILKTOUCH_DEUTERIUM_MB = 0;
 	public static double           MINING_LASER_MINE_FORTUNE_ENERGY_FACTOR = 1.5;
+	public static boolean          MINING_LASER_PUMP_UPGRADE_HARVEST_FLUID = false;
 	
 	// Laser tree farm
 	// oak      tree height is 8 to 11 logs + 2 leaves
@@ -2111,6 +2115,11 @@ public class WarpDriveConfig {
 					.defineInRange("fortune_energy_factor", 1.5D, 0.01D, 1000.0D);
 		}
 		
+		mining_laser_pump_upgrade_harvest_fluid = builder
+				.comment("Pump upgrade will actually pump fluid source if a tank is found, instead of just evaporating it")
+				.translation("warpdrive.config.mining_laser.pump_upgrade_harvest_fluid")
+				.define("pump_upgrade_harvest_fluid", false);
+		
 		builder.pop();
 		
 		// Offline avatar
@@ -2591,6 +2600,7 @@ public class WarpDriveConfig {
 		MINING_LASER_MINE_ENERGY_PER_BLOCK_IN_VOID = mining_laser_mine_energy_per_block_in_void.get();
 		MINING_LASER_MINE_ORES_ONLY_ENERGY_FACTOR = mining_laser_mine_ores_only_energy_factor.get();
 		MINING_LASER_MINE_SILKTOUCH_ENERGY_FACTOR = mining_laser_mine_silktouch_energy_factor.get();
+		MINING_LASER_PUMP_UPGRADE_HARVEST_FLUID = mining_laser_pump_upgrade_harvest_fluid.get();
 		
 		if (unused) {
 			MINING_LASER_MINE_SILKTOUCH_DEUTERIUM_MB = mining_laser_mine_silktouch_deuterium_mB.get();
@@ -2734,6 +2744,11 @@ public class WarpDriveConfig {
 			CompatIndustrialCraft2.register();
 		}
 		
+		final boolean isEnergyControlLoaded = Loader.isModLoaded("energycontrol");
+		if (isEnergyControlLoaded) {
+			CompatEnergyControl.register();
+		}
+		
 		if (isOpenComputersLoaded) {
 			CompatOpenComputers.register();
 		}
@@ -2875,6 +2890,11 @@ public class WarpDriveConfig {
 		final boolean isSGCraftLoaded = ModList.get().isLoaded("sgcraft");
 		if (isSGCraftLoaded) {
 			CompatSGCraft.register();
+		}
+
+		final boolean isJSGLoaded = Loader.isModLoaded("jsg");
+		if (isJSGLoaded) {
+			CompatJSG.register();
 		}
 		
 		final boolean isStorageDrawersLoaded = ModList.get().isLoaded("storagedrawers");

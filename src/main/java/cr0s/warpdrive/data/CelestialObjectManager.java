@@ -1,6 +1,7 @@
 package cr0s.warpdrive.data;
 
 import cr0s.warpdrive.Commons;
+import cr0s.warpdrive.LocalProfiler;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.WarpDriveText;
 import cr0s.warpdrive.config.InvalidXmlException;
@@ -25,8 +26,13 @@ import org.apache.logging.log4j.LogManager;
 import org.w3c.dom.Element;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -44,51 +50,75 @@ public class CelestialObjectManager extends XmlFileManager {
 	private static final ResourceLocation ID_THE_NETHER = new ResourceLocation("minecraft:the_nether");
 	private static final CelestialObjectManager SERVER = new CelestialObjectManager();
 	private static final CelestialObjectManager CLIENT = new CelestialObjectManager();
+	// mutable accumulator, written only while parsing/reloading; runtime reads go through the immutable 'registry' below
 	private HashMap<String, CelestialObject> celestialObjectsById = new HashMap<>();
-	private HashMap<ResourceLocation, CelestialObject> celestialObjectsByDimensionId = new HashMap<>();
-	public CelestialObject[] celestialObjects = new CelestialObject[0];
+	// Immutable snapshot swapped atomically in rebuildAndValidate() so concurrent readers (e.g. the render thread)
+	// always observe a consistent set of indexes
+	private volatile Registry registry = Registry.EMPTY;
 	
-	private double maxWorldBorder = 0.0D;
+	// bundles every runtime lookup structure so they can be published as a single atomic unit
+	private static final class Registry {
+		private static final Registry EMPTY = new Registry(new HashMap<>(), new HashMap<>(), new HashMap<>(), 0.0D);
+		final Map<String, CelestialObject> byId;                 // every object, by id
+		final Map<ResourceLocation, List<CelestialObject>> byDimensionId; // non-virtual objects, by dimensionId
+		final Map<String, List<CelestialObject>> byParentId;     // every object, by parentId (direct children)
+		final double maxWorldBorder;
+		private Registry(final Map<String, CelestialObject> byId,
+		                 final Map<ResourceLocation, List<CelestialObject>> byDimensionId,
+		                 final Map<String, List<CelestialObject>> byParentId,
+		                 final double maxWorldBorder) {
+			this.byId = byId;
+			this.byDimensionId = byDimensionId;
+			this.byParentId = byParentId;
+			this.maxWorldBorder = maxWorldBorder;
+		}
+	}
 	
 	// *** mixed statics ***
 	
 	public static void clearForReload(final boolean isRemote) {
 		// create a new object instead of clearing, in case another thread is iterating through it
 		(isRemote ? CLIENT : SERVER).celestialObjectsById = new HashMap<>();
-		(isRemote ? CLIENT : SERVER).celestialObjectsByDimensionId = new HashMap<>();
 	}
 	
+	@Deprecated
 	public static CelestialObject get(final boolean isRemote, @Nonnull final DimensionType dimensionType) {
-		return (isRemote ? CLIENT : SERVER).celestialObjectsByDimensionId.get(dimensionType.getRegistryName());
+		return (isRemote ? CLIENT : SERVER).getRepresentative(dimensionType.getRegistryName());
 	}
 	
+	@Deprecated
 	public static CelestialObject get(final IWorld world) {
 		if (world == null) {
 			return null;
 		}
 		final ResourceLocation dimensionId = world.getDimension().getType().getRegistryName();
 		assert dimensionId != null;
-		return (world.isRemote() ? CLIENT : SERVER).getByDimensionType(dimensionId);
+		return (world.isRemote() ? CLIENT : SERVER).getRepresentative(dimensionId);
 	}
 	
-	public static CelestialObject get(final boolean isRemote, final ResourceLocation dimensionId) {
-		return (isRemote ? CLIENT : SERVER).getByDimensionType(dimensionId);
+	public static CelestialObject get(final boolean isRemote, final ResourceLocation dimensionId, final int x, final int z) {
+		return (isRemote ? CLIENT : SERVER).get(dimensionId, x, z);
 	}
 	
 	public static CelestialObject getClosestChild(final World world, final int x, final int z) {
 		double closestPlanetDistance = Double.POSITIVE_INFINITY;
 		CelestialObject celestialObjectClosest = null;
 		if (world != null) {
-			for (final CelestialObject celestialObject : (world.isRemote() ? CLIENT : SERVER).celestialObjects) {
-				if (celestialObject.isHyperspace()) {
-					continue;
-				}
-				final double distanceSquared = celestialObject.getSquareDistanceInParent(world.getDimension().getType().getRegistryName(), x, z);
-				if (distanceSquared <= 0.0D) {
-					return celestialObject;
-				} else if (closestPlanetDistance > distanceSquared) {
-					closestPlanetDistance = distanceSquared;
-					celestialObjectClosest = celestialObject;
+			// scope to the children of the celestial object we're actually in, so a dimension shared by several
+			// objects returns *our* object's children rather than a sibling's
+			final CelestialObject celestialObjectCurrent = get(world.isRemote, world.getDimension().getType().getRegistryName(), x, z);
+			if (celestialObjectCurrent != null) {
+				final List<CelestialObject> children = (world.isRemote ? CLIENT : SERVER).registry.byParentId.get(celestialObjectCurrent.id);
+				if (children != null) {
+					for (final CelestialObject celestialObject : children) {
+						final double distanceSquared = celestialObject.getSquareDistanceInParent(world.getDimension().getType().getRegistryName(), x, z);
+						if (distanceSquared <= 0.0D) {
+							return celestialObject;
+						} else if (closestPlanetDistance > distanceSquared) {
+							closestPlanetDistance = distanceSquared;
+							celestialObjectClosest = celestialObject;
+						}
+					}
 				}
 			}
 		}
@@ -162,7 +192,7 @@ public class CelestialObjectManager extends XmlFileManager {
 	}
 	
 	@Nullable
-	public static ResourceLocation getDimensionName(@Nonnull final String stringDimension, @Nonnull final Entity entity) {
+	public static ResourceLocation getDimensionId(@Nonnull final String stringDimension, @Nonnull final Entity entity) {
 		switch (stringDimension.toLowerCase()) {
 		case "world":
 		case "overworld":
@@ -184,10 +214,10 @@ public class CelestialObjectManager extends XmlFileManager {
 			return getHyperspaceDimensionId(entity.world);
 			
 		default:
-			final ResourceLocation dimensionName = new ResourceLocation(stringDimension);
+			final ResourceLocation dimensionId = new ResourceLocation(stringDimension);
 			try {
 				// try by name first
-				final DimensionType dimensionTypeDefault = DimensionType.byName(dimensionName);
+				final DimensionType dimensionTypeDefault = DimensionType.byName(dimensionId);
 				if (dimensionTypeDefault != null) {
 					return dimensionTypeDefault.getRegistryName();
 				}
@@ -197,7 +227,7 @@ public class CelestialObjectManager extends XmlFileManager {
 				WarpDrive.logger.info(String.format("Invalid dimension %s, expecting integer or dimension id or overworld/nether/end/theend/space/hyper/hyperspace",
 				                                    stringDimension));
 			}
-			return dimensionName;
+			return dimensionId;
 		}
 		// (unreachable code)
 	}
@@ -210,13 +240,15 @@ public class CelestialObjectManager extends XmlFileManager {
 	
 	public static void onRegisterDimensions() {
 		// only create dimensions if we own them
-		for (final CelestialObject celestialObject : SERVER.celestialObjects) {
+		for (final CelestialObject celestialObject : SERVER.registry.byId.values()) {
 			if (!celestialObject.isVirtual()) {
 				DimensionType dimensionType = DimensionType.byName(celestialObject.dimensionId);
 				switch (celestialObject.provider) {
 				case CelestialObject.PROVIDER_SPACE:
 					if (celestialObject.isSpace()) {
 						if (dimensionType == null) {
+							// several celestial objects may share one dimension; registerDimension writes to the same registry
+							// DimensionType.byName() reads, so this null-guard already registers each shared dimension only once
 							dimensionType = DimensionManager.registerDimension(celestialObject.dimensionId, WarpDrive.modDimensionSpace, null, false);
 							DimensionManager.keepLoaded(dimensionType, false);
 						}
@@ -229,6 +261,8 @@ public class CelestialObjectManager extends XmlFileManager {
 				case CelestialObject.PROVIDER_HYPERSPACE:
 					if (celestialObject.isHyperspace()) {
 						if (dimensionType == null) {
+							// several celestial objects may share one dimension; registerDimension writes to the same registry
+							// DimensionType.byName() reads, so this null-guard already registers each shared dimension only once
 							dimensionType = DimensionManager.registerDimension(celestialObject.dimensionId, WarpDrive.modDimensionHyperspace, null, false);
 							DimensionManager.keepLoaded(dimensionType, false);
 						}
@@ -266,20 +300,32 @@ public class CelestialObjectManager extends XmlFileManager {
 	public static INBT writeClientSync(final CelestialObject celestialObject) {
 		final ListNBT nbtTagList = new ListNBT();
 		if (celestialObject != null) {
-			// add current with all direct parents
-			CelestialObject celestialObjectParent = celestialObject;
-			while (celestialObjectParent != null) {
-				nbtTagList.add(celestialObjectParent.write(new CompoundNBT()));
-				celestialObjectParent = celestialObjectParent.parent;
-			}
-			
-			// add all children
-			for (final CelestialObject celestialObjectChild : SERVER.celestialObjects) {
-				// keep only direct children
-				if (!celestialObjectChild.parentId.equals(celestialObject.id)) {
-					continue;
+			// sync every object sharing the player's current dimension (siblings), so the client can resolve
+			// get(dimensionId, x, z) by position as the player moves between same-dimension zones, without needing a
+			// re-sync on movement. For each, include its full parent chain up to hyperspace (required or the client's
+			// resolveParent() breaks) and its direct children; dedupe by id so the shared parent chain is sent once.
+			final Set<String> sentIds = new HashSet<>();
+			final List<CelestialObject> sameDimension = SERVER.registry.byDimensionId.get(celestialObject.dimensionId);
+			final List<CelestialObject> roots = sameDimension != null ? sameDimension : Collections.singletonList(celestialObject);
+			for (final CelestialObject root : roots) {
+				// the object with all its direct parents, up to hyperspace
+				CelestialObject celestialObjectParent = root;
+				while (celestialObjectParent != null) {
+					if (sentIds.add(celestialObjectParent.id)) {
+						nbtTagList.add(celestialObjectParent.write(new CompoundNBT()));
+					}
+					celestialObjectParent = celestialObjectParent.parent;
 				}
-				nbtTagList.add(celestialObjectChild.write(new CompoundNBT()));
+
+				// all its direct children
+				final List<CelestialObject> children = SERVER.registry.byParentId.get(root.id);
+				if (children != null) {
+					for (final CelestialObject celestialObjectChild : children) {
+						if (sentIds.add(celestialObjectChild.id)) {
+							nbtTagList.add(celestialObjectChild.write(new CompoundNBT()));
+						}
+					}
+				}
 			}
 		}
 		return nbtTagList;
@@ -305,12 +351,14 @@ public class CelestialObjectManager extends XmlFileManager {
 		}
 		
 		// prevent creating a portal leading outside the world border
+		// note: look up the exit object at the SCALED destination (not at (0,0)), so a multi-object target dimension
+		// validates against the zone the portal actually leads to
 		final boolean isInTheNether = world.getDimension().getType() == DimensionType.THE_NETHER;
-		final CelestialObject celestialObjectExit = get(false, isInTheNether ? ID_OVERWORLD : ID_THE_NETHER);
+		final double factor = isInTheNether ? 8.0D : 1 / 8.0D;
+		final int xExit = (int) Math.floor(blockPos.getX() * factor);
+		final int zExit = (int) Math.floor(blockPos.getZ() * factor);
+		final CelestialObject celestialObjectExit = get(false, isInTheNether ? ID_OVERWORLD : ID_THE_NETHER, xExit, zExit);
 		if (celestialObjectExit != null) {
-			final double factor = isInTheNether ? 8.0D : 1 / 8.0D;
-			final int xExit = (int) Math.floor(blockPos.getX() * factor);
-			final int zExit = (int) Math.floor(blockPos.getZ() * factor);
 			if ( Math.abs(xExit - celestialObjectExit.dimensionCenterX) > celestialObjectExit.borderRadiusX
 			  || Math.abs(zExit - celestialObjectExit.dimensionCenterZ) > celestialObjectExit.borderRadiusZ ) {
 				final PlayerEntity entityPlayer = world.getClosestPlayer(blockPos.getX(), blockPos.getY(), blockPos.getZ(), 10.0D, false);
@@ -348,8 +396,9 @@ public class CelestialObjectManager extends XmlFileManager {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public static CelestialObject[] getRenderStack() {
-		return CLIENT.celestialObjects;
+	public static List<CelestialObject> getRenderChildren(final String parentId) {
+		final List<CelestialObject> children = CLIENT.registry.byParentId.get(parentId);
+		return children == null ? Collections.emptyList() : children;
 	}
 	
 	@OnlyIn(Dist.CLIENT)
@@ -373,14 +422,6 @@ public class CelestialObjectManager extends XmlFileManager {
 		final CelestialObject celestialObjectExisting = celestialObjectsById.get(celestialObject.id);
 		if (celestialObjectExisting == null || isUpdating) {
 			celestialObjectsById.put(celestialObject.id, celestialObject);
-			if (!celestialObject.isVirtual()) {
-				if (celestialObjectsByDimensionId.get(celestialObject.dimensionId) == null) {
-					celestialObjectsByDimensionId.put(celestialObject.dimensionId, celestialObject);
-				} else {
-					WarpDrive.logger.warn(String.format("Dimension %s is already used in another celestial object, use at your own risk...",
-					                                    celestialObject.dimensionId ));
-				}
-			}
 		} else {
 			WarpDrive.logger.warn(String.format("Celestial object %s is already defined, keeping original definition",
 			                                    celestialObject.id ));
@@ -388,22 +429,25 @@ public class CelestialObjectManager extends XmlFileManager {
 	}
 	
 	private void rebuildAndValidate(final boolean isRemote) {
-		// optimize execution speed by flattening the data structure
-		final int count = celestialObjectsById.size();
-		final CelestialObject[] celestialObjectsTemp = new CelestialObject[count];
-		int index = 0;
-		for (final CelestialObject celestialObject : celestialObjectsById.values()) {
-			celestialObjectsTemp[index++] = celestialObject;
-			celestialObject.resolveParent(celestialObjectsById.get(celestialObject.parentId));
+		LocalProfiler.start("CelestialMap validation");
+
+		// snapshot the accumulator, then (re)build the immutable indexes from it
+		final Map<String, CelestialObject> byId = new HashMap<>(celestialObjectsById);
+		final Map<ResourceLocation, List<CelestialObject>> byDimensionId = new HashMap<>();       // non-virtual, by dimensionId
+		final Map<String, List<CelestialObject>> byParentId = new HashMap<>();           // every object, by parentId
+		final Map<ResourceLocation, List<CelestialObject>> byParentDimensionId = new HashMap<>(); // local only, for overlap checks
+
+		// resolve parents first, since validation/bucketing below relies on the whole set being linked
+		for (final CelestialObject celestialObject : byId.values()) {
+			celestialObject.resolveParent(byId.get(celestialObject.parentId));
 		}
-		
-		// check overlapping regions
+
+		// per-object pass: finalize, gather stats, validate coordinates, and populate the indexes
 		int countErrors = 0;
 		int countHyperspace = 0;
 		int countSpace = 0;
 		double maxWorldBorderTemp = 0.0D;
-		for (int indexCelestialObject1 = 0; indexCelestialObject1 < count; indexCelestialObject1++) {
-			final CelestialObject celestialObject1 = celestialObjectsTemp[indexCelestialObject1];
+		for (final CelestialObject celestialObject1 : byId.values()) {
 			celestialObject1.lateUpdate();
 			
 			// stats
@@ -420,7 +464,7 @@ public class CelestialObjectManager extends XmlFileManager {
 			if (!celestialObject1.isVirtual()) {
 				if ( celestialObject1.parent == null
 				  || celestialObject1.parent.dimensionId != celestialObject1.dimensionId ) {// not hyperspace
-					final CelestialObject celestialObjectParent = get(celestialObject1.parentId);
+					final CelestialObject celestialObjectParent = byId.get(celestialObject1.parentId);
 					if (celestialObjectParent == null) {
 						if ( !isRemote
 						  && celestialObject1.parentId != null
@@ -461,23 +505,32 @@ public class CelestialObjectManager extends XmlFileManager {
 				}
 			}
 			
-			// validate against other celestial objects
-			for (int indexCelestialObject2 = indexCelestialObject1 + 1; indexCelestialObject2 < count; indexCelestialObject2++) {
-				final CelestialObject celestialObject2 = celestialObjectsTemp[indexCelestialObject2];
-				// are they overlapping in a common parent dimension?
-				if ( !celestialObject1.isHyperspace()
-				  && !celestialObject2.isHyperspace()
-				  && celestialObject1.parent != null
-				  && celestialObject2.parent != null
-				  && celestialObject1.parent.dimensionId == celestialObject2.parent.dimensionId ) {
-					final AxisAlignedBB areaInParent1 = celestialObject1.getAreaInParent();
+			// index this object for O(1) runtime lookups and for the bucketed overlap checks below
+			byParentId.computeIfAbsent(celestialObject1.parentId, key -> new ArrayList<>()).add(celestialObject1);
+			if (!celestialObject1.isVirtual()) {
+				byDimensionId.computeIfAbsent(celestialObject1.dimensionId, key -> new ArrayList<>()).add(celestialObject1);
+			}
+			if ( !celestialObject1.isHyperspace()
+			  && celestialObject1.parent != null ) {
+				byParentDimensionId.computeIfAbsent(celestialObject1.parent.dimensionId, key -> new ArrayList<>()).add(celestialObject1);
+			}
+		}
+
+		// overlap validation, bucketed so only objects that can actually conflict are compared
+		// 1) objects sharing a parent dimension: their areas in that parent must not intersect
+		for (final List<CelestialObject> bucket : byParentDimensionId.values()) {
+			for (int index1 = 0; index1 < bucket.size(); index1++) {
+				final CelestialObject celestialObject1 = bucket.get(index1);
+				final AxisAlignedBB areaInParent1 = celestialObject1.getAreaInParent();
+				for (int index2 = index1 + 1; index2 < bucket.size(); index2++) {
+					final CelestialObject celestialObject2 = bucket.get(index2);
 					final AxisAlignedBB areaInParent2 = celestialObject2.getAreaInParent();
 					if (areaInParent1.intersects(areaInParent2)) {
 						countErrors++;
 						WarpDrive.logger.error(String.format("CelestialObjects validation error #%d\nOverlapping parent areas detected in dimension %s between %s and %s\nArea1 %s from %s\nArea2 %s from %s", 
-						                                     countErrors, 
-						                                     celestialObject1.parent.dimensionId, 
-						                                     celestialObject1.id, 
+						                                     countErrors,
+						                                     celestialObject1.parent.dimensionId,
+						                                     celestialObject1.id,
 						                                     celestialObject2.id,
 						                                     areaInParent1,
 						                                     celestialObject1,
@@ -485,10 +538,15 @@ public class CelestialObjectManager extends XmlFileManager {
 						                                     celestialObject2 ));
 					}
 				}
-				// are they in the same dimension?
-				if ( !celestialObject1.isVirtual()
-				  && !celestialObject2.isVirtual()
-				  && celestialObject1.dimensionId == celestialObject2.dimensionId ) {
+			}
+		}
+		// 2) non-virtual objects sharing a dimension: their world borders must not intersect
+		for (final List<CelestialObject> bucket : byDimensionId.values()) {
+			for (int index1 = 0; index1 < bucket.size(); index1++) {
+				final CelestialObject celestialObject1 = bucket.get(index1);
+				final AxisAlignedBB worldBorderArea1 = celestialObject1.getWorldBorderArea();
+				for (int index2 = index1 + 1; index2 < bucket.size(); index2++) {
+					final CelestialObject celestialObject2 = bucket.get(index2);
 					final AxisAlignedBB worldBorderArea2 = celestialObject2.getWorldBorderArea();
 					if (worldBorderArea1.intersects(worldBorderArea2)) {
 						countErrors++;
@@ -530,10 +588,11 @@ public class CelestialObjectManager extends XmlFileManager {
 		
 		
 		// We're not checking invalid dimension id, so they can be pre-allocated (see MystCraft)
-		
-		// delay setting the array so the render thread can rely on its content
-		celestialObjects = celestialObjectsTemp;
-		maxWorldBorder = maxWorldBorderTemp;
+
+		// publish the new indexes as a single immutable snapshot so readers never observe a half-updated set
+		registry = new Registry(byId, byDimensionId, byParentId, maxWorldBorderTemp);
+
+		LocalProfiler.stop();
 	}
 	
 	@Override
@@ -560,15 +619,40 @@ public class CelestialObjectManager extends XmlFileManager {
 	
 	// get by celestial object id
 	public CelestialObject get(final String id) {
-		return celestialObjectsById.get(id);
+		return registry.byId.get(id);
 	}
 	
-	// get by dimension id (a.k.a. dimension type's registry name)
-	public CelestialObject getByDimensionType(@Nonnull final ResourceLocation dimensionId) {
-		return celestialObjectsByDimensionId.get(dimensionId);
+	public CelestialObject get(final ResourceLocation dimensionId, final int x, final int z) {
+		// O(1) fetch of that dimension's objects (already non-virtual + dimension-matching) instead of scanning all
+		final List<CelestialObject> candidates = registry.byDimensionId.get(dimensionId);
+		if (candidates == null) {
+			return null;
+		}
+		double distanceClosest = Double.POSITIVE_INFINITY;
+		CelestialObject celestialObjectClosest = null;
+		for (final CelestialObject celestialObject : candidates) {
+			final double distanceSquared = celestialObject.getSquareDistanceOutsideBorder(x, z);
+			if (distanceSquared <= 0) {
+				return celestialObject;
+			} else if (distanceClosest > distanceSquared) {
+				distanceClosest = distanceSquared;
+				celestialObjectClosest = celestialObject;
+			}
+		}
+		return celestialObjectClosest;
+    }
+    
+	// Deprecated: this is a temporary workaround for the 1 dimension : N celestial objects model:
+	// returns an ARBITRARY object among those sharing the dimension (the first indexed), because the caller has no X,Z to disambiguate.
+	// Callers should eventually pass X,Z and resolve the exact object via get(dim, x, z), after which this method must be deleted.
+	// Do NOT add new callers.
+	@Deprecated
+	private CelestialObject getRepresentative(@Nonnull final ResourceLocation dimensionId) {
+		final List<CelestialObject> candidates = registry.byDimensionId.get(dimensionId);
+		return (candidates == null || candidates.isEmpty()) ? null : candidates.get(0);
 	}
 	
 	public double getMaxWorldBorder() {
-		return maxWorldBorder < 1000 ? 6.0E7D : maxWorldBorder;
+		return registry.maxWorldBorder < 1000 ? 6.0E7D : registry.maxWorldBorder;
 	}
 }

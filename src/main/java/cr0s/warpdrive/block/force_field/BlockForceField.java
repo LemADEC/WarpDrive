@@ -76,9 +76,31 @@ public class BlockForceField extends BlockAbstractForceField implements IDamageR
 	public boolean isSideInvisible(@Nonnull final BlockState blockState, @Nonnull final BlockState blockStateAdjacent, @Nonnull final Direction side) {
 		return blockStateAdjacent.getBlock() == this
 		    || super.isSideInvisible(blockState, blockStateAdjacent, side);
+    }
+    
+	/* TODO MC1.15 force field camouflage (getMapColor + getExtendedState: needs the 1.15 MaterialColor/blockstate port; Forge removed IExtendedBlockState)
+	@SuppressWarnings("deprecation")
+	@Nonnull
+	@Override
+	public MapColor getMapColor(final IBlockState blockState, final IBlockAccess blockAccess, final BlockPos blockPos) {
+		final IExtendedBlockState blockStateExtended = (IExtendedBlockState) getExtendedState(blockState, blockAccess, blockPos);
+		final IBlockState blockStateCamouflage = blockStateExtended.getValue(BlockProperties.CAMOUFLAGE);
+		if ( blockStateCamouflage != null
+		  && blockStateCamouflage.getBlock() != Blocks.AIR ) {
+			try {
+				return blockStateCamouflage.getMapColor(blockAccess, blockPos);
+			} catch (final Exception exception) {
+				if (!Dictionary.BLOCKS_NOCAMOUFLAGE.contains(blockStateCamouflage.getBlock())) {
+					exception.printStackTrace(WarpDrive.printStreamError);
+					WarpDrive.logger.error(String.format("Exception trying to get MapColor for %s",
+					                                     blockStateCamouflage));
+					Dictionary.BLOCKS_NOCAMOUFLAGE.add(blockStateCamouflage.getBlock());
+				}
+			}
+		}
+		return MapColor.getBlockColor(EnumDyeColor.byMetadata(blockState.getValue(FREQUENCY)));
 	}
-	
-	/* TODO MC1.15 force field camouflage
+
 	@Nonnull
 	@Override
 	public BlockState getExtendedState(@Nonnull final BlockState blockState, final IWorldReader worldReader, final BlockPos blockPos) {

@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 import java.util.Map.Entry;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
@@ -36,7 +37,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -46,8 +47,8 @@ public class ChunkHandler {
 	private static final long CHUNK_HANDLER_UNLOADED_CHUNK_MAX_AGE_MS = 30000L;
 	
 	// persistent properties
-	private static final Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<ChunkData>> registryClient = new Int2ObjectOpenHashMap<>(32);
-	private static final Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<ChunkData>> registryServer = new Int2ObjectOpenHashMap<>(32);
+	private static final Object2ObjectOpenHashMap<ResourceLocation, Long2ObjectOpenHashMap<ChunkData>> registryClient = new Object2ObjectOpenHashMap<>(32);
+	private static final Object2ObjectOpenHashMap<ResourceLocation, Long2ObjectOpenHashMap<ChunkData>> registryServer = new Object2ObjectOpenHashMap<>(32);
 	
 	// computed properties
 	public static long delayLogging = 0;
@@ -216,8 +217,8 @@ public class ChunkHandler {
 		
 		// get dimension data
 		LocalProfiler.updateCallStat("onUnloadWorld");
-		final Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<ChunkData>> registry = event.getWorld().isRemote() ? registryClient : registryServer;
-		final Long2ObjectOpenHashMap<ChunkData> mapRegistryItems = registry.get(event.getWorld().getDimension().getType().getId());
+		final Object2ObjectOpenHashMap<ResourceLocation, Long2ObjectOpenHashMap<ChunkData>> registry = event.getWorld().isRemote() ? registryClient : registryServer;
+		final Long2ObjectOpenHashMap<ChunkData> mapRegistryItems = registry.get(event.getWorld().getDimension().getType().getRegistryName());
 		if (mapRegistryItems != null) {
 			// unload chunks during shutdown
 			for (final Object object : mapRegistryItems.values()) {
@@ -323,15 +324,15 @@ public class ChunkHandler {
 	private static ChunkData getChunkData(final boolean isRemote, final DimensionType dimensionType, final int xChunk, final int zChunk, final boolean doCreate) {
 		// get dimension data
 		LocalProfiler.updateCallStat("getChunkData");
-		final Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<ChunkData>> registry = isRemote ? registryClient : registryServer;
-		Long2ObjectOpenHashMap<ChunkData> mapRegistryItems = registry.get(dimensionType.getId());
+		final Object2ObjectOpenHashMap<ResourceLocation, Long2ObjectOpenHashMap<ChunkData>> registry = isRemote ? registryClient : registryServer;
+		Long2ObjectOpenHashMap<ChunkData> mapRegistryItems = registry.get(dimensionType.getRegistryName());
 		// (lambda expressions are forcing synchronisation, so we don't use them here)
 		if (mapRegistryItems == null) {
 			if (!doCreate) {
 				return null;
 			}
 			mapRegistryItems = new Long2ObjectOpenHashMap<>(2048);
-			registry.put(dimensionType.getId(), mapRegistryItems);
+			registry.put(dimensionType.getRegistryName(), mapRegistryItems);
 		}
 		// get chunk data
 		final long index = ChunkPos.asLong(xChunk, zChunk);
@@ -340,25 +341,31 @@ public class ChunkHandler {
 		if (chunkData == null) {
 			if (!doCreate) {
 				if (WarpDriveConfig.LOGGING_CHUNK_HANDLER) {
-					WarpDrive.logger.info(String.format("getChunkData(%s, %d, %d, %d, false) returning null",
-					                                     isRemote, dimensionType.getId(), xChunk, zChunk));
+					WarpDrive.logger.info(String.format( "getChunkData(%s, %s(%d), %d, %d, false) returning null",
+					                                     isRemote ? "Client" : "Server",
+														 dimensionType.getRegistryName(),
+				                                         dimensionType.getId(),
+														 xChunk,
+														 zChunk ));
 				}
 				return null;
 			}
 			chunkData = new ChunkData(xChunk, zChunk);
 			if (WarpDriveConfig.LOGGING_CHUNK_HANDLER) {
-				WarpDrive.logger.info(String.format("%s world DIM%d chunk %s is being added to the registry",
-				                                    isRemote ? "Client" : "Server",
-				                                    dimensionType.getId(),
-				                                    chunkData.getChunkCoords()));
+				WarpDrive.logger.info(String.format( "%s dimension %s(%d) chunk %s is being added to the registry",
+				                                     isRemote ? "Client" : "Server",
+				                                     dimensionType.getRegistryName(),
+				                                     dimensionType.getId(),
+				                                     chunkData.getChunkCoords() ));
 			}
 			if (Commons.isSafeThread()) {
 				mapRegistryItems.put(index, chunkData);
 			} else if (Commons.throttleMe("ChunkHandler added to the registry outside main thread")) {
-				WarpDrive.logger.error(String.format("%s world DIM%d chunk %s is being added to the registry outside main thread!",
-				                                    isRemote ? "Client" : "Server",
-				                                    dimensionType.getId(),
-				                                    chunkData.getChunkCoords()));
+				WarpDrive.logger.error(String.format( "%s dimension %s(%d) chunk %s is being added to the registry outside main thread!",
+				                                      isRemote ? "Client" : "Server",
+				                                      dimensionType.getRegistryName(),
+				                                      dimensionType.getId(),
+				                                      chunkData.getChunkCoords() ));
 				Commons.dumpAllThreads();
 				mapRegistryItems.put(index, chunkData);
 			}
@@ -404,8 +411,8 @@ public class ChunkHandler {
 	private static void updateTick(@Nonnull final World world) {
 		// get dimension data
 		LocalProfiler.updateCallStat("updateTick");
-		final Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<ChunkData>> registry = world.isRemote() ? registryClient : registryServer;
-		final Long2ObjectOpenHashMap<ChunkData> mapRegistryItems = registry.get(world.getDimension().getType().getId());
+		final Object2ObjectOpenHashMap<ResourceLocation, Long2ObjectOpenHashMap<ChunkData>> registry = world.isRemote() ? registryClient : registryServer;
+		final Long2ObjectOpenHashMap<ChunkData> mapRegistryItems = registry.get(world.getDimension().getType().getRegistryName());
 		if (mapRegistryItems == null) {
 			return;
 		}

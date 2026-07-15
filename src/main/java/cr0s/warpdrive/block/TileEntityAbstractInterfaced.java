@@ -338,11 +338,6 @@ public abstract class TileEntityAbstractInterfaced extends TileEntityAbstractBas
 		return tagCompound;
 	}
 	
-	@Override
-	public int hashCode() {
-		return (((((super.hashCode() + (world == null ? 0 : world.getDimension().getType().getId()) << 4) + pos.getX()) << 4) + pos.getY()) << 4) + pos.getZ();
-	}
-	
 	// Interface proxies are used to
 	// - convert arguments,
 	// - log LUA calls,

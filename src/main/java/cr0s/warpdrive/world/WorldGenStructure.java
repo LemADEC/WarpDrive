@@ -8,6 +8,7 @@ import cr0s.warpdrive.config.Filler;
 import cr0s.warpdrive.config.GenericSet;
 import cr0s.warpdrive.config.Loot;
 import cr0s.warpdrive.config.WarpDriveConfig;
+import cr0s.warpdrive.config.structures.Schematic.Insertion;
 import cr0s.warpdrive.data.InventoryWrapper;
 import cr0s.warpdrive.data.JumpBlock;
 import cr0s.warpdrive.data.JumpShip;
@@ -17,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Random;
+
+import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -234,29 +237,6 @@ public class WorldGenStructure {
 	public void fillInventoryWithLoot(final World world, final Random rand, final BlockPos blockPos, final String group,
 	                                  final int quantityMin, final int quantityRandom1, final int quantityRandom2,
 	                                  final int maxRetries) {
-		// validate context
-		final TileEntity tileEntity = world.getTileEntity(blockPos);
-		final Object inventory = InventoryWrapper.getInventory(tileEntity, null);
-		
-		if (inventory == null) {
-			WarpDrive.logger.warn(String.format("Unable to fill inventory with LootSet %s %s: %s has no inventory",
-			                                    group,
-			                                    Commons.format(world, blockPos),
-			                                    tileEntity ));
-			return;
-		}
-		
-		if (tileEntity.isRemoved()) {
-			WarpDrive.logger.warn(String.format("Unable to fill inventory with LootSet %s %s: %s is Invalid",
-			                                    group,
-			                                    Commons.format(world, blockPos),
-			                                    tileEntity ));
-			return;
-		}
-		
-		// evaluate parameters: quantity of loot, actual loot set
-		final int size = InventoryWrapper.getSize(inventory);
-		final int countLoots = Math.min(quantityMin + rand.nextInt(quantityRandom1) + rand.nextInt(quantityRandom2), size);
 		
 		final GenericSet<Loot> lootSet = WarpDriveConfig.LootManager.getRandomSetFromGroup(rand, group);
 		if (lootSet == null) {
@@ -266,6 +246,36 @@ public class WorldGenStructure {
 			                                    group ));
 			return;
 		}
+		
+		fillInventoryWithLoot(world, rand, blockPos, lootSet, quantityMin, quantityRandom1, quantityRandom2, maxRetries);
+	}
+	
+	public void fillInventoryWithLoot(final World world, final Random rand, final BlockPos blockPos, final GenericSet<Loot> lootSet,
+	                                  final int quantityMin, final int quantityRandom1, final int quantityRandom2,
+	                                  final int maxRetries) {
+		// validate context
+		final TileEntity tileEntity = world.getTileEntity(blockPos);
+		final Object inventory = InventoryWrapper.getInventory(tileEntity, null);
+		
+		if (inventory == null) {
+			WarpDrive.logger.warn(String.format("Unable to fill inventory with LootSet %s %s: %s has no inventory",
+			                                    lootSet.getFullName(),
+			                                    Commons.format(world, blockPos),
+			                                    tileEntity ));
+			return;
+		}
+		
+		if (tileEntity.isRemoved()) {
+			WarpDrive.logger.warn(String.format("Unable to fill inventory with LootSet %s %s: %s is Invalid",
+			                                    lootSet.getFullName(),
+			                                    Commons.format(world, blockPos),
+			                                    tileEntity ));
+			return;
+		}
+		
+		// evaluate parameters: quantity of loot, actual loot set
+		final int size = InventoryWrapper.getSize(inventory);
+		final int countLoots = Math.min(quantityMin + rand.nextInt(quantityRandom1) + rand.nextInt(quantityRandom2), size);
 		
 		// shuffle slot indexes to reduce random calls and loops later on
 		final ArrayList<Integer> indexSlots = new ArrayList<>(size);
@@ -277,6 +287,14 @@ public class WorldGenStructure {
 		}
 		Collections.shuffle(indexSlots);
 		
+		if (WarpDriveConfig.LOGGING_WORLD_GENERATION) {
+			WarpDrive.logger.debug(String.format("About to add %d loots from set %s into inventory %s at %s with max retries %d for each",
+			                                     countLoots,
+			                                     lootSet.getFullName(),
+			                                     inventory,
+			                                     Commons.format(world, blockPos),
+			                                     maxRetries));
+		}
 		// for all loots to add
 		ItemStack itemStackLoot;
 		boolean isAdded;
@@ -301,23 +319,15 @@ public class WorldGenStructure {
 						try {
 							InventoryWrapper.insertItem(inventory, indexSlot, itemStackLoot);
 							if (WarpDriveConfig.LOGGING_WORLD_GENERATION) {
-								WarpDrive.logger.debug(String.format("Filling inventory with LootSet %s %s: loot %s from %s in slot %d of inventory %s",
-								                                     group,
-								                                     Commons.format(world, blockPos),
+								WarpDrive.logger.debug(String.format(" + placed %s into slot %d",
 								                                     Commons.format(itemStackLoot),
-								                                     lootSet.getFullName(),
-								                                     indexSlot,
-								                                     inventory ));
+								                                     indexSlot));
 							}
 						} catch (final Exception exception) {
 							exception.printStackTrace(WarpDrive.printStreamError);
-							WarpDrive.logger.error(String.format("Exception while filling inventory with LootSet %s %s: loot %s from %s in slot %d of inventory %s reported %s",
-							                                     group,
-							                                     Commons.format(world, blockPos),
+							WarpDrive.logger.error(String.format(" ! Exception while placing %s into slot %d: %s",
 							                                     Commons.format(itemStackLoot),
-							                                     lootSet.getFullName(),
 							                                     indexSlot,
-							                                     inventory,
 							                                     exception.getMessage() ));
 						}
 						break;
@@ -347,6 +357,10 @@ public class WorldGenStructure {
 	}
 	
 	public void deployShip(final World world, final JumpShip jumpShip, final int targetX, final int targetY, final int targetZ, final byte rotationSteps) {
+		deployShip(world, jumpShip, targetX, targetY, targetZ, rotationSteps, null);
+	}
+	
+	public void deployShip(final World world, final JumpShip jumpShip, final int targetX, final int targetY, final int targetZ, final byte rotationSteps, @Nullable final Insertion[] insertions) {
 		
 		final Transformation transformation = new Transformation(jumpShip, world,
 			targetX - jumpShip.core.getX(),
@@ -370,7 +384,6 @@ public class WorldGenStructure {
 					WarpDrive.logger.info(String.format("At index %d, skipping anchor block %s", index, jumpBlock.blockState));
 				}
 			} else {
-				index++;
 				if (WarpDrive.isDev && WarpDriveConfig.LOGGING_WORLD_GENERATION) {
 					WarpDrive.logger.info(String.format("At index %d, deploying %s ",
 					                                    index, jumpBlock));
@@ -379,6 +392,23 @@ public class WorldGenStructure {
 				final Block blockAtTarget = world.getBlockState(targetLocation).getBlock();
 				if (blockAtTarget == Blocks.AIR || Dictionary.BLOCKS_EXPANDABLE.contains(blockAtTarget)) {
 					jumpBlock.deploy(null, world, transformation);
+					
+					// Apply insertions as defined
+					if (insertions != null) {
+						for(final Insertion insertion : insertions){
+							if (insertion.isMatching(jumpBlock)){
+								final BlockPos deployedLocation = transformation.apply(jumpBlock.x, jumpBlock.y, jumpBlock.z);
+								
+								fillInventoryWithLoot(world, rand, deployedLocation,
+								                      insertion,
+								                      insertion.getMinQuantity(),
+								                      insertion.getMaxQuantity(),
+								                      0,
+								                      insertion.getMaxRetries() );
+							}
+						}
+					}
+					
 				} else {
 					if (WarpDrive.isDev && WarpDriveConfig.LOGGING_WORLD_GENERATION) {
 						WarpDrive.logger.info(String.format("Deployment collision detected %s with %s during world generation, skipping this block...",

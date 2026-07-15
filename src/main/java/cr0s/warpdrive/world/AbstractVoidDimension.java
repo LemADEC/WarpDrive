@@ -38,6 +38,11 @@ public abstract class AbstractVoidDimension extends Dimension {
 		celestialObject = getCelestialObjectInConstructor(dimensionType);
 	}
 	
+	// TODO 1.15/1.21: this resolves the celestial object ONCE, at dimension construction, with no player position
+	// available, so it falls back to CelestialObjectManager's (deprecated) representative — an arbitrary object among
+	// those sharing a space dimension (1:N model), which can be the wrong one. Investigate refreshing it dynamically
+	// (e.g. ~1/second from the local player's X,Z when one exists) to resolve the exact per-position object via
+	// get(dimensionId, x, z); would require celestialObject to become non-final + a tick hook. See BACKLOG "1.15".
 	private static CelestialObject getCelestialObjectInConstructor(@Nonnull final DimensionType dimensionType) {
 		// note: world is being constructed at that time, isRemote isn't set yet, so we try client first, then server
 		final CelestialObject celestialObjectServer = CelestialObjectManager.get(false, dimensionType);

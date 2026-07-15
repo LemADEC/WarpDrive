@@ -111,14 +111,14 @@ public class CommandSpace {
 		
 		// parse arguments
 		// note: "space" will toggle between overworld and space if no dimension was provided
-		ResourceLocation dimensionNameTarget = CelestialObjectManager.getDimensionName(target, serverPlayerEntities.iterator().next());
+		ResourceLocation dimensionIdTarget = CelestialObjectManager.getDimensionId(target, serverPlayerEntities.iterator().next());
 		
 		for (final ServerPlayerEntity serverPlayerEntity : serverPlayerEntities) {
 			int xTarget = MathHelper.floor(serverPlayerEntity.getPosX());
 			int yTarget = Math.min(255, Math.max(0, MathHelper.floor(serverPlayerEntity.getPosY())));
 			int zTarget = MathHelper.floor(serverPlayerEntity.getPosZ());
 			final CelestialObject celestialObjectCurrent = CelestialObjectManager.get(serverPlayerEntity.world);
-			if (dimensionNameTarget == null) {
+			if (dimensionIdTarget == null) {
 				if (celestialObjectCurrent == null) {
 					commandSource.sendErrorMessage(new TranslationTextComponent("warpdrive.command.player_in_unknown_dimension",
 					                                                            serverPlayerEntity.getName().getFormattedText(),
@@ -144,7 +144,7 @@ public class CommandSpace {
 								                           .setStyle(Commons.getStyleCorrect()), false);
 						continue;
 					} else {
-						dimensionNameTarget = celestialObjectChild.dimensionId;
+						dimensionIdTarget = celestialObjectChild.dimensionId;
 						final VectorI vEntry = celestialObjectChild.getEntryOffset();
 						xTarget += vEntry.x;
 						yTarget += vEntry.y;
@@ -155,10 +155,10 @@ public class CommandSpace {
 					if ( celestialObjectCurrent.parent == null
 					  || celestialObjectCurrent.parent.isVirtual() ) {
 						WarpDrive.logger.error(String.format("Unable to target a null or virtual parent dimension of %s.", celestialObjectCurrent.dimensionId));
-						dimensionNameTarget = null;
+						dimensionIdTarget = null;
 						
 					} else {
-						dimensionNameTarget = celestialObjectCurrent.parent.dimensionId;
+						dimensionIdTarget = celestialObjectCurrent.parent.dimensionId;
 						final VectorI vEntry = celestialObjectCurrent.getEntryOffset();
 						xTarget -= vEntry.x;
 						yTarget -= vEntry.y;
@@ -170,7 +170,7 @@ public class CommandSpace {
 				// adjust offset when it's directly above or below us
 				if ( celestialObjectCurrent != null
 				  && celestialObjectCurrent.parent != null
-				  && celestialObjectCurrent.parent.dimensionId.equals(dimensionNameTarget) ) {// moving to parent explicitly
+				  && celestialObjectCurrent.parent.dimensionId.equals(dimensionIdTarget) ) {// moving to parent explicitly
 					final VectorI vEntry = celestialObjectCurrent.getEntryOffset();
 					xTarget -= vEntry.x;
 					yTarget -= vEntry.y;
@@ -178,7 +178,7 @@ public class CommandSpace {
 				} else {
 					final CelestialObject celestialObjectChild = CelestialObjectManager.getClosestChild(serverPlayerEntity.world, (int) serverPlayerEntity.getPosX(), (int) serverPlayerEntity.getPosZ());
 					if ( celestialObjectChild != null
-					  && celestialObjectChild.dimensionId.equals(dimensionNameTarget) ) {// moving to child explicitly
+					  && celestialObjectChild.dimensionId.equals(dimensionIdTarget) ) {// moving to child explicitly
 						final VectorI vEntry = celestialObjectChild.getEntryOffset();
 						xTarget += vEntry.x;
 						yTarget += vEntry.y;
@@ -188,20 +188,20 @@ public class CommandSpace {
 			}
 			
 			// validate the target dimension name
-			if (dimensionNameTarget == null) {
+			if (dimensionIdTarget == null) {
 				commandSource.sendErrorMessage(new TranslationTextComponent("warpdrive.command.undefined_dimension",
 				                                                            target).setStyle(Commons.getStyleWarning()) );
 				continue;
 			}
-			DimensionType dimensionTypeTarget = DimensionType.byName(dimensionNameTarget);
+			DimensionType dimensionTypeTarget = DimensionType.byName(dimensionIdTarget);
 			if (dimensionTypeTarget == null) {
 				commandSource.sendErrorMessage(new TranslationTextComponent("warpdrive.command.undefined_dimension",
-				                                                            dimensionNameTarget).setStyle(Commons.getStyleWarning()) );
+				                                                            dimensionIdTarget).setStyle(Commons.getStyleWarning()) );
 				continue;
 			}
 			
 			// get target celestial object
-			final CelestialObject celestialObjectTarget = CelestialObjectManager.get(false, dimensionTypeTarget.getRegistryName());
+			final CelestialObject celestialObjectTarget = CelestialObjectManager.get(false, dimensionTypeTarget.getRegistryName(), xTarget, zTarget);
 			
 			// force to center if we're outside the border
 			if ( celestialObjectTarget != null

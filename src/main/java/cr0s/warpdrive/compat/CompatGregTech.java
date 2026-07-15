@@ -84,8 +84,8 @@ public class CompatGregTech implements IBlockTransformer {
 		for (final Direction enumFacing : Direction.Plane.HORIZONTAL) {
 			// get state for current face
 			final int indexFacingOld = enumFacing.getIndex();
-			final boolean isBlocked = (connectionsOld & (1 << indexFacingOld)) != 0;
-			if (!isBlocked) {
+			final boolean isBlockedOrConnected = (connectionsOld & (1 << indexFacingOld)) != 0;
+			if (!isBlockedOrConnected) {
 				continue;
 			}
 			// get new face
@@ -184,7 +184,6 @@ public class CompatGregTech implements IBlockTransformer {
 	public void restoreExternals(final World world, final BlockPos blockPos,
 	                             final BlockState blockState, final TileEntity tileEntity,
 	                             final ITransformation transformation, final INBT nbtBase) {
-		// refresh client @TODO
-		// (not working in SSP) world.notifyBlockUpdate(blockPos, blockState, blockState, 2);
+		// nothing to do
 	}
 }

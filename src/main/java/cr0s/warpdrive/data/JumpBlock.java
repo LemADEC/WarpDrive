@@ -12,6 +12,7 @@ import cr0s.warpdrive.block.movement.BlockShipCore;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.config.Filler;
 import cr0s.warpdrive.config.WarpDriveDataFixer;
+import cr0s.warpdrive.network.PacketHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -408,6 +409,11 @@ public class JumpBlock {
 			
 			// is it required?
 			tileEntity.updateContainingBlockInfo();
+			
+			// Forces a full client re-sync (getUpdateTag -> handleUpdateTag), like a chunk reload would do:
+			// the vanilla per-block update only carries getUpdatePacket(), which some mods (e.g. GregTech pipes/
+			// cables) leave empty after a bulk placement.
+			PacketHandler.sendTileEntitySyncToClients(world, blockPos, tileEntity.getUpdateTag());
 			
 			/* TODO MC1.15 enable IC2 support once it's updated
 			final String className = teClass.getName();

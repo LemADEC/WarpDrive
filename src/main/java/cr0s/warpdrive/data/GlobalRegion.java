@@ -148,7 +148,7 @@ public class GlobalRegion extends GlobalPosition {
 	}
 	
 	public String getFormattedLocation() {
-		final CelestialObject celestialObject = CelestialObjectManager.get(false, dimensionId);
+		final CelestialObject celestialObject = CelestialObjectManager.get(false, dimensionId, x, z);
 		if (celestialObject == null) {
 			return String.format("%s @ (%d %d %d)",
 			                     dimensionId,

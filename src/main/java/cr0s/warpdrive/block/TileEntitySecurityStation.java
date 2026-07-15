@@ -202,28 +202,28 @@ public class TileEntitySecurityStation extends TileEntityAbstractMachine impleme
 	public Object[] removeAllAttachedPlayers() {
 		final int count = playerIdNames.size();
 		if (count == 0) {
-			return new Object[] { true, "Nothing to do as there's already no attached players." };
+			return new Object[] { Boolean.TRUE, "Nothing to do as there's already no attached players." };
 		}
 		
 		playerIdNames.clear();
-		return new Object[] { true, String.format("Done, %d players have been removed.", count) };
+		return new Object[] { Boolean.TRUE, String.format("Done, %d players have been removed.", count) };
 	}
 	
 	@Override
 	public Object[] removeAttachedPlayer(@Nonnull final Object[] arguments) {
 		if (arguments.length != 1 || !(arguments[0] instanceof String)) {
-			return new Object[] { false, "Invalid argument, expecting exactly one player name as string." };
+			return new Object[] { Boolean.FALSE, "Invalid argument, expecting exactly one player name as string." };
 		}
 		
 		final String nameToRemove = (String) arguments[0];
 		for (final PlayerIdName playerIdName : playerIdNames) {
 			if (nameToRemove.equals(playerIdName.getName())) {
 				playerIdNames.remove(playerIdName);
-				return new Object[] { true, "Player removed successfully." };
+				return new Object[] { Boolean.TRUE, "Player removed successfully." };
 			}
 		}
 		
-		return new Object[] { false, "No player found with that name." };
+		return new Object[] { Boolean.FALSE, "No player found with that name." };
 	}
 	
 	// OpenComputers callback methods

@@ -106,6 +106,7 @@
 		<xs:attribute name="blockState" type="xs:string" use="required" />
 		<xs:attribute name="minQuantity" type="xs:string" use="optional" />
 		<xs:attribute name="maxQuantity" type="xs:string" use="optional" />
+		<xs:attribute name="maxRetries" type="xs:string" use="optional" />
 		<xs:attribute name="mods" type="xs:string" use="optional" />
 	</xs:complexType>
 

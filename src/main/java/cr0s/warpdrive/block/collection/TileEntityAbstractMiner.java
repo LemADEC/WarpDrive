@@ -8,7 +8,12 @@ import cr0s.warpdrive.block.TileEntityAbstractLaser;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.data.FluidWrapper;
 import cr0s.warpdrive.data.InventoryWrapper;
+import cr0s.warpdrive.data.TankWrapper;
 import cr0s.warpdrive.data.Vector3;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,6 +37,8 @@ import net.minecraft.world.server.ServerWorld;
 
 import net.minecraftforge.common.IPlantable;
 import net.minecraft.block.IGrowable;
+import net.minecraft.fluid.Fluid;
+import net.minecraftforge.fluids.FluidStack;
 
 public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 	
@@ -62,11 +69,32 @@ public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 		if (blockState.getBlock().isAir(blockState, world, blockPos)) {
 			return;
 		}
-		if (FluidWrapper.isFluid(blockState)) {
-			// Evaporate fluid
+		
+		final Fluid fluid = FluidWrapper.getFluid(blockState);
+		if (fluid != null) {// (this is a fluid block)
+			if ( WarpDriveConfig.MINING_LASER_PUMP_UPGRADE_HARVEST_FLUID
+			  && FluidWrapper.isSourceBlock(world, blockPos, blockState) ) {// (fluid collection is enabled & it's a source block)
+				final Collection<Object> connectedTanks = TankWrapper.getConnectedTanks(world, pos);
+				if (!connectedTanks.isEmpty()) {// (at least 1 tank is connected)
+					final FluidStack fluidStack = new FluidStack(fluid, 1000);
+					
+					final boolean fluidOverflowed = TankWrapper.addToTanks(world, pos, connectedTanks, fluidStack);
+					if (fluidOverflowed) {
+						// Assume player wants to collect the fluid, hence stop the mining in case of overflow
+						setIsEnabled(false);
+					}
+					
+					// Collect Fluid
+					world.playSound( null, blockPos, fluid.getAttributes().getFillSound(), SoundCategory.BLOCKS, 0.5F,
+					                 2.6F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.8F );
+				}
+			} else {
+				// Evaporate fluid
+				world.playSound( null, blockPos, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.5F,
+				                 2.6F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.8F );
+			}
 			world.playSound(null, blockPos, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.5F,
 					2.6F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.8F);
-			
 			// remove without updating neighbours
 			world.setBlockState(blockPos, Blocks.AIR.getDefaultState(), 2);
 			
@@ -85,14 +113,14 @@ public abstract class TileEntityAbstractMiner extends TileEntityAbstractLaser {
 			
 			// try to replant the crop
 			if ( itemStackDrops != null
-			  && blockState.getBlock() instanceof IGrowable) {
+			  && blockState.getBlock() instanceof IGrowable ) {
 				for (final ItemStack itemStackPlant : itemStackDrops) {
 					if (itemStackPlant.getItem() instanceof IPlantable) {
 						final IPlantable plantable = (IPlantable) itemStackPlant.getItem();
 						final BlockState blockStatePlant = plantable.getPlant(world, blockPos);
 						if (WarpDriveConfig.LOGGING_COLLECTION) {
 							WarpDrive.logger.info(String.format("Drop includes %s which is plantable %s as block %s",
-							                                    itemStackPlant, plantable, blockStatePlant ));
+							                                    itemStackPlant, plantable, blockStatePlant));
 						}
 						final BlockPos blockPosSoil = blockPos.down();
 						final BlockState blockStateSoil = getWorld().getBlockState(blockPosSoil);

@@ -938,7 +938,7 @@ public class TileEntityTransporterCore extends TileEntityAbstractEnergyCoreOrCon
 		// check for overlapping beacon requests
 		if ( globalPositionBeacon != null
 		  && !globalPositionBeacon.equals(tileEntity) ) {
-			final int radius2 = WarpDriveConfig.TRANSPORTER_FOCUS_SEARCH_RADIUS_BLOCKS * WarpDriveConfig.TRANSPORTER_FOCUS_SEARCH_RADIUS_BLOCKS;
+			final long radius2 = (long) WarpDriveConfig.TRANSPORTER_FOCUS_SEARCH_RADIUS_BLOCKS * WarpDriveConfig.TRANSPORTER_FOCUS_SEARCH_RADIUS_BLOCKS;
 			if (globalPositionBeacon.distance2To(tileEntity) <= radius2) {// it's a beacon party! we're happy with it...
 				return true;
 			}

@@ -24,6 +24,7 @@ import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.server.*;
@@ -94,6 +95,7 @@ public class PacketHandler {
 		registerMessage(MessageSpawnParticle.class       , 4, NetworkDirection.PLAY_TO_CLIENT);
 		registerMessage(MessageVideoChannel.class        , 5, NetworkDirection.PLAY_TO_CLIENT);
 		registerMessage(MessageTransporterEffect.class   , 6, NetworkDirection.PLAY_TO_CLIENT);
+		registerMessage(MessageClientTileEntitySync.class, 7, NetworkDirection.PLAY_TO_CLIENT);
 		
 		registerMessage(MessageTargeting.class           , 100, NetworkDirection.PLAY_TO_SERVER);
 		registerMessage(MessageClientValidation.class    , 101, NetworkDirection.PLAY_TO_SERVER);
@@ -138,12 +140,12 @@ public class PacketHandler {
 		// send beam from both ends
 		assert world.getServer() != null;
 		final List<ServerPlayerEntity> playerEntityList = world.getServer().getPlayerList().getPlayers();
-		final DimensionType dimensionId = world.getDimension().getType();
-		final int radius_square = radius * radius;
+		final DimensionType dimensionType = world.getDimension().getType();
+		final long radius_square = (long) radius * radius;
 		for (final ServerPlayerEntity entityPlayerMP : playerEntityList) {
 			// is it out of range?
 			if ( entityPlayerMP.world == null
-			  || entityPlayerMP.world.getDimension().getType() != dimensionId
+			  || entityPlayerMP.world.getDimension().getType() != dimensionType
 			  || ( v3Source.distanceTo_square(entityPlayerMP) > radius_square
 			    && v3Target.distanceTo_square(entityPlayerMP) > radius_square ) ) {
 				continue;
@@ -214,7 +216,7 @@ public class PacketHandler {
 		// send particle to players in range and the same cloak
 		assert world.getServer() != null;
 		final List<ServerPlayerEntity> playerEntityList = world.getServer().getPlayerList().getPlayers();
-		final int radius_square = radius * radius;
+		final long radius_square = (long) radius * radius;
 		for (final ServerPlayerEntity entityPlayerMP : playerEntityList) {
 			// is it out of range?
 			if ( entityPlayerMP.world == null
@@ -253,7 +255,7 @@ public class PacketHandler {
 		final MinecraftServer server = world.getServer();
 		assert server != null;
 		final List<ServerPlayerEntity> serverPlayerEntities = server.getPlayerList().getPlayers();
-		final int radius_square = radius * radius;
+		final long radius_square = (long) radius * radius;
 		for (final ServerPlayerEntity entityServerPlayer : serverPlayerEntities) {
 			if ( globalPositionLocal != null
 			  && globalPositionLocal.distance2To(entityServerPlayer) < radius_square ) {
@@ -264,6 +266,17 @@ public class PacketHandler {
 				sendToPlayer(messageTransporterEffectRemote, entityServerPlayer);
 			}
 		}
+	}
+	
+	// Forces a full tile entity re-sync to nearby clients
+	public static void sendTileEntitySyncToClients(final World world, final BlockPos blockPos, final CompoundNBT tagCompound) {
+		if (world.isRemote()) {
+			return;
+		}
+		final MessageClientTileEntitySync message = new MessageClientTileEntitySync(blockPos, tagCompound);
+		sendToPlayers(message, world, new Vector3(blockPos.getX() + 0.5D,
+		                                          blockPos.getY() + 0.5D,
+		                                          blockPos.getZ() + 0.5D), null, 256 );
 	}
 	
 	// Monitor/Laser/Camera updating its video channel to client side

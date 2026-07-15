@@ -570,7 +570,8 @@ public class Commons {
 		if (entity.world != null) {
 			return format(entity.world, entity.getPosX(), entity.getPosY(), entity.getPosZ());
 		}
-		return String.format("@ DIM%d (%.2f %.2f %.2f)",
+		return String.format("@ %s(%d) (%.2f %.2f %.2f)",
+		                     entity.dimension.getRegistryName(),
 		                     entity.dimension.getId(),
 		                     entity.getPosX(), entity.getPosY(), entity.getPosZ() );
 	}
@@ -1104,7 +1105,8 @@ public class Commons {
 		
 		final String[] tokens = stringInput.split("[\\[@\\]]");
 		final String name = tokens[0];
-		BlockState blockState = Registry.BLOCK.getOrDefault(new ResourceLocation(name)).getDefaultState();
+		final ResourceLocation blockRegistryName = ResourceLocation.tryCreate(name);
+		BlockState blockState = (blockRegistryName == null ? Blocks.AIR : Registry.BLOCK.getOrDefault(blockRegistryName)).getDefaultState();
 		if (blockState.getBlock() == Blocks.AIR) {
 			WarpDrive.logger.warn("Missing block {} for input {}.", name, stringInput);
 			return blockState;

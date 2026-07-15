@@ -1,0 +1,10 @@
+{
+  // VSCode auto-removes whitespace it AUTO-inserted (e.g. indent added on Enter) once you leave a blank line
+  // (default true). That is why fixing a blank line's tab "doesn't stick" until you type then delete a real
+  // character. Off = manual blank-line indentation is kept. Not expressible in EditorConfig; VSCode-only.
+  "editor.trimAutoWhitespace": false,
+
+  // keep trim-on-save OFF (VSCode default): there is no granular "trim non-blank lines only", so enabling it
+  // would strip blank-line indentation too. Left explicit to guard against a user-global override.
+  "files.trimTrailingWhitespace": false
+}

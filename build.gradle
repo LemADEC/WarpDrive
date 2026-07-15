@@ -187,6 +187,9 @@ repositories {
         url = "https://maven.enginehub.org/repo/"
     }
     maven {
+        url "https://cursemaven.com"
+    }
+    maven {
         // other projects seems to replicated here, so we keep it at the end for now
         name = "SquidDev CC Tweaked"
         url = "https://squiddev.cc/maven/"
@@ -232,6 +235,7 @@ dependencies {
     implementation fg.deobf("com.sk89q.worldedit.worldedit-libs:core:${config.WorldEdit_version}")
     implementation fg.deobf("com.sk89q.worldedit.worldedit-libs:forge:${config.WorldEdit_version}")
     implementation fg.deobf("com.sk89q.worldedit:worldedit-forge-mc1.15.2:${config.WorldEdit_version}")
+    
     compileOnly fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:${config.ImmersiveEngineering_version}")
     implementation fg.deobf("org.squiddev:cc-tweaked-${config.minecraft_version}:${config.CCTweaked_version}")
     compileOnly fg.deobf("GC-1.12-dev:GalacticraftCore-Dev:${config.Galacticraft_version}.${config.Galacticraft_build}")

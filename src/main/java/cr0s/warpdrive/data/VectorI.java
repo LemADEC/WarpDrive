@@ -248,21 +248,21 @@ public class VectorI implements Cloneable {
 		final int newX = vector.x - x;
 		final int newY = vector.y - y;
 		final int newZ = vector.z - z;
-		return Math.sqrt(newX * newX + newY * newY + newZ * newZ);
+		return Math.sqrt((double) newX * newX + (double) newY * newY + (double) newZ * newZ);
 	}
 	
-	public int distance2To(final BlockPos blockPos) {
+	public long distance2To(final BlockPos blockPos) {
 		final int newX = blockPos.getX() - x;
 		final int newY = blockPos.getY() - y;
 		final int newZ = blockPos.getZ() - z;
-		return (newX * newX + newY * newY + newZ * newZ);
+		return (long) newX * newX + (long) newY * newY + (long) newZ * newZ;
 	}
 	
-	public int distance2To(final VectorI vector) {
+	public long distance2To(final VectorI vector) {
 		final int newX = vector.x - x;
 		final int newY = vector.y - y;
 		final int newZ = vector.z - z;
-		return (newX * newX + newY * newY + newZ * newZ);
+		return (long) newX * newX + (long) newY * newY + (long) newZ * newZ;
 	}
 	
 	public double distance2To(final Entity entity) {
@@ -272,18 +272,18 @@ public class VectorI implements Cloneable {
 		return newX * newX + newY * newY + newZ * newZ;
 	}
 	
-	public int distance2To(final TileEntity tileEntity) {
+	public long distance2To(final TileEntity tileEntity) {
 		final int newX = tileEntity.getPos().getX() - x;
 		final int newY = tileEntity.getPos().getY() - y;
 		final int newZ = tileEntity.getPos().getZ() - z;
-		return (newX * newX + newY * newY + newZ * newZ);
+		return (long) newX * newX + (long) newY * newY + (long) newZ * newZ;
 	}
 	
-	public static int distance2To(final VectorI vector1, final VectorI vector2) {
+	public static long distance2To(final VectorI vector1, final VectorI vector2) {
 		final int newX = vector1.x - vector2.x;
 		final int newY = vector1.y - vector2.y;
 		final int newZ = vector1.z - vector2.z;
-		return (newX * newX + newY * newY + newZ * newZ);
+		return (long) newX * newX + (long) newY * newY + (long) newZ * newZ;
 	}
 	
 	// Square roots are evil, avoid them at all cost
@@ -292,8 +292,8 @@ public class VectorI implements Cloneable {
 		return Math.sqrt(getMagnitudeSquared());
 	}
 	
-	public int getMagnitudeSquared() {
-		return x * x + y * y + z * z;
+	public long getMagnitudeSquared() {
+		return (long) x * x + (long) y * y + (long) z * z;
 	}
 	
 	public VectorI scale(final float amount) {

@@ -7,21 +7,28 @@ import cr0s.warpdrive.config.InvalidXmlException;
 import cr0s.warpdrive.config.Loot;
 import cr0s.warpdrive.config.WarpDriveConfig;
 import cr0s.warpdrive.config.XmlFileManager;
+import cr0s.warpdrive.data.JumpBlock;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.state.IProperty;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import net.minecraftforge.registries.ForgeRegistries;
 
 import org.w3c.dom.Element;
 
 public class Schematic extends AbstractStructure {
 	
-	protected String filename;
+	protected HashMap<String, Integer> filenames;
 	protected Replacement[] replacements;
 	protected Insertion[] insertions;
 	
@@ -29,9 +36,51 @@ public class Schematic extends AbstractStructure {
 		super(group, name);
 	}
 	
+	public String getRandomFileName(final Random random) {
+		
+		// In loadFromXmlElement, it's already checked that there must be at least 1 "schematic" xml node
+		// therefore, this should not be possible
+		assert(!filenames.isEmpty());
+		
+		int totalWeight = 0;
+		for (final int weight : filenames.values()) {
+			totalWeight += weight;
+		}
+		int result = random.nextInt(totalWeight);
+		for (final Map.Entry<String, Integer> entry : filenames.entrySet()) {
+			result -= entry.getValue();
+			if (result <= 0) {
+				return entry.getKey();
+			}
+		}
+		return filenames.keySet().iterator().next();
+	}
+	
+	@Override
+	public AbstractStructureInstance instantiate(final Random random) {
+		return new SchematicInstance(this, random);
+	}
+	
 	@Override
 	public boolean loadFromXmlElement(final Element element) throws InvalidXmlException {
 		super.loadFromXmlElement(element);
+		
+		final List<Element> fileNameList = XmlFileManager.getChildrenElementByTagName(element, "schematic");
+		if (fileNameList.isEmpty()) {
+			throw new InvalidXmlException("Must have one schematic node with file name!");
+		}
+		this.filenames = new HashMap<>(fileNameList.size());
+		for (final Element entry : fileNameList) {
+			final String filename = entry.getAttribute("filename");
+			int weight = 1;
+			try {
+				weight = Integer.parseInt(entry.getAttribute("weight"));
+			} catch (final NumberFormatException numberFormatException) {
+				throw new InvalidXmlException(String.format("Invalid weight in schematic %s of structure %s:%s",
+				                                            filename, group, name));
+			}
+			this.filenames.put(filename, weight);
+		}
 		
 		// load all replacement elements
 		final List<Element> listReplacements = XmlFileManager.getChildrenElementByTagName(element, "replacement");
@@ -72,21 +121,100 @@ public class Schematic extends AbstractStructure {
 		return true;
 	}
 	
-	@Override
+	static class BlockMatcher {
+		
+		BlockState blockState;
+		
+		public static BlockMatcher fromXmlElement(final Element element, final GenericSet<?> caller) throws InvalidXmlException{
+			final String blockStateString = element.getAttribute("blockState");
+			final BlockMatcher blockMatcher;
+			
+			blockMatcher = BlockMatcher.fromBlockStateString(blockStateString);
+			if (blockMatcher == null){
+				WarpDrive.logger.warn(String.format("Invalid matching scheme %s found for %s",
+				                                    blockStateString,
+				                                    caller.getFullName()));
+			}
+			
+			return blockMatcher;
+		}
+		
+		public static BlockMatcher fromBlockStateString(final String blockStateString) {
+			// TODO: allow multiple properties (e.g. variant=oak,half=bottom)
+			
+			final BlockMatcher result = new BlockMatcher();
+			
+			String blockNameString = "";
+			String propertiesString = "*";
+			if (blockStateString.contains("@")) {// (with metadata)
+				final String[] blockStateParts = blockStateString.split("@");
+				blockNameString = blockStateParts[0].trim();
+				propertiesString = blockStateParts[1].trim();
+			} else {// (without metadata)
+				blockNameString = blockStateString;
+			}
+			final ResourceLocation blockRegistryName = ResourceLocation.tryCreate(blockNameString);
+			final Block block = blockRegistryName == null ? null : ForgeRegistries.BLOCKS.getValue(blockRegistryName);
+			if (block == null) {
+				WarpDrive.logger.warn(String.format("Ignoring invalid block with name %s.", blockNameString));
+				return null;
+			}
+			if (propertiesString.equals("*")) {// (no properties or explicit wildcard)
+				result.blockState = block.getDefaultState();
+			} else if (propertiesString.contains("=")) {// (in string format (e.g. "color=red"))
+				final String[] metaParts = propertiesString.split("=");
+				final String propertyKey = metaParts[0].trim();
+				final String propertyValue = metaParts[1].trim();
+				final IProperty<?> property = block.getStateContainer().getProperty(propertyKey);
+				if (property == null) {
+					WarpDrive.logger.warn(String.format("Found invalid block property %s for block %s", propertyKey, blockNameString));
+					return null;
+				}
+				final BlockState blockStateWithProperty = withProperty(block.getDefaultState(), property, propertyValue);
+				if (blockStateWithProperty == null) {
+					WarpDrive.logger.warn(String.format("Unable to find value %s for block property %s of block %s", propertyValue, propertyKey, blockNameString));
+					return null;
+				}
+				result.blockState = blockStateWithProperty;
+			} else {// (invalid format)
+				WarpDrive.logger.warn(String.format("Missing property value in %s for block %s, please use the property=value syntax.", propertiesString, blockNameString));
+				return null;
+			}
+			return result;
+		}
+		
+		public boolean isMatching(final BlockState blockStateIn) {
+			return blockStateIn.equals(blockState);
+		}
+		
+		public boolean isMatching(final JumpBlock jumpBlockIn) {
+			return blockState != null && jumpBlockIn != null && blockState.equals(jumpBlockIn.blockState);
+		}
+		
+		private static <T extends Comparable<T>> BlockState withProperty(@Nonnull final BlockState blockState, @Nonnull final IProperty<T> property, @Nonnull final String valueString) {
+			for (final T value : property.getAllowedValues()) {
+				if (property.getName(value).equalsIgnoreCase(valueString)) {
+					return blockState.with(property, value);
+				}
+			}
+			return null;
+		}
+		
+		@Override
+		public String toString() {
+			return "BlockMatcher{" + (blockState == null ? "null" : blockState.toString()) + "}";
+		}
+    }
+    
+    @Override
 	public boolean place(@Nonnull final World world, @Nonnull final Random random, @Nonnull final BlockPos blockPos) {
 		return instantiate(random).place(world, random, blockPos);
 	}
-
-	@Override
-	public AbstractStructureInstance instantiate(final Random random) {
-		return new SchematicInstance(this, random);
-	}
 	
-	public class Replacement extends GenericSet<Filler> {
+	public static class Replacement extends GenericSet<Filler> {
 		
 		private final String parentFullName;
-		protected Block block;
-		protected BlockState blockState;
+		protected BlockMatcher matcher;
 		
 		public Replacement(final String parentFullName, final String name) {
 			super(null, name, Filler.DEFAULT, "filler");
@@ -95,12 +223,14 @@ public class Schematic extends AbstractStructure {
 		
 		@Override
 		public boolean loadFromXmlElement(final Element element) throws InvalidXmlException {
-			if (WarpDriveConfig.LOGGING_WORLD_GENERATION) {
-				WarpDrive.logger.info(String.format("  + found replacement %s",
-				                                    element.getAttribute("name")));
-			}
-			
 			super.loadFromXmlElement(element);
+			
+			matcher = BlockMatcher.fromXmlElement(element, this);
+			
+			if ( WarpDriveConfig.LOGGING_WORLD_GENERATION
+			  && matcher != null ) {
+				WarpDrive.logger.info(String.format("  + found replacement for block %s", matcher));
+			}
 			
 			// resolve static imports
 			for (final String importGroupName : getImportGroupNames()) {
@@ -126,8 +256,7 @@ public class Schematic extends AbstractStructure {
 		
 		public Replacement instantiate(final Random random) {
 			final Replacement replacement = new Replacement(parentFullName, name);
-			replacement.block = block;
-			replacement.blockState = blockState;
+			replacement.matcher = this.matcher;
 			try {
 				replacement.loadFrom(this);
 				for (final String importGroup : getImportGroups()) {
@@ -159,18 +288,21 @@ public class Schematic extends AbstractStructure {
 		}
 		
 		public boolean isMatching(final BlockState blockStateIn) {
-			return (block != null && block == blockStateIn.getBlock())
-			    || blockState.equals(blockStateIn);
+			return matcher != null && matcher.isMatching(blockStateIn);
+		}
+		
+		public boolean isMatching(final JumpBlock jumpBlockIn) {
+			return matcher != null && matcher.isMatching(jumpBlockIn);
 		}
 	}
 	
-	public class Insertion extends GenericSet<Loot> {
+	public static class Insertion extends GenericSet<Loot> {
 		
 		private final String parentFullName;
+		protected BlockMatcher matcher;
 		private int minQuantity;
 		private int maxQuantity;
-		protected Block block;
-		protected BlockState blockState;
+		private int maxRetries;
 		
 		public Insertion(final String parentFullName, final String name) {
 			super(null, name, Loot.DEFAULT, "loot");
@@ -179,12 +311,14 @@ public class Schematic extends AbstractStructure {
 		
 		@Override
 		public boolean loadFromXmlElement(final Element element) throws InvalidXmlException {
-			if (WarpDriveConfig.LOGGING_WORLD_GENERATION) {
-				WarpDrive.logger.info(String.format("  + found insertion %s",
-				                                    element.getAttribute("name")));
-			}
-			
 			super.loadFromXmlElement(element);
+			
+			matcher = BlockMatcher.fromXmlElement(element, this);
+			
+			if ( WarpDriveConfig.LOGGING_WORLD_GENERATION
+			  && matcher != null ) {
+				WarpDrive.logger.info(String.format("  + found insertion for block %s", matcher));
+			}
 			
 			// get optional minQuantity attribute, defaulting to 0
 			minQuantity = 0;
@@ -198,6 +332,13 @@ public class Schematic extends AbstractStructure {
 			final String stringMaxQuantity = element.getAttribute("minQuantity");
 			if (!stringMaxQuantity.isEmpty()) {
 				maxQuantity = Integer.parseInt(stringMaxQuantity);
+			}
+			
+			// get optional maxTries attribute, defaulting to 3 according to WorldGenStructure#fillInventoryWithLoot
+			maxRetries = 3;
+			final String stringMaxTries = element.getAttribute("maxRetries");
+			if (!stringMaxTries.isEmpty()) {
+				maxRetries = Integer.parseInt(stringMaxTries);
 			}
 			
 			// resolve static imports
@@ -226,8 +367,8 @@ public class Schematic extends AbstractStructure {
 			final Insertion insertion = new Insertion(parentFullName, name);
 			insertion.minQuantity = minQuantity;
 			insertion.maxQuantity = maxQuantity;
-			insertion.block = block;
-			insertion.blockState = blockState;
+			insertion.maxRetries  = maxRetries;
+			insertion.matcher     = matcher;
 			try {
 				insertion.loadFrom(this);
 				for (final String importGroup : getImportGroups()) {
@@ -238,7 +379,7 @@ public class Schematic extends AbstractStructure {
 						continue;
 					}
 					if (WarpDriveConfig.LOGGING_WORLD_GENERATION) {
-						WarpDrive.logger.info(String.format("Filling %s:%s with %s:%s",
+						WarpDrive.logger.info(String.format("Inserting %s:%s with %s:%s",
 						                                    parentFullName, name, importGroup, lootSet.getName()));
 					}
 					insertion.loadFrom(lootSet);
@@ -258,9 +399,24 @@ public class Schematic extends AbstractStructure {
 			return insertion;
 		}
 		
+		public int getMinQuantity() {
+			return minQuantity;
+		}
+		
+		public int getMaxQuantity() {
+			return maxQuantity;
+		}
+		
+		public int getMaxRetries() {
+			return maxRetries;
+		}
+		
 		public boolean isMatching(final BlockState blockStateIn) {
-			return (block != null && block == blockStateIn.getBlock())
-			    || blockState.equals(blockStateIn);
+			return matcher != null && matcher.isMatching(blockStateIn);
+		}
+		
+		public boolean isMatching(final JumpBlock jumpBlockIn) {
+			return matcher != null && matcher.isMatching(jumpBlockIn);
 		}
 	}
 }

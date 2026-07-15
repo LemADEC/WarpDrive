@@ -94,18 +94,18 @@ public class CommandDebug {
 	}
 	
 	private static int execute(@Nonnull final CommandSource commandSource,
-	                    @Nonnull final String dimensionName,
+	                    @Nonnull final String stringDimension,
 	                    @Nonnull final BlockPos blockPos,
 	                    @Nonnull final BlockState blockState,
 	                    @Nonnull final String actions) {
 		
 		final DimensionType dimensionType;
 		try {
-			dimensionType = DimensionType.byName(Objects.requireNonNull(CelestialObjectManager.getDimensionName(dimensionName, commandSource.asPlayer())));
+			dimensionType = DimensionType.byName(Objects.requireNonNull(CelestialObjectManager.getDimensionId(stringDimension, commandSource.asPlayer())));
 		} catch (final Exception exception) {
 			exception.printStackTrace(WarpDrive.printStreamError);
 			commandSource.sendErrorMessage(new TranslationTextComponent("warpdrive.command.undefined_dimension",
-			                                                            dimensionName).setStyle(Commons.getStyleWarning()) );
+			                                                            stringDimension).setStyle(Commons.getStyleWarning()) );
 			return 0;
 		}
 		

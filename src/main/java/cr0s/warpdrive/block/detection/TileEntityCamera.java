@@ -32,8 +32,11 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.monster.IMob;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -41,6 +44,8 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.RayTraceResult.Type;
@@ -72,6 +77,44 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 	private int tickSensing = 0;
 	
 	
+	private enum Category {
+		PLAYER("player"), MONSTER("monster"), ANIMAL("animal"), UNKNOWN("unknown");
+		
+		private final String label;
+		
+		Category(@Nonnull final String label) {
+			this.label = label;
+		}
+		
+		String getLabel() {
+			return label;
+		}
+		
+		// coarse identity from the entity's base vanilla class
+		private static Category of(@Nonnull final Entity entity) {
+			if (entity instanceof PlayerEntity) {
+				return PLAYER;
+			}
+			if (entity instanceof IMob) {
+				return MONSTER;
+			}
+			if (entity instanceof AnimalEntity) {
+				return ANIMAL;
+			}
+			return UNKNOWN;
+		}
+		
+		// parse a persisted label, defaulting to UNKNOWN so a corrupt or outdated NBT value is sanitized
+		private static Category fromLabel(final String label) {
+			for (final Category category : values()) {
+				if (category.label.equals(label)) {
+					return category;
+				}
+			}
+			return UNKNOWN;
+		}
+	}
+	
 	private static final class Result {
 		
 		public Vector3 position;
@@ -79,30 +122,39 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		public String type;
 		public UUID uniqueId;
 		public String name;
+		public Category category;
 		public boolean isCrewMember;
+		public int identificationLevel; // 1 = face visible (full ID), 0 = only body visible (category)
 		private boolean isUpdated;
 		
 		Result(@Nonnull final Vector3 position, @Nonnull final Vector3 motion, @Nonnull final String type,
-		       @Nonnull final UUID uniqueId, @Nonnull final String name, final boolean isCrewMember) {
+		       @Nonnull final UUID uniqueId, @Nonnull final String name, @Nonnull final Category category,
+		       final boolean isCrewMember, final int identificationLevel) {
 			this.position = position;
 			this.motion = motion;
 			this.type = type;
 			this.uniqueId = uniqueId;
 			this.name = name;
+			this.category = category;
 			this.isCrewMember = isCrewMember;
+			this.identificationLevel = identificationLevel;
 			this.isUpdated = false;
 		}
 		
-		Result(@Nonnull final Entity entity, final boolean isCrewMember) {
+		Result(@Nonnull final Entity entity, final boolean isCrewMember, final int identificationLevel) {
 			this(new Vector3(entity.getPosX(),
 			                 entity.getPosY() + entity.getEyeHeight(),
 			                 entity.getPosZ() ),
-			     new Vector3(entity.getMotion()),
+			     new Vector3(entity.getMotion().x,
+			                 entity.getMotion().y,
+			                 entity.getMotion().z ),
 			     Dictionary.getId(entity),
 			     entity.getUniqueID(),
 			     entity.getName().getString(),
-			     isCrewMember );
-			// seen it was created from an entity, it's already updated
+			     Category.of(entity),
+			     isCrewMember,
+			     identificationLevel );
+			// since it was created from an entity, it's already updated
 			isUpdated = true;
 		}
 		
@@ -110,7 +162,8 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			isUpdated = false;
 		}
 		
-		void update(@Nonnull final Entity entity) {
+		void update(@Nonnull final Entity entity, final boolean isCrewMember, final int identificationLevel) {
+			// full refresh: identity can change (rename, crew membership, reload...), so never assume it is stable
 			uniqueId = entity.getUniqueID();
 			position.x = entity.getPosX();
 			position.y = entity.getPosY() + entity.getEyeHeight();
@@ -118,6 +171,11 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			motion.x = entity.getMotion().x;
 			motion.y = entity.getMotion().y;
 			motion.z = entity.getMotion().z;
+			type = Dictionary.getId(entity);
+			name = entity.getName().getString();
+			category = Category.of(entity);
+			this.isCrewMember = isCrewMember;
+			this.identificationLevel = identificationLevel;
 			isUpdated = true;
 		}
 		
@@ -125,34 +183,16 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			return isUpdated;
 		}
 		
-		@Override
-		public boolean equals(final Object object) {
-			if (this == object) {
-				return true;
-			}
-			if (object == null) {
-				return false;
-			}
-			if (object instanceof Entity) {
-				final Entity entity = (Entity) object;
-				// note: getting an entity type is fairly slow, so we do it as late as possible
-				return (uniqueId == null || entity.getUniqueID().equals(uniqueId))
-				       && entity.getName().getString().equals(name)
-				       && Dictionary.getId(entity).equals(type);
-			}
-			if (getClass() != object.getClass()) {
-				return false;
-			}
-			final Result that = (Result) object;
-			return (uniqueId == null || that.uniqueId == null || that.uniqueId.equals(uniqueId))
-			       && that.name.equals(name)
-			       && that.type.equals(type);
+		// matches the given entity by its immutable identity: persistent random uuid + type. The uuid is distinct from
+		// getEntityId() (the reusable index that a later entity may reuse), so a changing name/crew/level is an update of
+		// the same result rather than a remove + add. This is the ONLY identity lookup: Result is a unique mutable object
+		// and is intentionally not value-comparable, so equals()/hashCode() are left as Object's identity defaults
+		// (verified 2026-07 at runtime: nothing calls them - the results list only uses add/get/iteration and matches()).
+		boolean matches(@Nonnull final Entity entity) {
+			return uniqueId != null && uniqueId.equals(entity.getUniqueID())
+			    && type.equals(Dictionary.getId(entity));
 		}
 		
-		@Override
-		public int hashCode() {
-			return type.hashCode() + name.hashCode();
-		}
 	}
 	
 	public TileEntityCamera(@Nonnull final IBlockBase blockBase) {
@@ -217,21 +257,19 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 				                                                                        && ( !(entity instanceof PlayerEntity)
 				                                                                          || !entity.isSpectator() ));
 				for (final Entity entity : entitiesInRange) {
-					// check for line of sight
-					final Vec3d vEntity = new Vec3d(entity.getPosX(),
-					                                entity.getPosY(),
-					                                entity.getPosZ() );
-					final RayTraceResult rayTraceResult = world.rayTraceBlocks(
-							new RayTraceContext(vCamera, vEntity, RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, null));
-					if (rayTraceResult.getType() != Type.BLOCK) {
+					// check for line of sight, seeing through transparent blocks (glass/ice/water), sampling
+					// head/torso/feet so a partially-hidden entity is still detected, like the monitor shows it
+					final int identificationLevel = getIdentificationLevel(entity);
+					if (identificationLevel < 0) {
 						continue;
 					}
 					
 					// check for existing results
+					final boolean isCrewMember = identificationLevel >= 1 && getCrewStatus(entity);
 					boolean isNew = true;
 					for (final Result result : results) {
-						if (result.equals(entity)) {
-							result.update(entity);
+						if (result.matches(entity)) {
+							result.update(entity, isCrewMember, identificationLevel);
 							isNew = false;
 							break;
 						}
@@ -240,8 +278,7 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 					// add new result
 					if (isNew) {
 						countAdded++;
-						final boolean isCrewMember = getCrewStatus(entity);
-						results.add(new Result(entity, isCrewMember));
+						results.add(new Result(entity, isCrewMember, identificationLevel));
 					}
 				}
 				
@@ -256,6 +293,60 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 				}
 			}
 		}
+	}
+	
+	// highest visible body region from the camera (through transparent blocks): 1 = face -> full ID, 0 = only body
+	// (torso/feet) -> category only, -1 = fully hidden. A single occluding block (e.g. a slab at head height) legitimately
+	// drops a distant entity to category-only from that camera's angle, while another camera with a clear face line reports
+	// full ID; this per-camera, per-body-region grading is intended.
+	private int getIdentificationLevel(@Nonnull final Entity entity) {
+		if (hasLineOfSight(new Vec3d(entity.getPosX(), entity.getPosY() + entity.getEyeHeight(), entity.getPosZ()))) {
+			return 1; // the face (head/eyes) is visible -> full identification
+		}
+		if ( hasLineOfSight(new Vec3d(entity.getPosX(), entity.getPosY() + entity.getHeight() * 0.5D, entity.getPosZ()))
+		  || hasLineOfSight(new Vec3d(entity.getPosX(), entity.getPosY() + entity.getHeight() * 0.1D, entity.getPosZ())) ) {
+			return 0; // only the body (torso/feet) is visible -> category only
+		}
+		return -1; // fully hidden
+	}
+	
+	// Line of sight from the camera to a point, blocked only by opaque blocks.
+	// Non-opaque blocks (glass, ice, water, leaves) are seen through.
+	// Block collision geometry is respected (slabs/stairs).
+	private boolean hasLineOfSight(@Nonnull final Vec3d vTarget) {
+		// Tiny nudge to resume just past each hit face WITHOUT skipping any block: a larger step could jump over the
+		// entry-face hit of the block right behind a transparent one (leaking through slabs/stairs on a sloped ray)
+		final Vec3d vNudge = vTarget.subtract(vCamera).normalize().scale(0.001D);
+		Vec3d vStart = vCamera;
+		// Cap the traversal to the ray length (itself bounded by the camera range): each crossed block costs at most
+		// ~2 steps (entry+exit of a transparent block), and a length-L ray crosses at most ~1.8*L blocks on a diagonal;
+		// x4 covers both with a slight margin. Reaching the cap means the ray never resolved within range -> not visible.
+		final int maxSteps = (int) Math.ceil(vCamera.distanceTo(vTarget)) * 4 + 8;
+		for (int step = 0; step < maxSteps; step++) {
+			final BlockRayTraceResult rayTraceResult = world.rayTraceBlocks(new RayTraceContext(
+					vStart, vTarget, RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, null));
+			if (rayTraceResult.getType() != Type.BLOCK) {
+				return true; // reached the target, no opaque block in the way
+			}
+			final BlockPos blockPosHit = rayTraceResult.getPos();
+			final BlockState blockState = world.getBlockState(blockPosHit);
+			final Block block = blockState.getBlock();
+			final boolean isOwnBlock = blockPosHit.equals(pos); // the camera must not occlude itself
+			// Blocks vision only if it is a solid opaque obstruction; see through the own block, non-opaque materials
+			// (glass/water/ice/leaves) and blocks tagged Transparent in the dictionary
+			final boolean blocksVision = !isOwnBlock
+			                          && blockState.getMaterial().isOpaque()
+			                          && !Dictionary.BLOCKS_TRANSPARENT.contains(block);
+			if (blocksVision) {
+				return false; // Solid opaque block whose collision box the ray actually hit
+			}
+			// Nudge just past the hit face and keep tracing
+			vStart = rayTraceResult.getHitVec().add(vNudge);
+			if (vCamera.squareDistanceTo(vStart) >= vCamera.squareDistanceTo(vTarget)) {
+				return true; // Nudged past the target
+			}
+		}
+		return false; // Exceeded the ray-length traversal budget (out of range / occluded)
 	}
 	
 	private boolean getCrewStatus(final Entity entity) {
@@ -312,10 +403,12 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		  && blockState.getBlock() instanceof BlockCamera ) {
 			final Direction enumFacing = blockState.get(BlockProperties.FACING);
 			final float radius = range / 2.0F;
+			// Optical center of the camera where line of sight computation starts
 			vCamera = new Vec3d(
-					pos.getX() + 0.5F + 0.6F * enumFacing.getXOffset(),
-					pos.getY() + 0.5F + 0.6F * enumFacing.getYOffset(),
-					pos.getZ() + 0.5F + 0.6F * enumFacing.getZOffset() );
+					pos.getX() + 0.5D,
+					pos.getY() + 0.5D,
+					pos.getZ() + 0.5D );
+			// Observable area
 			final Vec3d vCenter = new Vec3d(
 					pos.getX() + 0.5F + (radius + 0.5F) * enumFacing.getXOffset(),
 					pos.getY() + 0.5F + (radius + 0.5F) * enumFacing.getYOffset(),
@@ -383,7 +476,9 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 						tagCompoundResult.getString("type"),
 						Objects.requireNonNull(tagCompoundResult.getUniqueId("uniqueId")),
 						tagCompoundResult.getString("name"),
-						tagCompoundResult.getBoolean("isCrewMember") );
+						Category.fromLabel(tagCompoundResult.getString("category")),
+						tagCompoundResult.getBoolean("isCrewMember"),
+						tagCompoundResult.getInt("identificationLevel") );
 				results.add(result);
 			} catch (final Exception exception) {
 				WarpDrive.logger.error(String.format("%s Exception while reading previous result %s",
@@ -420,7 +515,9 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 				if (result.name != null) {
 					tagCompoundResult.putString("name", result.name);
 				}
+				tagCompoundResult.putString("category", result.category.getLabel());
 				tagCompoundResult.putBoolean("isCrewMember", result.isCrewMember);
+				tagCompoundResult.putInt("identificationLevel", result.identificationLevel);
 				tagList.add(tagCompoundResult);
 			}
 			tagCompound.put("results", tagList);
@@ -470,12 +567,16 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 		final Object[] objectResults = new Object[results.size()];
 		int index = 0;
 		for (final Result result : results) {
+			// full identity (type/name/crew) is only exported when the face was seen; category is always available
+			final boolean isFullyIdentified = result.identificationLevel >= 1;
 			objectResults[index++] = new Object[] {
-					result.type,
-					result.name == null ? "" : result.name,
+					isFullyIdentified ? result.type : "",
+					isFullyIdentified && result.name != null ? result.name : "",
+					result.category.getLabel(),
 					result.position.x, result.position.y, result.position.z,
 					result.motion.x, result.motion.y, result.motion.z,
-					result.isCrewMember };
+					isFullyIdentified && result.isCrewMember,
+					result.identificationLevel };
 		}
 		return objectResults;
 	}
@@ -493,22 +594,25 @@ public class TileEntityCamera extends TileEntityAbstractMachine implements IVide
 			try {
 				index = Commons.toInt(arguments[0]);
 			} catch(final Exception exception) {
-				return new Object[] { false, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, 0, 0, 0, 0, 0, 0, false };
+				return new Object[] { false, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, 0, 0, 0, 0, 0, 0, false, -1 };
 			}
 			if (index >= 0 && index < results.size()) {
 				final Result result = results.get(index);
+				final boolean isFullyIdentified = result != null && result.identificationLevel >= 1;
 				if (result != null) {
 					return new Object[] {
 							true,
-							result.type,
-							result.name == null ? "" : result.name,
+							isFullyIdentified ? result.type : "",
+							isFullyIdentified && result.name != null ? result.name : "",
+							result.category.getLabel(),
 							result.position.x, result.position.y, result.position.z,
 							result.motion.x, result.motion.y, result.motion.z,
-							result.isCrewMember };
+							isFullyIdentified && result.isCrewMember,
+							result.identificationLevel };
 				}
 			}
 		}
-		return new Object[] { false, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, 0, 0, 0, 0, 0, 0, false };
+		return new Object[] { false, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, COMPUTER_ERROR_TAG, 0, 0, 0, 0, 0, 0, false, -1 };
 	}
 	
 	// OpenComputers callback methods
