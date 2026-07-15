@@ -12,6 +12,7 @@ public enum EnumJumpSequencerState implements IStringSerializable {
 	CHECK_BORDERS         ("check_borders"),
 	SAVE_TO_DISK          ("save_to_disk"),
 	GET_INITIAL_VECTOR    ("get_initial_vector"),
+	PRELOAD_TARGET_CHUNKS ("preload_target_chunks"),
 	ADJUST_JUMP_VECTOR    ("adjust_jump_vector"),
 	LOAD_TARGET_CHUNKS    ("load_target_chunks"),
 	SAVE_ENTITIES         ("save_entities"),
