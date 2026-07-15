@@ -149,6 +149,9 @@ public class TileEntityEnanReactorLaser extends TileEntityAbstractLaser implemen
 		
 		// refresh blockstate
 		final IBlockState blockState_old = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState_old, BlockEnanReactorLaser.class, BlockProperties.ACTIVE, BlockProperties.FACING)) {
+			return;
+		}
 		final IBlockState blockState_new;
 		if (reactorFace.facingLaserProperty != null) {
 			blockState_new = blockState_old.withProperty(BlockProperties.ACTIVE, true)

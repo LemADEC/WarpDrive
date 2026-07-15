@@ -139,10 +139,13 @@ public class TileEntityForceFieldProjector extends TileEntityAbstractForceField 
 		setupTicks = world.rand.nextInt(PROJECTOR_SETUP_TICKS);
 		updateTicks = world.rand.nextInt(PROJECTOR_PROJECTION_UPDATE_TICKS);
 		guideTicks = PROJECTOR_GUIDE_UPDATE_TICKS;
-		enumFacing = world.getBlockState(pos).getValue(BlockProperties.FACING);
 		
 		// recover is_double_sided from blockstate property
 		final IBlockState blockState = world.getBlockState(pos);
+		if (isInvalidBlockState(blockState, BlockForceFieldProjector.class, BlockProperties.FACING, BlockForceFieldProjector.IS_DOUBLE_SIDED)) {
+			return;
+		}
+		enumFacing = blockState.getValue(BlockProperties.FACING);
 		if (blockState.getValue(BlockForceFieldProjector.IS_DOUBLE_SIDED)) {
 			isDoubleSided = true;
 		} else if (isDoubleSided) {
