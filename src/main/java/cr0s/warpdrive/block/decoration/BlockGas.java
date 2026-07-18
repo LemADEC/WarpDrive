@@ -63,7 +63,7 @@ public class BlockGas extends BlockAbstractBase {
 	public void onBlockAdded(@Nonnull final BlockState blockStateNew, @Nonnull final World world, @Nonnull final BlockPos blockPos,
 	                         @Nonnull final BlockState blockStateOld, final boolean isMoving) {
 		// Gas blocks are only allowed in space
-		if (CelestialObjectManager.hasAtmosphere(world)) {
+		if (CelestialObjectManager.hasAtmosphere(world, blockPos.getX(), blockPos.getZ())) {
 			world.removeBlock(blockPos, false);
 		}
 	}

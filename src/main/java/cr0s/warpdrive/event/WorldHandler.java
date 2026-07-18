@@ -51,7 +51,7 @@ public class WorldHandler {
 			final int x = MathHelper.floor(entityLivingBase.getPosX());
 			final int y = MathHelper.floor(entityLivingBase.getPosY());
 			final int z = MathHelper.floor(entityLivingBase.getPosZ());
-			final CelestialObject celestialObject = CelestialObjectManager.get(event.getWorld());
+			final CelestialObject celestialObject = CelestialObjectManager.get(event.getWorld(), x, z);
 			
 			if (entityLivingBase instanceof ServerPlayerEntity) {
 				WarpDrive.cloaks.onPlayerJoinWorld((ServerPlayerEntity) entityLivingBase, event.getWorld());

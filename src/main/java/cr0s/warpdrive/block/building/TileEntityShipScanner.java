@@ -453,7 +453,7 @@ public class TileEntityShipScanner extends TileEntityAbstractMachine implements 
 				return false;
 			}
 			if ( jumpShip.actualMass > WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE
-			  && CelestialObjectManager.isPlanet(world) ) {
+			  && CelestialObjectManager.isPlanet(world, pos.getX(), pos.getZ()) ) {
 				reason.append(Commons.getStyleWarning(), "warpdrive.ship.guide.too_much_mass_for_planet",
 				                                       WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE, jumpShip.actualMass );
 				return false;

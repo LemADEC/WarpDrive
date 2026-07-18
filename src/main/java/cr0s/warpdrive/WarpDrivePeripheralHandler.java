@@ -31,7 +31,9 @@ public class WarpDrivePeripheralHandler implements IPeripheralProvider {
 				WarpDrive.logger.info(String.format("[CC] IPeripheralProvider.getPeripheral %s %s %s",
 				                                    Commons.format(world, blockPos), side, tileEntity ));
 			}
-			return LazyOptional.of(() -> (IPeripheral) tileEntity);
+			// return the tile entity's IDynamicPeripheral, NOT (IPeripheral) tileEntity: in 1.15 the TE no longer
+			// implements IPeripheral (the peripheral is a separate object), so the old cast threw ClassCastException.
+			return ((TileEntityAbstractInterfaced) tileEntity).CC_getPeripheral();
 		}
 		return LazyOptional.empty();
 	}

@@ -46,8 +46,10 @@ import net.minecraftforge.common.DimensionManager;
 
 public class CelestialObjectManager extends XmlFileManager {
 	
-	private static final ResourceLocation ID_OVERWORLD = new ResourceLocation("minecraft:overworld");
+	private static final ResourceLocation ID_OVERWORLD  = new ResourceLocation("minecraft:overworld");
 	private static final ResourceLocation ID_THE_NETHER = new ResourceLocation("minecraft:the_nether");
+	private static final ResourceLocation ID_THE_END    = new ResourceLocation("minecraft:the_end");
+	
 	private static final CelestialObjectManager SERVER = new CelestialObjectManager();
 	private static final CelestialObjectManager CLIENT = new CelestialObjectManager();
 	// mutable accumulator, written only while parsing/reloading; runtime reads go through the immutable 'registry' below
@@ -81,23 +83,17 @@ public class CelestialObjectManager extends XmlFileManager {
 		(isRemote ? CLIENT : SERVER).celestialObjectsById = new HashMap<>();
 	}
 	
-	@Deprecated
-	public static CelestialObject get(final boolean isRemote, @Nonnull final DimensionType dimensionType) {
-		return (isRemote ? CLIENT : SERVER).getRepresentative(dimensionType.getRegistryName());
+	public static CelestialObject get(final boolean isRemote, final ResourceLocation dimensionId, final int x, final int z) {
+		return (isRemote ? CLIENT : SERVER).get(dimensionId, x, z);
 	}
 	
-	@Deprecated
-	public static CelestialObject get(final IWorld world) {
+	public static CelestialObject get(final IWorld world, final int x, final int z) {
 		if (world == null) {
 			return null;
 		}
 		final ResourceLocation dimensionId = world.getDimension().getType().getRegistryName();
 		assert dimensionId != null;
-		return (world.isRemote() ? CLIENT : SERVER).getRepresentative(dimensionId);
-	}
-	
-	public static CelestialObject get(final boolean isRemote, final ResourceLocation dimensionId, final int x, final int z) {
-		return (isRemote ? CLIENT : SERVER).get(dimensionId, x, z);
+		return (world.isRemote() ? CLIENT : SERVER).get(dimensionId, x, z);
 	}
 	
 	public static CelestialObject getClosestChild(final World world, final int x, final int z) {
@@ -125,35 +121,35 @@ public class CelestialObjectManager extends XmlFileManager {
 		return celestialObjectClosest;
 	}
 	
-	public static boolean isInSpace(final World world) {
-		final CelestialObject celestialObject = get(world);
+	public static boolean isInSpace(final World world, final int x, final int z) {
+		final CelestialObject celestialObject = get(world, x, z);
 		return celestialObject != null && celestialObject.isSpace();
 	}
 	
-	public static boolean isInHyperspace(final World world) {
-		final CelestialObject celestialObject = get(world);
+	public static boolean isInHyperspace(final World world, final int x, final int z) {
+		final CelestialObject celestialObject = get(world, x, z);
 		return celestialObject != null && celestialObject.isHyperspace();
 	}
 	
-	public static boolean hasAtmosphere(final World world) {
-		final CelestialObject celestialObject = get(world);
+	public static boolean hasAtmosphere(final World world, final int x, final int z) {
+		final CelestialObject celestialObject = get(world, x, z);
 		return celestialObject == null || celestialObject.hasAtmosphere();
 	}
 	
-	public static boolean isPlanet(final World world) {
-		final CelestialObject celestialObject = get(world);
+	public static boolean isPlanet(final World world, final int x, final int z) {
+		final CelestialObject celestialObject = get(world, x, z);
 		return celestialObject == null
 		    || (!celestialObject.isSpace() && !celestialObject.isHyperspace());
 	}
 	
 	public static double getGravity(@Nonnull final Entity entity) {
-		final CelestialObject celestialObject = get(entity.world);
+		final CelestialObject celestialObject = get(entity.world, (int) entity.getPosX(), (int) entity.getPosZ());
 		return celestialObject == null ? 1.0D : celestialObject.getGravity();
 	}
 	
 	@Nullable
 	public static ResourceLocation getSpaceDimensionId(@Nonnull final World world, final int x, final int z) {
-		CelestialObject celestialObject = get(world);
+		CelestialObject celestialObject = get(world, x, z);
 		if (celestialObject == null) {
 			return world.getDimension().getType().getRegistryName();
 		}
@@ -171,8 +167,8 @@ public class CelestialObjectManager extends XmlFileManager {
 	}
 	
 	@Nullable
-	public static ResourceLocation getHyperspaceDimensionId(@Nonnull final World world) {
-		CelestialObject celestialObject = get(world);
+	public static ResourceLocation getHyperspaceDimensionId(@Nonnull final World world, final int x, final int z) {
+		CelestialObject celestialObject = get(world, x, z);
 		if (celestialObject == null) {
 			return world.getDimension().getType().getRegistryName();
 		}
@@ -204,6 +200,12 @@ public class CelestialObjectManager extends XmlFileManager {
 		case "-1":
 			return ID_THE_NETHER;
 			
+		case "end":
+		case "theend":
+		case "the_end":
+		case "1":
+			return ID_THE_END;
+			
 		case "s":
 		case "space":
 			return getSpaceDimensionId(entity.world, (int) entity.getPosX(), (int) entity.getPosZ());
@@ -211,7 +213,7 @@ public class CelestialObjectManager extends XmlFileManager {
 		case "h":
 		case "hyper":
 		case "hyperspace":
-			return getHyperspaceDimensionId(entity.world);
+			return getHyperspaceDimensionId(entity.world, (int) entity.getPosX(), (int) entity.getPosZ());
 			
 		default:
 			final ResourceLocation dimensionId = new ResourceLocation(stringDimension);
@@ -333,7 +335,7 @@ public class CelestialObjectManager extends XmlFileManager {
 	
 	public static boolean onOpeningNetherPortal(@Nonnull final IWorld world, @Nonnull final BlockPos blockPos) {
 		// prevent creating a portal outside the world border
-		final CelestialObject celestialObjectPortal = get(world);
+		final CelestialObject celestialObjectPortal = get(world, blockPos.getX(), blockPos.getZ());
 		if (celestialObjectPortal != null) {
 			if (!celestialObjectPortal.isInsideBorder(blockPos.getX(), blockPos.getZ()) ) {
 				final PlayerEntity entityPlayer = world.getClosestPlayer(blockPos.getX(), blockPos.getY(), blockPos.getZ(), 10.0D, false);
@@ -409,7 +411,7 @@ public class CelestialObjectManager extends XmlFileManager {
 		  || entityPlayer.world != world ) {
 			return worldBorder;
 		}
-		final CelestialObject celestialObject = get(world);
+		final CelestialObject celestialObject = get(world, (int) entityPlayer.getPosX(), (int) entityPlayer.getPosZ());
 		if (celestialObject == null) {
 			return worldBorder;
 		}
@@ -642,16 +644,6 @@ public class CelestialObjectManager extends XmlFileManager {
 		return celestialObjectClosest;
     }
     
-	// Deprecated: this is a temporary workaround for the 1 dimension : N celestial objects model:
-	// returns an ARBITRARY object among those sharing the dimension (the first indexed), because the caller has no X,Z to disambiguate.
-	// Callers should eventually pass X,Z and resolve the exact object via get(dim, x, z), after which this method must be deleted.
-	// Do NOT add new callers.
-	@Deprecated
-	private CelestialObject getRepresentative(@Nonnull final ResourceLocation dimensionId) {
-		final List<CelestialObject> candidates = registry.byDimensionId.get(dimensionId);
-		return (candidates == null || candidates.isEmpty()) ? null : candidates.get(0);
-	}
-	
 	public double getMaxWorldBorder() {
 		return registry.maxWorldBorder < 1000 ? 6.0E7D : registry.maxWorldBorder;
 	}

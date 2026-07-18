@@ -242,15 +242,6 @@ public class VectorI implements Cloneable {
 		return tagCompound;
 	}
 	
-	// Square roots are evil, avoid them at all cost
-	@Deprecated
-	public double distanceTo(final VectorI vector) {
-		final int newX = vector.x - x;
-		final int newY = vector.y - y;
-		final int newZ = vector.z - z;
-		return Math.sqrt((double) newX * newX + (double) newY * newY + (double) newZ * newZ);
-	}
-	
 	public long distance2To(final BlockPos blockPos) {
 		final int newX = blockPos.getX() - x;
 		final int newY = blockPos.getY() - y;
@@ -284,12 +275,6 @@ public class VectorI implements Cloneable {
 		final int newY = vector1.y - vector2.y;
 		final int newZ = vector1.z - vector2.z;
 		return (long) newX * newX + (long) newY * newY + (long) newZ * newZ;
-	}
-	
-	// Square roots are evil, avoid them at all cost
-	@Deprecated
-	public double getMagnitude() {
-		return Math.sqrt(getMagnitudeSquared());
 	}
 	
 	public long getMagnitudeSquared() {

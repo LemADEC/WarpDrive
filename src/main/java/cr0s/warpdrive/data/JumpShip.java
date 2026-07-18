@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.mojang.datafixers.Dynamic;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -25,7 +27,9 @@ import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.datafix.fixes.BlockStateFlatteningMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
@@ -250,9 +254,13 @@ public class JumpShip {
 						}
 						
 						if (blockStatePalette == null) {
-							// TODO MC1.15 convert legacy vanilla block ids when loading schematics?
-							// jumpBlock.block = Block.getBlockById(blockId);
-							// jumpBlock.blockMeta = (localMetadata[index]) & 0x0F;
+							// Legacy pre-1.13 numeric block ids (WorldEdit "Alpha" format): convert with vanilla's flattening
+							// map. It's indexed by (id << 4 | metadata) and returns the fixed { Name, Properties } NBT, which
+							// NBTUtil parses into a BlockState. Covers vanilla ids 0-255; modded ids (>255 via AddBlocks) fall
+							// out of the 4096-entry table and resolve to air (see the removed-mod-block placeholder backlog item).
+							final int metadata = localMetadata != null && index < localMetadata.length ? (localMetadata[index] & 0x0F) : 0;
+							final Dynamic<?> dynamicFixed = BlockStateFlatteningMap.getFixedNBTForID((blockId << 4) | metadata);
+							jumpBlock.blockState = NBTUtil.readBlockState((CompoundNBT) dynamicFixed.getValue());
 						} else {
 							final BlockState blockState = blockStatePalette.get(blockId);
 							if (blockState != null) {

@@ -1,7 +1,6 @@
 package cr0s.warpdrive.render;
 
 import cr0s.warpdrive.Commons;
-import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.data.EnumDisplayAlignment;
 
 import javax.annotation.Nonnull;
@@ -11,20 +10,13 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexFormat;
-import net.minecraft.client.renderer.vertex.VertexFormatElement;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import org.lwjgl.opengl.GL11;
 
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.model.geometry.IModelGeometry;
 
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
@@ -51,7 +43,7 @@ public class RenderCommons {
 	                                            final float red, final float green, final float blue, final float alpha) {
 		final Tessellator tessellator = Tessellator.getInstance();
 		final BufferBuilder vertexBuffer = tessellator.getBuffer();
-		vertexBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+		vertexBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 		vertexBuffer.pos( x         , (y + sizeY), zLevel).tex(SCALE_UV * u          , SCALE_UV * (v + sizeY)).color(red, green, blue, alpha).endVertex();
 		vertexBuffer.pos((x + sizeX), (y + sizeY), zLevel).tex(SCALE_UV * (u + sizeX), SCALE_UV * (v + sizeY)).color(red, green, blue, alpha).endVertex();
 		vertexBuffer.pos((x + sizeX),  y         , zLevel).tex(SCALE_UV * (u + sizeX), SCALE_UV * v).color(red, green, blue, alpha).endVertex();
@@ -223,39 +215,5 @@ public class RenderCommons {
 		// RenderSystem.enableTexture();
 		RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 		RenderSystem.popMatrix();
-	}
-	
-	public static IModelGeometry<?> getModel(final ResourceLocation resourceLocation) {
-		final IModelGeometry<?> model = null;
-		try {
-			// TODO MC1.15 reactor core rendering
-			// model = ModelLoaderRegistry.getModel(resourceLocation);
-		} catch (final Exception exception) {
-			WarpDrive.logger.info(String.format("getModel %s", resourceLocation));
-			throw new RuntimeException(exception);
-		}
-		return model;
-	}
-	
-	public static void renderModelTESR(@Nonnull final List<BakedQuad> quads, @Nonnull final BufferBuilder renderer, final int brightness) {
-		final int l1 = (brightness >> 0x10) & 0xFFFF;
-		final int l2 = brightness & 0xFFFF;
-		for (final BakedQuad quad : quads) {
-			final int[] vData = quad.getVertexData();
-			final VertexFormat format = renderer.getVertexFormat();
-			final int size = format.getIntegerSize();
-			final int uv = format.getElements().stream().filter(element -> element.getUsage() == VertexFormatElement.Usage.UV).findFirst().get().getIndex() / 4;
-			// final int color = format.getColorOffset();
-			for (int i = 0; i < 4; ++i) {
-				renderer
-						.pos(	Float.intBitsToFloat(vData[size * i    ]),
-						        Float.intBitsToFloat(vData[size * i + 1]),
-						        Float.intBitsToFloat(vData[size * i + 2]) )
-						.color(255, 255, 255, 255)
-						.tex(Float.intBitsToFloat(vData[size * i + uv]), Float.intBitsToFloat(vData[size * i + uv + 1]))
-						.lightmap(l1, l2)
-						.endVertex();
-			}
-		}
 	}
 }

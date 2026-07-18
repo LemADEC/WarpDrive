@@ -10,7 +10,7 @@ newmtl m_crystal
 # Ni 1.000000
 d 1.000000
 # illum 2
-map_Kd warpdrive:blocks/energy/reactor_core-crystal
+map_Kd warpdrive:block/energy/reactor_core-crystal
 
 newmtl m_grip
 # Ns 96.078431
@@ -21,7 +21,7 @@ newmtl m_grip
 # Ni 1.000000
 d 1.000000
 # illum 2
-map_Kd warpdrive:blocks/energy/reactor_core-grip
+map_Kd warpdrive:block/energy/reactor_core-grip
 
 newmtl m_matter
 # Ns 0
@@ -30,7 +30,7 @@ newmtl m_matter
 # Ks 0.8 0.8 0.8
 d 1
 # illum 2
-map_Kd warpdrive:blocks/energy/reactor_matter
+map_Kd warpdrive:block/energy/reactor_matter
 
 newmtl m_surface
 # Ns 0
@@ -39,7 +39,7 @@ newmtl m_surface
 # Ks 0.8 0.8 0.8
 d 1
 # illum 2
-map_Kd warpdrive:blocks/energy/reactor_surface
+map_Kd warpdrive:block/energy/reactor_surface
 
 newmtl m_shield
 # Ns 0
@@ -48,4 +48,4 @@ newmtl m_shield
 # Ks 0.8 0.8 0.8
 d 1
 # illum 2
-map_Kd warpdrive:blocks/energy/reactor_shield
+map_Kd warpdrive:block/energy/reactor_shield

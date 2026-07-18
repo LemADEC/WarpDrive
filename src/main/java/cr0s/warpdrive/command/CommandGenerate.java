@@ -203,7 +203,7 @@ public class CommandGenerate {
 	                           @Nonnull final String structureName) {
 		
 		// Reject command, if target is not in space
-		if (!CelestialObjectManager.isInSpace(world) && (!"ship".equals(structureGroup))) {
+		if (!CelestialObjectManager.isInSpace(world, blockPos.getX(), blockPos.getZ()) && (!"ship".equals(structureGroup))) {
 			commandSource.sendErrorMessage(new TranslationTextComponent("warpdrive.command.only_in_space").setStyle(Commons.getStyleWarning()));
 			return 0;
 		}

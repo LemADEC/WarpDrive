@@ -6,6 +6,7 @@ import cr0s.warpdrive.network.PacketHandler;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -132,13 +133,20 @@ public final class EntityCamera extends LivingEntity {
 			final Block block = world.getBlockState(new BlockPos(cameraX, cameraY, cameraZ)).getBlock();
 			final Minecraft mc = Minecraft.getInstance();
 			if (mc.getRenderViewEntity() != null) {
-				mc.getRenderViewEntity().rotationYaw = player.rotationYaw;
-				// mc.renderViewEntity.rotationYawHead = player.rotationYawHead;
-				mc.getRenderViewEntity().rotationPitch = player.rotationPitch;
+				// Copy prev+current so the render interpolate properly
+				final Entity entityRenderView = mc.getRenderViewEntity();
+				entityRenderView.prevRotationYaw = player.prevRotationYaw;
+				entityRenderView.rotationYaw = player.rotationYaw;
+				entityRenderView.prevRotationPitch = player.prevRotationPitch;
+				entityRenderView.rotationPitch = player.rotationPitch;
+				if (entityRenderView instanceof LivingEntity) {
+					((LivingEntity) entityRenderView).prevRotationYawHead = player.prevRotationYawHead;
+					((LivingEntity) entityRenderView).rotationYawHead = player.rotationYawHead;
+				}
 			}
 			
-			ClientCameraHandler.overlayLoggingMessage = "ZoomIn/Out with " + ClientProxy.keyBindingCameraZoomIn.getKey().getTranslationKey() + "/" + ClientProxy.keyBindingCameraZoomOut.getKey().getTranslationKey()
-			                                          + "\nShoot with " + ClientProxy.keyBindingCameraShoot.getKey().getTranslationKey();
+			ClientCameraHandler.overlayLoggingMessage = "ZoomIn/Out with " + ClientProxy.keyBindingCameraZoomIn.getLocalizedName() + "/" + ClientProxy.keyBindingCameraZoomOut.getLocalizedName()
+			                                          + (block == WarpDrive.blockLaserCamera ? "\nShoot with " + ClientProxy.keyBindingCameraShoot.getLocalizedName() : "");
 			// Perform zoom
 			if (ClientProxy.keyBindingCameraZoomIn.isKeyDown()) {
 				zoomWaitTicks++;

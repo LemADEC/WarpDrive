@@ -114,7 +114,7 @@ public class LivingHandler {
 		
 		// *** world border handling
 		// Instant kill if entity exceeds world's limit
-		final CelestialObject celestialObject = CelestialObjectManager.get(entityLivingBase.world);
+		final CelestialObject celestialObject = CelestialObjectManager.get(entityLivingBase.world, (int) entityLivingBase.getPosX(), (int) entityLivingBase.getPosZ());
 		if (celestialObject == null) {
 			// unregistered dimension => exit
 			return;

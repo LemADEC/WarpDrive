@@ -6,13 +6,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import cr0s.warpdrive.WarpDrive;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 
 import net.minecraftforge.client.model.data.IModelData;
 
@@ -22,9 +26,9 @@ public class BakedModelShipScanner extends BakedModelAbstractBase {
 	
 	private void initSprite() {
 		if (spriteBorder == null) {
-			// TODO MC1.15 getAtlasSprite for ship scanner
-			// final AtlasTexture textureMapBlocks = Minecraft.getInstance().getTextureMapBlocks();
-			// spriteBorder = textureMapBlocks.getAtlasSprite("warpdrive:blocks/building/ship_scanner-border");
+			spriteBorder = Minecraft.getInstance().getModelManager()
+			                        .getAtlasTexture(PlayerContainer.LOCATION_BLOCKS_TEXTURE)
+			                        .getSprite(new ResourceLocation(WarpDrive.MODID, "block/building/ship_scanner-border"));
 		}
 	}
 	
@@ -39,6 +43,10 @@ public class BakedModelShipScanner extends BakedModelAbstractBase {
 	public List<BakedQuad> getQuads(@Nullable final BlockState blockState, @Nullable final Direction side, @Nonnull final Random rand, @Nonnull IModelData modelData) {
 		
 		initSprite();
+		
+		// Bake in BLOCK format (8 ints/vertex, with normal + lightmap) so IVertexBuilder.addQuad can replay these quads
+		// (addQuad hardcodes a stride of 8). The baked lightmap is ignored - the TESR passes a full-bright light to addQuad.
+		format = DefaultVertexFormats.BLOCK;
 		
 		final boolean isHidden = false;
 		

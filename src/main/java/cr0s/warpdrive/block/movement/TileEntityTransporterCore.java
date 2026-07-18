@@ -712,7 +712,7 @@ public class TileEntityTransporterCore extends TileEntityAbstractEnergyCoreOrCon
 		}
 		
 		// compute local universal coordinates
-		final CelestialObject celestialObjectLocal = CelestialObjectManager.get(world);
+		final CelestialObject celestialObjectLocal = CelestialObjectManager.get(world, globalPositionLocal.x, globalPositionLocal.z);
 		final Vector3 v3Local_universal = GlobalRegionManager.getUniversalCoordinates(celestialObjectLocal, globalPositionLocal.x, globalPositionLocal.y, globalPositionLocal.z);
 		
 		// validate context

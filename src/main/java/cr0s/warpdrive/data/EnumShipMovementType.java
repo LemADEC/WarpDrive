@@ -81,7 +81,7 @@ public enum EnumShipMovementType implements IStringSerializable {
 			return GATE_ACTIVATING;
 		}
 		
-		final CelestialObject celestialObjectSource = CelestialObjectManager.get(worldSource);
+		final CelestialObject celestialObjectSource = CelestialObjectManager.get(worldSource, xCurrent, zCurrent);
 		final boolean isInSpace      = celestialObjectSource != null && celestialObjectSource.isSpace();
 		final boolean isInHyperSpace = celestialObjectSource != null && celestialObjectSource.isHyperspace();
 		

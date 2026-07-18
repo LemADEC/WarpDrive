@@ -17,11 +17,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.block.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.dimension.DimensionType;
 
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.common.thread.EffectiveSide;
 
 public class CloakManager {
 	
@@ -33,7 +35,7 @@ public class CloakManager {
 	public void onChunkLoaded(final ServerPlayerEntity player, final int chunkPosX, final int chunkPosZ) {
 		for (final CloakedArea area : cloaks) {
 			// skip other dimensions
-			if (area.dimensionType != player.world.getDimension().getType()) {
+			if (!area.dimensionId.equals(player.world.getDimension().getType().getRegistryName())) {
 				continue;
 			}
 			
@@ -51,7 +53,7 @@ public class CloakManager {
 		}
 		for (final CloakedArea area : cloaks) {
 			// skip other dimensions
-			if (area.dimensionType != world.getDimension().getType()) {
+			if (!area.dimensionId.equals(world.getDimension().getType().getRegistryName())) {
 				continue;
 			}
 			
@@ -73,12 +75,12 @@ public class CloakManager {
 			final int minX, final int minY, final int minZ,
 			final int maxX, final int maxY, final int maxZ) {
 		assert world.getDimension().getType().getRegistryName() != null;
-		final CloakedArea cloakedAreaNew = new CloakedArea(world, world.getDimension().getType(), blockPosCore, isFullyTransparent,
+		final CloakedArea cloakedAreaNew = new CloakedArea(world, world.getDimension().getType().getRegistryName(), blockPosCore, isFullyTransparent,
 		                                                   minX, minY, minZ, maxX, maxY, maxZ );
 		
 		// find existing one
 		for (final CloakedArea cloakedArea : cloaks) {
-			if ( cloakedArea.dimensionType == world.getDimension().getType()
+			if ( cloakedArea.dimensionId.equals(world.getDimension().getType().getRegistryName())
 			  && cloakedArea.blockPosCore.equals(blockPosCore) ) {
 				cloaks.remove(cloakedArea);
 				break;
@@ -109,11 +111,11 @@ public class CloakManager {
 		}
 	}
 	
-	public void removeCloakedArea(final DimensionType dimensionType, final BlockPos blockPos) {
+	public void removeCloakedArea(final ResourceLocation dimensionId, final BlockPos blockPos) {
 		for (final CloakedArea area : cloaks) {
 			if ( area.blockPosCore.equals(blockPos)
-			  && area.dimensionType == dimensionType ) {
-				if (FMLEnvironment.dist == Dist.CLIENT) {
+			  && area.dimensionId.equals(dimensionId) ) {
+				if (EffectiveSide.get() == LogicalSide.CLIENT) {
 					area.clientDecloak();
 				} else {
 					area.sendCloakPacketToPlayersEx(true); // send info about collapsing cloaking field
@@ -127,7 +129,7 @@ public class CloakManager {
 	public CloakedArea getCloakedArea(final World world, final BlockPos blockPos) {
 		for (final CloakedArea area : cloaks) {
 			if ( area.blockPosCore.equals(blockPos)
-			  && area.dimensionType == world.getDimension().getType() ) {
+			  && area.dimensionId.equals(world.getDimension().getType().getRegistryName()) ) {
 				return area;
 			}
 		}
@@ -144,7 +146,7 @@ public class CloakManager {
 	@Nullable
 	public static CloakedArea getContainingArea(@Nonnull final World world, @Nonnull final BlockPos blockPos1, @Nullable final BlockPos blockPos2) {
 		for (final CloakedArea area : cloaks) {
-			if ( area.dimensionType == world.getDimension().getType()
+			if ( area.dimensionId.equals(world.getDimension().getType().getRegistryName())
 			  && area.isBlockWithinArea(blockPos1) ) {
 				return blockPos2 == null || area.isBlockWithinArea(blockPos2) ? area : null;
 			}

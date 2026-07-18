@@ -48,7 +48,7 @@ public class RenderOverlayCamera {
 			final Tessellator tessellator = Tessellator.getInstance();
 			final BufferBuilder vertexBuffer = tessellator.getBuffer();
 			
-			vertexBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+			vertexBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 			vertexBuffer.pos(       0.0D, scaledHeight, -90.0D).tex(0.0F, 1.0F).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
 			vertexBuffer.pos(scaledWidth, scaledHeight, -90.0D).tex(1.0F, 1.0F).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();
 			vertexBuffer.pos(scaledWidth,         0.0D, -90.0D).tex(1.0F, 0.0F).color(1.0F, 1.0F, 1.0F, 1.0F).endVertex();

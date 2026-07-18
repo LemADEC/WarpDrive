@@ -26,6 +26,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.dimension.DimensionType;
 
 import net.minecraftforge.fml.LogicalSide;
@@ -35,7 +36,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class CloakedArea {
 	
-	public DimensionType dimensionType;
+	public ResourceLocation dimensionId;
 	public BlockPos blockPosCore;
 	public int minX, minY, minZ;
 	public int maxX, maxY, maxZ;
@@ -44,10 +45,10 @@ public class CloakedArea {
 	public BlockState blockStateFog;
 	
 	public CloakedArea(@Nullable final World world,
-	                   @Nonnull final DimensionType dimensionType, @Nonnull final BlockPos blockPosCore, final boolean isFullyTransparent,
+	                   @Nonnull final ResourceLocation dimensionId, @Nonnull final BlockPos blockPosCore, final boolean isFullyTransparent,
 	                   final int minX, final int minY, final int minZ,
 	                   final int maxX, final int maxY, final int maxZ) {
-		this.dimensionType = dimensionType;
+		this.dimensionId = dimensionId;
 		this.blockPosCore = blockPosCore;
 		this.isFullyTransparent = isFullyTransparent;
 		
@@ -116,7 +117,7 @@ public class CloakedArea {
 		
 		final MinecraftServer server = LogicalSidedProvider.INSTANCE.get(LogicalSide.SERVER);
 		for (final ServerPlayerEntity entityServerPlayer : server.getPlayerList().getPlayers()) {
-			if (dimensionType == entityServerPlayer.dimension) {
+			if (dimensionId.equals(entityServerPlayer.dimension.getRegistryName())) {
 				final double dX = midX - entityServerPlayer.getPosX();
 				final double dY = midY - entityServerPlayer.getPosY();
 				final double dZ = midZ - entityServerPlayer.getPosZ();
@@ -233,6 +234,11 @@ public class CloakedArea {
 			}
 		}
 		
+		// Force a render refresh since light engine is async now
+		Minecraft.getInstance().worldRenderer.markBlockRangeForRenderUpdate(
+			minX - 1, Math.max(  0, minY - 1), minZ - 1,
+			maxX + 1, Math.min(255, maxY + 1), maxZ + 1);
+		
 		// Hide any entities inside area
 		if (WarpDriveConfig.LOGGING_CLOAKING) { WarpDrive.logger.info("Refreshing cloaked entities..."); }
 		final AxisAlignedBB aabb = new AxisAlignedBB(minX, minY, minZ, maxX + 1, maxY + 1, maxZ + 1);
@@ -279,7 +285,7 @@ public class CloakedArea {
 	@Override
 	public String toString() {
 		return String.format("%s @ %s (%d %d %d) (%d %d %d) -> (%d %d %d)",
-			getClass().getSimpleName(), dimensionType.getRegistryName(),
+			getClass().getSimpleName(), dimensionId,
 			blockPosCore.getX(), blockPosCore.getY(), blockPosCore.getZ(),
 			minX, minY, minZ,
 			maxX, maxY, maxZ);

@@ -12,12 +12,19 @@ import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
+import net.minecraft.command.ISuggestionProvider;
 import net.minecraft.command.arguments.EntityArgument;
+import net.minecraft.command.arguments.EntitySelector;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
@@ -28,10 +35,14 @@ import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 
 public class CommandSpace {
@@ -41,6 +52,9 @@ public class CommandSpace {
 		private static final Collection<String> EXAMPLES = Arrays.asList("overworld", "nether", "end", "theend",
 		                                                                 "space", "hyper", "hyperspace",
 		                                                                 "<dimensionId>", "<dimensionName>");
+		
+		private static final SimpleCommandExceptionType NOT_A_DIMENSION =
+				new SimpleCommandExceptionType(new LiteralMessage("Expected a dimension keyword or id"));
 		
 		@Nonnull
 		public static DimensionNameArgument create() {
@@ -55,7 +69,59 @@ public class CommandSpace {
 		@Nonnull
 		@Override
 		public String parse(@Nonnull final StringReader stringReader) throws CommandSyntaxException {
-			return stringReader.getString();
+			// Consume the token up to the next space and ADVANCE the cursor.
+			// Dimension ids contain ':' and '.', which readUnquotedString() rejects.
+			final int start = stringReader.getCursor();
+			while (stringReader.canRead() && stringReader.peek() != ' ') {
+				stringReader.skip();
+			}
+			final String token = stringReader.getString().substring(start, stringReader.getCursor());
+			// Explicitly reject anything that is not a dimension keyword or a registered dimension id, so a bare argument that happens
+			// to be a valid player name falls through to the <players> branch instead of being eaten here
+			if (!isDimensionToken(token)) {
+				throw NOT_A_DIMENSION.createWithContext(stringReader);
+			}
+			return token;
+		}
+		
+		private static boolean isDimensionToken(@Nonnull final String token) {
+			switch (token.toLowerCase(Locale.ROOT)) {
+			case "world":
+			case "overworld":
+			case "nether":
+			case "thenether":
+			case "end":
+			case "theend":
+			case "the_end":
+			case "s":
+			case "space":
+			case "h":
+			case "hyper":
+			case "hyperspace":
+				return true;
+			default:
+				try {// a registered dimension id (namespaced)
+					if (DimensionType.byName(new ResourceLocation(token)) != null) {
+						return true;
+					}
+				} catch (final Exception exceptionResourceLocation) {
+					// not a valid ResourceLocation (e.g. a player name) => not a dimension
+				}
+				try {// a numeric dimension id
+					return DimensionType.getById(Integer.parseInt(token)) != null;
+				} catch (final Exception exceptionInteger) {
+					return false;
+				}
+			}
+		}
+		
+		@Override
+		public <S> CompletableFuture<Suggestions> listSuggestions(@Nonnull final CommandContext<S> context, @Nonnull final SuggestionsBuilder builder) {
+			final List<String> options = new ArrayList<>(Arrays.asList("overworld", "nether", "theend", "space", "hyperspace"));
+			for (final ResourceLocation dimensionId : Registry.DIMENSION_TYPE.keySet()) {
+				options.add(dimensionId.toString());
+			}
+			return ISuggestionProvider.suggest(options, builder);
 		}
 		
 		public Collection<String> getExamples() {
@@ -63,31 +129,65 @@ public class CommandSpace {
 		}
 	}
 	
+	// wraps EntityArgument.players() but rejects tokens that are dimension keywords/ids, so a bare /space <dimension>
+	// resolves deterministically to the <target> branch instead of being (inconsistently) swallowed as a player name
+	public static class PlayersNotDimensionArgument implements ArgumentType<EntitySelector> {
+		
+		private static final SimpleCommandExceptionType NOT_A_PLAYER =
+				new SimpleCommandExceptionType(new LiteralMessage("Expected a player (a dimension name belongs in the target slot)"));
+		
+		private final EntityArgument delegate = EntityArgument.players();
+		
+		@Nonnull
+		public static PlayersNotDimensionArgument create() {
+			return new PlayersNotDimensionArgument();
+		}
+		
+		@Nonnull
+		@Override
+		public EntitySelector parse(@Nonnull final StringReader stringReader) throws CommandSyntaxException {
+			final int start = stringReader.getCursor();
+			while (stringReader.canRead() && stringReader.peek() != ' ') {
+				stringReader.skip();
+			}
+			final String token = stringReader.getString().substring(start, stringReader.getCursor());
+			stringReader.setCursor(start);
+			if (DimensionNameArgument.isDimensionToken(token)) {
+				throw NOT_A_PLAYER.createWithContext(stringReader);
+			}
+			return delegate.parse(stringReader);
+		}
+		
+		@Override
+		public <S> CompletableFuture<Suggestions> listSuggestions(@Nonnull final CommandContext<S> context, @Nonnull final SuggestionsBuilder builder) {
+			return delegate.listSuggestions(context, builder);
+		}
+	}
+	
 	public static void register(@Nonnull final CommandDispatcher<CommandSource> dispatcher) {
 		final CommandNode<CommandSource> commandNode = dispatcher.register(
 				Commands.literal("space")
 				        .requires(commandSource -> commandSource.hasPermissionLevel(2))
-				        .then(Commands.argument("players", EntityArgument.players())
+				        .then(Commands.literal("help")
+				                      .executes((commandContext) -> help(commandContext.getSource(),
+				                                                         commandContext.getNodes().get(0).getNode().getName() ))
+				             )
+				        // /space <target> : target is validated (real dimension/keyword), so bare player names fall through to <players>
+				        .then(Commands.argument("target", DimensionNameArgument.create())
+				                      .executes((commandContext) -> execute(commandContext.getSource(),
+				                                                            Collections.singleton(commandContext.getSource().asPlayer()),
+				                                                            DimensionNameArgument.get(commandContext, "target") ))
+				             )
+				        // /space <players> (target)
+				        .then(Commands.argument("players", PlayersNotDimensionArgument.create())
+				                      .executes((commandContext) -> execute(commandContext.getSource(),
+				                                                            EntityArgument.getPlayers(commandContext, "players"),
+				                                                            "space" ))
 				                      .then(Commands.argument("target", DimensionNameArgument.create())
 				                                    .executes((commandContext) -> execute(commandContext.getSource(),
 				                                                                          EntityArgument.getPlayers(commandContext, "players"),
 				                                                                          DimensionNameArgument.get(commandContext, "target") ))
 				                           )
-				             )
-				        .then(Commands.argument("players", EntityArgument.players())
-				                      .executes((commandContext) -> execute(commandContext.getSource(),
-				                                                            EntityArgument.getPlayers(commandContext, "players"),
-				                                                            "space" ))
-				             )
-				        .then(Commands.argument("target", DimensionNameArgument.create())
-				                      .executes((commandContext) -> execute(commandContext.getSource(),
-				                                                            Collections.singleton(commandContext.getSource().asPlayer()),
-				                                                            DimensionNameArgument.get(commandContext, "target")))
-				             )
-				        
-				        .then(Commands.literal("help")
-				                      .executes((commandContext) -> help(commandContext.getSource(),
-				                                                         commandContext.getNodes().get(0).getNode().getName() ))
 				             )
 				        .executes((commandContext) -> execute(commandContext.getSource(),
 				                                              Collections.singleton(commandContext.getSource().asPlayer()),
@@ -117,7 +217,7 @@ public class CommandSpace {
 			int xTarget = MathHelper.floor(serverPlayerEntity.getPosX());
 			int yTarget = Math.min(255, Math.max(0, MathHelper.floor(serverPlayerEntity.getPosY())));
 			int zTarget = MathHelper.floor(serverPlayerEntity.getPosZ());
-			final CelestialObject celestialObjectCurrent = CelestialObjectManager.get(serverPlayerEntity.world);
+			final CelestialObject celestialObjectCurrent = CelestialObjectManager.get(serverPlayerEntity.world, xTarget, zTarget);
 			if (dimensionIdTarget == null) {
 				if (celestialObjectCurrent == null) {
 					commandSource.sendErrorMessage(new TranslationTextComponent("warpdrive.command.player_in_unknown_dimension",
@@ -170,7 +270,7 @@ public class CommandSpace {
 				// adjust offset when it's directly above or below us
 				if ( celestialObjectCurrent != null
 				  && celestialObjectCurrent.parent != null
-				  && celestialObjectCurrent.parent.dimensionId.equals(dimensionIdTarget) ) {// moving to parent explicitly
+				  && dimensionIdTarget.equals(celestialObjectCurrent.parent.dimensionId) ) {// moving to parent explicitly
 					final VectorI vEntry = celestialObjectCurrent.getEntryOffset();
 					xTarget -= vEntry.x;
 					yTarget -= vEntry.y;
@@ -178,7 +278,7 @@ public class CommandSpace {
 				} else {
 					final CelestialObject celestialObjectChild = CelestialObjectManager.getClosestChild(serverPlayerEntity.world, (int) serverPlayerEntity.getPosX(), (int) serverPlayerEntity.getPosZ());
 					if ( celestialObjectChild != null
-					  && celestialObjectChild.dimensionId.equals(dimensionIdTarget) ) {// moving to child explicitly
+					  && dimensionIdTarget.equals(celestialObjectChild.dimensionId) ) {// moving to child explicitly
 						final VectorI vEntry = celestialObjectChild.getEntryOffset();
 						xTarget += vEntry.x;
 						yTarget += vEntry.y;

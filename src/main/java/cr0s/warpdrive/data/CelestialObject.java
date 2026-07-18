@@ -239,6 +239,7 @@ public class CelestialObject implements Cloneable, IStringSerializable, ICelesti
 			dimensionId = null;
 			gravity = GRAVITY_NORMAL;
 			isBreathable = true;
+			ambientBrightness = 1.0F;
 			provider = PROVIDER_NONE;
 			isHyperspace = false;
 			dimensionCenterX = 0;
@@ -270,6 +271,7 @@ public class CelestialObject implements Cloneable, IStringSerializable, ICelesti
 			gravity = parseGravity(elementDimension.getAttribute("gravity"));
 			isBreathable = Boolean.parseBoolean(elementDimension.getAttribute("isBreathable"));
 			isHyperspace = Boolean.parseBoolean(elementDimension.getAttribute("isHyperspace"));
+			ambientBrightness = Float.parseFloat(elementDimension.getAttribute("ambientBrightness"));
 			
 			// get optional provider element
 			{
@@ -695,6 +697,7 @@ public class CelestialObject implements Cloneable, IStringSerializable, ICelesti
 			dimensionCenterZ = 0;
 			gravity = GRAVITY_NORMAL;
 			isBreathable = true;
+			ambientBrightness = 1.0F;
 			isHyperspace = false;
 			provider = PROVIDER_NONE;
 		} else {
@@ -721,6 +724,7 @@ public class CelestialObject implements Cloneable, IStringSerializable, ICelesti
 		}
 		
 		boxBrightness = tagCompound.getFloat("boxBrightness");
+		ambientBrightness = tagCompound.getFloat("ambientBrightness");
 		baseStarBrightness = tagCompound.getFloat("baseStarBrightness");
 		vanillaStarBrightness = tagCompound.getFloat("vanillaStarBrightness");
 		opacityCelestialObjects = tagCompound.getFloat("opacityCelestialObjects");
@@ -781,6 +785,7 @@ public class CelestialObject implements Cloneable, IStringSerializable, ICelesti
 		tagCompound.put("boxTextures", nbtTagListBoxTextures);
 		
 		tagCompound.putFloat("boxBrightness", boxBrightness);
+		tagCompound.putFloat("ambientBrightness", ambientBrightness);
 		tagCompound.putFloat("baseStarBrightness", baseStarBrightness);
 		tagCompound.putFloat("vanillaStarBrightness", vanillaStarBrightness);
 		tagCompound.putFloat("opacityCelestialObjects", opacityCelestialObjects);

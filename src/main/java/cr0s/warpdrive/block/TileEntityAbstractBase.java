@@ -138,6 +138,10 @@ public abstract class TileEntityAbstractBase extends TileEntity implements IBloc
 		return isFirstTick;
 	}
 	
+	// Custom hook to react to a genuine block break/replace. Routed from BlockAbstractContainer.onReplaced().
+	public void onBlockBroken(final net.minecraft.block.BlockState blockStateOld, final net.minecraft.world.World world, final net.minecraft.util.math.BlockPos blockPos, final net.minecraft.block.BlockState blockStateNew) {
+	}
+	
 	@Override
 	public void onBlockUpdateDetected(@Nonnull final BlockPos blockPosUpdated) {
 		assert Commons.isSafeThread();

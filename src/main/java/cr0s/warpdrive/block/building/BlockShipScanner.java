@@ -1,6 +1,8 @@
 package cr0s.warpdrive.block.building;
 
 import cr0s.warpdrive.Commons;
+import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.client.SpriteManager;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -17,6 +19,11 @@ import net.minecraft.world.World;
 import cr0s.warpdrive.block.BlockAbstractContainer;
 import cr0s.warpdrive.data.BlockProperties;
 import cr0s.warpdrive.data.EnumTier;
+
+import net.minecraft.util.ResourceLocation;
+
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 
@@ -36,16 +43,17 @@ public class BlockShipScanner extends BlockAbstractContainer {
 		builder.add(BlockProperties.ACTIVE);
 	}
 	
-	/* TODO MC1.15 ship scanner builder's field
+	// TileEntityShipScannerRenderer requires its texture to be preloaded.
+	// The sprite is shared across all tiers, so we only register it once.
 	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void modelInitialisation() {
 		super.modelInitialisation();
 		
-		// Bind our TESR to our tile entity
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityShipScanner.class, new TileEntityShipScannerRenderer());
+		if (enumTier == EnumTier.BASIC) {
+			SpriteManager.add(new ResourceLocation(WarpDrive.MODID, "block/building/ship_scanner-border"));
+		}
 	}
-	*/
 	
 	@Nonnull
 	@Override

@@ -281,6 +281,16 @@ public abstract class TileEntityAbstractInterfaced extends TileEntityAbstractBas
 		return LazyOptional.empty();
 	}
 	
+	// The CC peripheral is a separate IDynamicPeripheral object, NOT the tile entity itself (unlike MC1.12, where the TE
+	// implemented IPeripheral). Both discovery paths use this: the capability (CC queries getCapability first) and the
+	// registered WarpDrivePeripheralHandler provider fallback - the latter previously did (IPeripheral) tileEntity, which
+	// threw ClassCastException (the TE doesn't implement IPeripheral in 1.15), leaving computers unable to connect.
+	// This works even if the @CapabilityInject field is null (null == null still resolves the peripheral).
+	@Nonnull
+	public LazyOptional<IPeripheral> CC_getPeripheral() {
+		return CC_getCapability(CC_CAPABILITY_PERIPHERAL);
+	}
+
 	@Override
 	public void read(@Nonnull final CompoundNBT tagCompound) {
 		super.read(tagCompound);

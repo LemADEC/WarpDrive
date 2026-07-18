@@ -1024,7 +1024,7 @@ public class WarpDriveConfig {
 		final List<ServerPlayerEntity> entityPlayers = server.getPlayerList().getPlayers();
 		for (final ServerPlayerEntity entityServerPlayer : entityPlayers) {
 			if ( !(entityServerPlayer instanceof FakePlayer) ) {
-				final CelestialObject celestialObject = CelestialObjectManager.get(entityServerPlayer.world);
+				final CelestialObject celestialObject = CelestialObjectManager.get(entityServerPlayer.world, (int) entityServerPlayer.getPosX(), (int) entityServerPlayer.getPosZ());
 				PacketHandler.sendClientSync(entityServerPlayer, celestialObject);
 			}
 		}
@@ -1133,7 +1133,7 @@ public class WarpDriveConfig {
 		client_location_offset_y = builder
 				.comment("Vertical offset on screen, increase to move down")
 				.translation("warpdrive.config.client.location_offset_y")
-				.defineInRange("location_offset_y", 0, -32768, 32767);
+				.defineInRange("location_offset_y", -20, -32768, 32767);
 		client_location_text_alignment = builder
 				.comment("Text alignment: TOP_LEFT, TOP_CENTER, TOP_RIGHT, MIDDLE_LEFT, MIDDLE_CENTER, MIDDLE_RIGHT, BOTTOM_LEFT, BOTTOM_CENTER or BOTTOM_RIGHT")
 				.translation("warpdrive.config.client.location_text_alignment")
@@ -1316,7 +1316,7 @@ public class WarpDriveConfig {
 		cloaking_max_energy_stored = builder
 				.comment("Maximum energy stored.")
 				.translation("warpdrive.config.cloaking.max_energy_stored")
-				.defineInRange("max_energy_stored", 200, 1, Integer.MAX_VALUE);
+				.defineInRange("max_energy_stored", 500000000, 1, Integer.MAX_VALUE);
 		cloaking_coil_capture_blocks = builder
 				.comment("Extra blocks covered after the outer coils.")
 				.translation("warpdrive.config.cloaking.coil_capture_blocks")
@@ -1512,7 +1512,7 @@ public class WarpDriveConfig {
 		mining_laser_max_mediums_count = builder
 		        .comment("Maximum number of laser mediums.")
 		        .translation("warpdrive.config.mining_laser.max_mediums_count")
-		        .defineInRange("max_mediums_count", 500, 1, 10);
+		        .defineInRange("max_mediums_count", 3, 1, 10);
 		mining_laser_radius_no_laser_medium = builder
 		        .comment("Mining radius without any laser medium, measured in blocks.")
 		        .translation("warpdrive.config.mining_laser.radius_no_laser_medium")
@@ -1721,11 +1721,11 @@ public class WarpDriveConfig {
 		tree_farm_max_reach_distance_no_laser_medium = builder
 				.comment("Maximum reach distance of the laser without any laser medium, measured in blocks.")
 				.translation("warpdrive.config.tree_farm.max_reach_distance_no_laser_medium")
-				.defineInRange("max_reach_distance_no_laser_medium", 5, 1, 64);
+				.defineInRange("max_reach_distance_no_laser_medium", 8, 1, 64);
 		tree_farm_max_reach_distance_per_laser_medium = builder
 				.comment("Bonus to maximum reach distance per laser medium, measured in blocks.")
 				.translation("warpdrive.config.tree_farm.max_reach_distance_per_laser_medium")
-				.defineInRange("max_reach_distance_per_laser_medium", 5, 0, 16);
+				.defineInRange("max_reach_distance_per_laser_medium", 6, 0, 16);
 		
 		builder.pop();
 		
@@ -2078,7 +2078,7 @@ public class WarpDriveConfig {
 		mining_laser_scan_energy_per_layer_in_atmosphere = builder
 				.comment("Energy cost per layer on a planet with atmosphere.")
 				.translation("warpdrive.config.mining_laser.scan_energy_per_layer_in_atmosphere")
-				.defineInRange("scan_energy_per_layer_in_atmosphere", 1500, 1, Integer.MAX_VALUE);
+				.defineInRange("scan_energy_per_layer_in_atmosphere", 30000, 1, Integer.MAX_VALUE);
 		mining_laser_mine_energy_per_block_in_atmosphere = builder
 				.comment("Energy cost per block on a planet with atmosphere.")
 				.translation("warpdrive.config.mining_laser.mine_energy_per_block_in_atmosphere")

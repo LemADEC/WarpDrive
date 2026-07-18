@@ -143,7 +143,7 @@ public class TileEntityRadar extends TileEntityAbstractEnergyConsumer {
 		}
 		
 		// check for registered celestial object
-		final CelestialObject celestialObject = CelestialObjectManager.get(world);
+		final CelestialObject celestialObject = CelestialObjectManager.get(world, pos.getX(), pos.getZ());
 		if (celestialObject == null) {
 			return new Object[] { false, GlobalRegionManager.GALAXY_UNDEFINED, pos.getX(), pos.getY(), pos.getZ(), Commons.format(world) };
 		}

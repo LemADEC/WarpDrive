@@ -45,6 +45,7 @@ public abstract class MixinChunk
 	                  @Nonnull final CompoundNBT nbt,
 	                  final int availableSections,
 	                  @Nonnull final CallbackInfo callback) {
-		CloakManager.Chunk_read(world.getChunk(getPos().x, getPos().z));
+		// Pass the Chunk directely since it's not registered in the provider yet...
+		CloakManager.Chunk_read((Chunk) (Object) this);
 	}
 }

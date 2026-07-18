@@ -27,7 +27,7 @@ public class CommonWorldGenerator {// TODO MC1.15 world generation StructureStar
 		try {
 			final int x = (chunkX * 16) + (5 - random.nextInt(10));
 			final int z = (chunkZ * 16) + (5 - random.nextInt(10));
-			final CelestialObject celestialObject = CelestialObjectManager.get(world);
+			final CelestialObject celestialObject = CelestialObjectManager.get(world, x, z);
 			if (celestialObject == null) {
 				// as observed on 1.7.10: during world transition, the generator from the previous world is still called
 				return;

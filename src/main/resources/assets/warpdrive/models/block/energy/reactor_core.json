@@ -1,0 +1,5 @@
+{
+  "loader": "forge:obj",
+  "model": "warpdrive:models/block/energy/reactor_core.obj",
+  "flip-v": true
+}

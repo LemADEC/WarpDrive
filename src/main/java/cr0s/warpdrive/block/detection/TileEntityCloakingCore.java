@@ -46,11 +46,7 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergyCoreOrContro
 	private static final int LASER_REFRESH_TICKS = 100;
 	private static final int LASER_DURATION_TICKS = 110;
 	
-	// inner coils color map
-	private static final float[] innerCoilColor_r = { 1.00f, 1.00f, 1.00f, 1.00f, 0.75f, 0.25f, 0.00f, 0.00f, 0.00f, 0.00f, 0.50f, 1.00f };
-	private static final float[] innerCoilColor_g = { 0.00f, 0.25f, 0.75f, 1.00f, 1.00f, 1.00f, 1.00f, 1.00f, 0.50f, 0.25f, 0.00f, 0.00f };
-	private static final float[] innerCoilColor_b = { 0.25f, 0.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.50f, 1.00f, 1.00f, 1.00f, 1.00f, 0.75f };
-	
+	// Upgrades
 	private static final UpgradeSlot upgradeSlotTransparency = new UpgradeSlot("cloaking.transparency",
 	                                                                           ItemComponent.getItemStackNoCache(EnumComponentType.DIAMOND_CRYSTAL, 6),
 	                                                                           1);
@@ -231,12 +227,15 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergyCoreOrContro
 	}
 	
 	@Override
-	public void remove() {
-		setIsEnabled(false);
-		updateCoils(false, false);
-		disableCloakingField();
+	public void onBlockBroken(final net.minecraft.block.BlockState blockStateOld, final net.minecraft.world.World world, final net.minecraft.util.math.BlockPos blockPos, final net.minecraft.block.BlockState blockStateNew) {
+		// Tear down the cloak, only server side
+		if (!world.isRemote()) {
+			setIsEnabled(false);
+			updateCoils(false, false);
+			disableCloakingField();
+		}
 		
-		super.remove();
+		super.onBlockBroken(blockStateOld, world, blockPos, blockStateNew);
 	}
 	
 	@Override
@@ -501,22 +500,17 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergyCoreOrContro
 			}
 		}
 		
-		// draw connecting coils
+		// Draw connecting coils
 		for (int i = 0; i < 5; i++) {
 			final Direction start = Direction.values()[i];
 			for (int j = i + 1; j < 6; j++) {
 				final Direction stop = Direction.values()[j];
-				// skip mirrored coils (removing the inner lines)
+				// Skip mirrored coils (removing the inner lines)
 				if (start.getOpposite() == stop) {
 					continue;
 				}
 				
-				// draw a random colored beam
-				final int mapIndex = world.rand.nextInt(innerCoilColor_b.length);
-				r = innerCoilColor_r[mapIndex];
-				g = innerCoilColor_g[mapIndex];
-				b = innerCoilColor_b[mapIndex];
-				
+				// Connecting beams
 				PacketHandler.sendBeamPacketToPlayersInArea(world,
 					new Vector3(
 							pos.getX() + 0.5D + (DISTANCE_INNER_COILS_BLOCKS + 0.3D) * start.getXOffset() + 0.2D * stop .getXOffset(),
@@ -536,7 +530,7 @@ public class TileEntityCloakingCore extends TileEntityAbstractEnergyCoreOrContro
 	public void disableCloakingField() {
 		assert world != null;
 		if (WarpDrive.cloaks.isAreaExists(world, pos)) {
-			WarpDrive.cloaks.removeCloakedArea(world.getDimension().getType(), pos);
+			WarpDrive.cloaks.removeCloakedArea(world.getDimension().getType().getRegistryName(), pos);
 			
 			if (!soundPlayed) {
 				soundPlayed = true;

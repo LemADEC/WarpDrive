@@ -323,7 +323,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 			}
 			if (!isUnlimited) {
 				if ( shipMass > WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE
-				  && CelestialObjectManager.isPlanet(world) ) {
+				  && CelestialObjectManager.isPlanet(world, pos.getX(), pos.getZ()) ) {
 					textShipScanIssues = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.too_much_mass_for_planet",
 					                                       WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE, shipMass );
 					isShipScanValid = false;
@@ -333,7 +333,7 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 					return;
 				}
 				if ( shipMass < WarpDriveConfig.SHIP_MASS_MIN_FOR_HYPERSPACE
-				  && CelestialObjectManager.isInHyperspace(world) ) {
+				  && CelestialObjectManager.isInHyperspace(world, pos.getX(), pos.getZ()) ) {
 					textShipScanIssues = new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.insufficient_mass_for_hyperspace",
 					                                       WarpDriveConfig.SHIP_MASS_MIN_FOR_HYPERSPACE, shipMass );
 					isShipScanValid = false;
@@ -1336,12 +1336,12 @@ public class TileEntityShipCore extends TileEntityAbstractShipController impleme
 	
 	@Override
 	public Object[] isInSpace() {
-		return new Boolean[] { CelestialObjectManager.isInSpace(world) };
+		return new Boolean[] { CelestialObjectManager.isInSpace(world, pos.getX(), pos.getZ()) };
 	}
 	
 	@Override
 	public Object[] isInHyperspace() {
-		return new Boolean[] { CelestialObjectManager.isInHyperspace(world) };
+		return new Boolean[] { CelestialObjectManager.isInHyperspace(world, pos.getX(), pos.getZ()) };
 	}
 	
 	// public Object[] shipName(@Nonnull final Object[] arguments);

@@ -11,8 +11,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.block.Blocks;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -31,23 +33,49 @@ import net.minecraftforge.client.IRenderHandler;
 
 public abstract class AbstractVoidDimension extends Dimension {
 	
-	protected final CelestialObject celestialObject;
-	
+	// Resolved initially at construction at the dimension origin, for server side usage (getLightBrightness API is position-less);
+	// Resolved periodically on client side based on player's actual position
+	protected CelestialObject celestialObject;
+
 	AbstractVoidDimension(@Nonnull final World world, @Nonnull final DimensionType dimensionType) {
-		super(world, dimensionType, getCelestialObjectInConstructor(dimensionType).ambientBrightness);
-		celestialObject = getCelestialObjectInConstructor(dimensionType);
+		super(world, dimensionType, ambientBrightnessOf(getBaselineCelestialObject(dimensionType)));
+		celestialObject = getBaselineCelestialObject(dimensionType);
 	}
-	
-	// TODO 1.15/1.21: this resolves the celestial object ONCE, at dimension construction, with no player position
-	// available, so it falls back to CelestialObjectManager's (deprecated) representative — an arbitrary object among
-	// those sharing a space dimension (1:N model), which can be the wrong one. Investigate refreshing it dynamically
-	// (e.g. ~1/second from the local player's X,Z when one exists) to resolve the exact per-position object via
-	// get(dimensionId, x, z); would require celestialObject to become non-final + a tick hook. See BACKLOG "1.15".
-	private static CelestialObject getCelestialObjectInConstructor(@Nonnull final DimensionType dimensionType) {
-		// note: world is being constructed at that time, isRemote isn't set yet, so we try client first, then server
-		final CelestialObject celestialObjectServer = CelestialObjectManager.get(false, dimensionType);
-		final CelestialObject celestialObjectClient = CelestialObjectManager.get(true, dimensionType);
-		return celestialObjectClient != null ? celestialObjectClient : celestialObjectServer;
+
+	// Coordinate-based baseline resolved at the dimension origin (0,0) so it's deterministic (the object whose border contains
+	// the origin, else the nearest), non-null whenever the dimension holds any object.
+	// Called during construction, where world.isRemote() isn't reliable yet, so we probe the client registry then the server one.
+	@Nullable
+	private static CelestialObject getBaselineCelestialObject(@Nonnull final DimensionType dimensionType) {
+		final ResourceLocation dimensionId = dimensionType.getRegistryName();
+		final CelestialObject celestialObjectClient = CelestialObjectManager.get(true, dimensionId, 0, 0);
+		return celestialObjectClient != null ? celestialObjectClient : CelestialObjectManager.get(false, dimensionId, 0, 0);
+	}
+
+	private static float ambientBrightnessOf(@Nullable final CelestialObject celestialObject) {
+		return celestialObject == null ? 0.0F : celestialObject.ambientBrightness;
+	}
+
+	// Re-resolves celestialObject from the local player's exact position and rebuilds the (cached) vanilla light table
+	// from its ambientBrightness (used by getLightBrightness/getFogColor/stars). No-op while the object is unchanged.
+	@OnlyIn(Dist.CLIENT)
+	public void refreshFromLocalPlayer() {
+		final PlayerEntity entityPlayer = Minecraft.getInstance().player;
+		if ( entityPlayer == null
+		  || entityPlayer.world != world ) {
+			return;
+		}
+		final CelestialObject celestialObjectNew = CelestialObjectManager.get(world, (int) entityPlayer.getPosX(), (int) entityPlayer.getPosZ());
+		if (celestialObjectNew == celestialObject) {
+			return;
+		}
+		celestialObject = celestialObjectNew;
+		final float ambientBrightness = ambientBrightnessOf(celestialObjectNew);
+		for (int lightLevel = 0; lightLevel <= 15; lightLevel++) {
+			final float ratio   = (float) lightLevel / 15.0F;
+			final float vanilla = ratio / (4.0F - 3.0F * ratio);
+			lightBrightnessTable[lightLevel] = MathHelper.lerp(ambientBrightness, vanilla, 1.0F);
+		}
 	}
 	
 	@Override
@@ -157,13 +185,5 @@ public abstract class AbstractVoidDimension extends Dimension {
 		return new Vec3d(red, green, blue);
 	}
 	
-	@OnlyIn(Dist.CLIENT)
-	@Override
-	public float getLightBrightness(final int lightLevel) {
-		if (celestialObject == null) {
-			return 0.0F;
-		}
-		final float starBrightnessVanilla = super.getLightBrightness(lightLevel);
-		return celestialObject.baseStarBrightness + celestialObject.vanillaStarBrightness * starBrightnessVanilla;
-	}
+	// getLightBrightness used parent, using the cached lightBrightnessTable (0 -> ambientBrightness, 15 -> 1.0).
 }

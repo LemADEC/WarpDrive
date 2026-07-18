@@ -274,42 +274,49 @@ processResources {
 // build the storage space for each computer scripts
 task copyShipControllerCommons1(type: Copy) {
     from 'src/main/resources/data/warpdrive/lua.computercraft/shipcontroller'
-    into('build/resources/main/assets/warpdrive/lua.computercraft/shipcore')
+    into('build/resources/main/data/warpdrive/lua.computercraft/shipcore')
 }
 task copyShipControllerCommons2(type: Copy) {
     from 'src/main/resources/data/warpdrive/lua.opencomputers/shipcontroller'
-    into('build/resources/main/assets/warpdrive/lua.opencomputers/shipcore')
+    into('build/resources/main/data/warpdrive/lua.opencomputers/shipcore')
 }
 
 task copyOpenComputersCommons1(type: Copy) {
     from 'src/main/resources/data/warpdrive/lua.opencomputers/common'
-    into('build/resources/main/assets/warpdrive/lua.opencomputers/accelerator')
+    into('build/resources/main/data/warpdrive/lua.opencomputers/accelerator')
 }
 
 task copyOpenComputersCommons2(type: Copy) {
     from 'src/main/resources/data/warpdrive/lua.opencomputers/common'
-    into('build/resources/main/assets/warpdrive/lua.opencomputers/enanreactorcore')
+    into('build/resources/main/data/warpdrive/lua.opencomputers/enanreactorcore')
 }
 
 task copyOpenComputersCommons3(type: Copy) {
     from 'src/main/resources/data/warpdrive/lua.opencomputers/common'
-    into('build/resources/main/assets/warpdrive/lua.opencomputers/shipcontroller')
+    into('build/resources/main/data/warpdrive/lua.opencomputers/shipcontroller')
 }
 
 task copyOpenComputersCommons4(type: Copy) {
     from 'src/main/resources/data/warpdrive/lua.opencomputers/common'
-    into('build/resources/main/assets/warpdrive/lua.opencomputers/shipcore')
+    into('build/resources/main/data/warpdrive/lua.opencomputers/shipcore')
 }
 
 task copyOpenComputersCommons5(type: Copy) {
     from 'src/main/resources/data/warpdrive/lua.opencomputers/common'
-    into('build/resources/main/assets/warpdrive/lua.opencomputers/transportercore')
+    into('build/resources/main/data/warpdrive/lua.opencomputers/transportercore')
 }
 
 task copyOpenComputersCommons6(type: Copy) {
     from 'src/main/resources/data/warpdrive/lua.opencomputers/common'
-    into('build/resources/main/assets/warpdrive/lua.opencomputers/weaponcontroller')
+    into('build/resources/main/data/warpdrive/lua.opencomputers/weaponcontroller')
 }
+
+// These per-peripheral LUA script folders (e.g. shipcore = a copy of shipcontroller's) are read at runtime from
+// build/resources/main/data/... . runClient/runServer trigger processResources (NOT jar), so wire the copies to run
+// after processResources too - otherwise the copied scripts are missing in the dev run and preloaded scripts don't load.
+processResources.finalizedBy 'copyShipControllerCommons1', 'copyShipControllerCommons2',
+        'copyOpenComputersCommons1', 'copyOpenComputersCommons2', 'copyOpenComputersCommons3',
+        'copyOpenComputersCommons4', 'copyOpenComputersCommons5', 'copyOpenComputersCommons6'
 
 jar {
     dependsOn copyShipControllerCommons1, copyShipControllerCommons2

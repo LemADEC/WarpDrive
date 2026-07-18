@@ -464,24 +464,11 @@ public class Commons {
 		if (dimensionType == null) {
 			return "~NULL~";
 		}
-		
-		String saveFolder;
-		try {
-			saveFolder = dimensionType.directory;
-		} catch (final Exception exception) {
-			exception.printStackTrace(WarpDrive.printStreamError);
-			saveFolder = "<Exception " + dimensionType.getRegistryName() + ">";
+		final ResourceLocation dimensionId = dimensionType.getRegistryName();
+		if (dimensionId == null) {
+			return String.format("~invalid dimension %s with id %d~", dimensionType, dimensionType.getId());
 		}
-		if (saveFolder == null || saveFolder.isEmpty()) {
-			final ResourceLocation dimension = dimensionType.getRegistryName();
-			if ( dimension == null
-			  || dimension.toString().equals("minecraft:overworld") ) {
-				assert false;
-				return String.format("~invalid dimension %s with id %d~", dimensionType, dimensionType.getId());
-			}
-			return dimension.toString();
-		}
-		return saveFolder;
+		return dimensionId.toString();
 	}
 	
 	public static String format(final DimensionType dimensionType, @Nonnull final BlockPos blockPos) {
@@ -499,33 +486,7 @@ public class Commons {
 		if (world == null) {
 			return "~NULL~";
 		}
-		
-		// TODO MC1.15 format world only through the DimensionType?
-		// world.getProviderName() is MultiplayerChunkCache on client, ServerChunkCache on local server, (undefined method) on dedicated server
-		
-		// world.provider.getSaveFolder() is null for the Overworld, other dimensions shall define it
-		String saveFolder;
-		try {
-			saveFolder = world.getDimension().getType().directory;
-		} catch (final Exception exception) {
-			exception.printStackTrace(WarpDrive.printStreamError);
-			saveFolder = "<Exception " + world.getDimension().getType().getRegistryName() + ">";
-		}
-		if (saveFolder == null || saveFolder.isEmpty()) {
-			final ResourceLocation registryName = world.getDimension().getType().getRegistryName();
-			if (registryName == null) {
-				assert false;
-				return String.format("~invalid dimension %s~", registryName);
-			}
-			
-			// world.getWorldInfo().getWorldName() is MpServer on client side, or the server.properties' world name on server side
-			final String worldName = world.getWorldInfo().getWorldName();
-			if (worldName.equals("MpServer")) {
-				return "overworld";
-			}
-			return worldName;
-		}
-		return saveFolder;
+		return format(world.getDimension().getType());
 	}
 	
 	public static String format(final IBlockReader blockReader, @Nonnull final BlockPos blockPos) {

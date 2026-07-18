@@ -106,7 +106,7 @@ public class TileEntityMiningLaser extends TileEntityAbstractMiner {
 	private void updateParameters() {
 		viscosityMax = getUpgradeCount(upgradeSlotPumping) * 2500;
 		
-		final boolean hasAtmosphere = CelestialObjectManager.hasAtmosphere(world);
+		final boolean hasAtmosphere = CelestialObjectManager.hasAtmosphere(world, pos.getX(), pos.getZ());
 		
 		radiusCapacity = WarpDriveConfig.MINING_LASER_RADIUS_NO_LASER_MEDIUM
 		                 + (int) Math.floor(cache_laserMedium_factor * WarpDriveConfig.MINING_LASER_RADIUS_PER_LASER_MEDIUM);

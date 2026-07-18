@@ -9,6 +9,7 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -62,8 +63,9 @@ public class ClientCameraHandler {
 		blockStateCheck2 = blockStateCamera;
 		
 		// Spawn camera entity
+		// note: as a client-only entity, it must go through ClientWorld.addEntity(id, entity)
 		final EntityCamera entityCamera = new EntityCamera(entityPlayer.world, blockPosCamera.getX(), blockPosCamera.getY(), blockPosCamera.getZ(), entityPlayer);
-		entityPlayer.world.addEntity(entityCamera);
+		((ClientWorld) entityPlayer.world).addEntity(entityCamera.getEntityId(), entityCamera);
 		// entityCamera.setPositionAndUpdate(camera_x + 0.5D, camera_y + 0.5D, camera_z + 0.5D);
 		entityCamera.setLocationAndAngles(blockPosCamera.getX() + 0.5D, blockPosCamera.getY() + 0.5D, blockPosCamera.getZ() + 0.5D, initialYaw, initialPitch);
 		

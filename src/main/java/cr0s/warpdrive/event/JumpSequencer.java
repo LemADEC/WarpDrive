@@ -574,7 +574,7 @@ public class JumpSequencer extends AbstractSequencer {
 		// note: when deploying from scanner shipMovementType is CREATIVE, so betweenWorlds is false
 		
 		{// compute targetWorld and movement vector (moveX, moveY, moveZ)
-			final CelestialObject celestialObjectSource = CelestialObjectManager.get(worldSource);
+			final CelestialObject celestialObjectSource = CelestialObjectManager.get(worldSource, ship.core.getX(), ship.core.getZ());
 			final boolean isTargetWorldFound = computeTargetWorld(celestialObjectSource, shipMovementType, reason);
 			if (!isTargetWorldFound) {
 				LocalProfiler.stop();
@@ -583,16 +583,15 @@ public class JumpSequencer extends AbstractSequencer {
 			}
 		}
 		
-		// Check mass constrains
-		if ( ( worldSource != null
-		    && CelestialObjectManager.isPlanet(worldSource) )
-		  || CelestialObjectManager.isPlanet(worldTarget) ) {
-			if (!ship.isUnlimited() && ship.actualMass > WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE) {
-				LocalProfiler.stop();
-				disableAndMessage(false, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.too_much_mass_for_planet",
-				                                           WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE, ship.actualMass));
-				return;
-			}
+		// Check mass constraint on the source (the target is checked in state_adjustJumpVector, once its coordinates are known)
+		if ( worldSource != null
+		  && CelestialObjectManager.isPlanet(worldSource, ship.core.getX(), ship.core.getZ())
+		  && !ship.isUnlimited()
+		  && ship.actualMass > WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE ) {
+			LocalProfiler.stop();
+			disableAndMessage(false, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.too_much_mass_for_planet",
+			                                           WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE, ship.actualMass));
+			return;
 		}
 		
 		if (betweenWorlds && WarpDriveConfig.LOGGING_JUMP) {
@@ -700,8 +699,22 @@ public class JumpSequencer extends AbstractSequencer {
 				return;
 			}
 			
+			// Compute target area
+			final CelestialObject celestialObjectTarget = CelestialObjectManager.get(worldTarget, (int) ((aabbTarget.minX + aabbTarget.maxX) / 2.0D), (int) ((aabbTarget.minZ + aabbTarget.maxZ) / 2.0D));
+			
+			// Check mass constraint on the target (null = undefined dimension, treated as a planet surface)
+			final boolean isTargetPlanet = celestialObjectTarget == null
+			                            || (!celestialObjectTarget.isSpace() && !celestialObjectTarget.isHyperspace());
+			if ( isTargetPlanet
+			  && !ship.isUnlimited()
+			  && ship.actualMass > WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE ) {
+				LocalProfiler.stop();
+				disableAndMessage(false, new WarpDriveText(Commons.getStyleWarning(), "warpdrive.ship.guide.too_much_mass_for_planet",
+				                                           WarpDriveConfig.SHIP_MASS_MAX_ON_PLANET_SURFACE, ship.actualMass));
+				return;
+			}
+
 			// Check world border
-			final CelestialObject celestialObjectTarget = CelestialObjectManager.get(worldTarget);
 			if (celestialObjectTarget == null) {
 				if (WarpDriveConfig.LOGGING_JUMP) {
 					WarpDrive.logger.error(String.format("There's no world border defined for %s",

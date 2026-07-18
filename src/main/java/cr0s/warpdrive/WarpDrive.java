@@ -184,6 +184,9 @@ import net.minecraft.potion.Effect;
 import net.minecraft.potion.Potion;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import cr0s.warpdrive.render.TileEntityEnanReactorCoreRenderer;
+import cr0s.warpdrive.render.TileEntityShipScannerRenderer;
 import net.minecraft.item.Item;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
@@ -236,7 +239,8 @@ public class WarpDrive {
 	public static final String PROTOCOL_VERSION = "@version@";
 	@SuppressWarnings("ConstantConditions")
 	public static final boolean isDev = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0
-	                                 || MOD_VERSION.contains("-dev");
+	                                 || MOD_VERSION.contains("-dev")
+	                                 || !net.minecraftforge.fml.loading.FMLEnvironment.production;
 	public static GameProfile gameProfile = new GameProfile(UUID.nameUUIDFromBytes("[WarpDrive]".getBytes()), "[WarpDrive]");
 	
 	// common blocks and items
@@ -752,7 +756,28 @@ public class WarpDrive {
 	@SubscribeEvent
 	public static void onClientSetup(@Nonnull final FMLClientSetupEvent event) {
 		
-		// block rendering layers
+		for (final EnumTier enumTier : EnumTier.nonCreative()) {
+			// Reactor core TESR for Advanced & Superior tiers only
+			final Block blockEnanReactorCore = blockEnanReactorCores[enumTier.getIndex()];
+			if ( blockEnanReactorCore != null
+			  && enumTier != EnumTier.BASIC ) {
+				//noinspection unchecked
+				ClientRegistry.bindTileEntityRenderer(
+						(TileEntityType<TileEntityEnanReactorCore>) TileEntityAbstractBase.getTileEntityType((IBlockBase) blockEnanReactorCore),
+						TileEntityEnanReactorCoreRenderer::new);
+			}
+
+			// Ship scanner TESR for all tiers
+			final Block blockShipScanner = blockShipScanners[enumTier.getIndex()];
+			if (blockShipScanner != null) {
+				//noinspection unchecked
+				ClientRegistry.bindTileEntityRenderer(
+						(TileEntityType<TileEntityShipScanner>) TileEntityAbstractBase.getTileEntityType((IBlockBase) blockShipScanner),
+						TileEntityShipScannerRenderer::new);
+			}
+		}
+		
+		// Block rendering layers
 		RenderTypeLookup.setRenderLayer(WarpDrive.blockAirSource, RenderType.getTranslucent());
 		RenderTypeLookup.setRenderLayer(WarpDrive.blockAirFlow, RenderType.getTranslucent());
 		RenderTypeLookup.setRenderLayer(WarpDrive.blockCamouflage, RenderType.getTranslucent());

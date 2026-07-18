@@ -83,7 +83,7 @@ public class MessageCloak implements IMessage {
 	private void handle(final ClientPlayerEntity player) {
 		if (isUncloaking) {
 			// reveal the area
-			WarpDrive.cloaks.removeCloakedArea(player.world.getDimension().getType(), new BlockPos(coreX, coreY, coreZ));
+			WarpDrive.cloaks.removeCloakedArea(player.world.getDimension().getType().getRegistryName(), new BlockPos(coreX, coreY, coreZ));
 		} else { 
 			// Hide the area
 			WarpDrive.cloaks.updateCloakedArea(player.world, new BlockPos(coreX, coreY, coreZ), isFullyTransparent,

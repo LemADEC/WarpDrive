@@ -64,7 +64,7 @@ public class TileEntityAirGeneratorTiered extends TileEntityAbstractEnergyConsum
 		
 		// Air generator works only in space & hyperspace
 		final BlockState blockState = world.getBlockState(pos);
-		if (CelestialObjectManager.hasAtmosphere(world)) {
+		if (CelestialObjectManager.hasAtmosphere(world, pos.getX(), pos.getZ())) {
 			updateBlockState(blockState, BlockProperties.ACTIVE, false);
 			return;
 		}

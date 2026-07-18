@@ -35,7 +35,7 @@ public class RenderOverlayLocation {
 		// get celestial object
 		String name = Commons.format(entityPlayer.world);
 		String description = "";
-		final CelestialObject celestialObject = CelestialObjectManager.get(entityPlayer.world);
+		final CelestialObject celestialObject = CelestialObjectManager.get(entityPlayer.world, x, z);
 		if (celestialObject != null) {
 			if (!celestialObject.getDisplayName().isEmpty()) {
 				name = celestialObject.getDisplayName();

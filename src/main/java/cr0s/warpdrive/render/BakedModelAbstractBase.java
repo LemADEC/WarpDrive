@@ -116,7 +116,16 @@ public abstract class BakedModelAbstractBase implements IMyBakedModel {
 				break;
 				
 			case UV:
-				builder.put(index, u, v, 0.0F, 1.0F);
+				// Usage-index 0 is the texture UV (TEX_2F).
+				// Higher indexes are the lightmap/overlay (e.g. BLOCK's TEX_2SB, index 2).
+				// Writing the texture UV into the lightmap element adds garbage with causes an overflow in IVertexBuilder.addQuad
+				// resulting in out of range lightmap values and darkening everything.
+				// Passing zeroed lightmap means the renderer's own light (passed to addQuad) wins.
+				if (element.getIndex() == 0) {
+					builder.put(index, u, v, 0.0F, 1.0F);
+				} else {
+					builder.put(index, 0.0F, 0.0F, 0.0F, 1.0F);
+				}
 				break;
 				
 //			case MATRIX:
@@ -154,6 +163,11 @@ public abstract class BakedModelAbstractBase implements IMyBakedModel {
 		}
 		
 		final BakedQuadBuilder builder = new BakedQuadBuilder(sprite);
+		// A face is required by IVertexBuilder.addQuad (it reads getFace() for the normal); only set it when we actually
+		// have a normal (BLOCK format), so the POSITION_COLOR_TEX baked models keep their previous face-less behaviour.
+		if (vectorNormal != null) {
+			builder.setQuadOrientation(Direction.getFacingFromVector(vectorNormal.getX(), vectorNormal.getY(), vectorNormal.getZ()));
+		}
 		putVertex(builder, x1, y1, z1, red, green, blue, alpha, u1, v1, vectorNormal);
 		putVertex(builder, x2, y2, z2, red, green, blue, alpha, u2, v2, vectorNormal);
 		putVertex(builder, x3, y3, z3, red, green, blue, alpha, u3, v3, vectorNormal);

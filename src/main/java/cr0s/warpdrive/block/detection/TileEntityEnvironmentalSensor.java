@@ -67,7 +67,7 @@ public class TileEntityEnvironmentalSensor extends TileEntityAbstractMachine {
 		updateBlockState(blockState, BlockProperties.ACTIVE, isEnabled);
 		
 		// update breathable state from main thread
-		final CelestialObject celestialObject = CelestialObjectManager.get(world);
+		final CelestialObject celestialObject = CelestialObjectManager.get(world, pos.getX(), pos.getZ());
 		final boolean hasAtmosphere = celestialObject != null && celestialObject.hasAtmosphere();
 		if (hasAtmosphere) {
 			airConcentration = 32;

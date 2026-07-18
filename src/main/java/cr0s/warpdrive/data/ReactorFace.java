@@ -145,9 +145,9 @@ public class ReactorFace implements IStringSerializable {
 		// add lens
 		if (facingLaserProperty != null) {
 			new ReactorFace(enumTier, -1, name + ".lens",
-			                    x - facingLaserProperty.getXOffset(),
-			                    y - facingLaserProperty.getYOffset(),
-			                    z - facingLaserProperty.getZOffset(),
+			                    x + facingLaserProperty.getXOffset(),
+			                    y + facingLaserProperty.getYOffset(),
+			                    z + facingLaserProperty.getZOffset(),
 			                null);
 		}
 	}

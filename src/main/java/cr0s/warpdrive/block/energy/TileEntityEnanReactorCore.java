@@ -294,9 +294,9 @@ public class TileEntityEnanReactorCore extends TileEntityEnanReactorController i
 		if (lasersReceived > 1.0F) {
 			nospamFactor = 0.5;
 			world.createExplosion(null,
-			                      pos.getX() + reactorFace.x - reactorFace.facingLaserProperty.getXOffset(),
-			                      pos.getY() + reactorFace.y - reactorFace.facingLaserProperty.getYOffset(),
-			                      pos.getZ() + reactorFace.z - reactorFace.facingLaserProperty.getZOffset(),
+			                      pos.getX() + reactorFace.x + reactorFace.facingLaserProperty.getXOffset(),
+			                      pos.getY() + reactorFace.y + reactorFace.facingLaserProperty.getYOffset(),
+			                      pos.getZ() + reactorFace.z + reactorFace.facingLaserProperty.getZOffset(),
 			                      1.0F, false, Mode.NONE);
 		}
 		final double normalisedAmount = Math.min(1.0D, Math.max(0.0D, amount / PR_MAX_LASER_ENERGY)); // 0.0 to 1.0
@@ -855,19 +855,23 @@ public class TileEntityEnanReactorCore extends TileEntityEnanReactorController i
 	@Override
 	public void read(@Nonnull final CompoundNBT tagCompound) {
 		super.read(tagCompound);
-		
-		// skip empty NBT on placement to use defaults values
-		if (!tagCompound.contains("outputMode")) {
+
+		// On the server, skip empty NBT on placement to keep the default values.
+		// On the client, always process to grab the partial updates that drive the rendering.
+		if ( (world == null || !world.isRemote())
+		  && !tagCompound.contains("outputMode") ) {
 			return;
 		}
 		
-		enumReactorOutputMode = EnumReactorOutputMode.byName(tagCompound.getString("outputMode"));
-		if (enumReactorOutputMode == null) {
-			enumReactorOutputMode = EnumReactorOutputMode.OFF;
+		if (tagCompound.contains("outputMode")) {
+			enumReactorOutputMode = EnumReactorOutputMode.byName(tagCompound.getString("outputMode"));
+			if (enumReactorOutputMode == null) {
+				enumReactorOutputMode = EnumReactorOutputMode.OFF;
+			}
+			outputThreshold = tagCompound.getInt("outputThreshold");
+			instabilityTarget = tagCompound.getDouble("instabilityTarget");
+			stabilizerEnergy = tagCompound.getInt("stabilizerEnergy");
 		}
-		outputThreshold = tagCompound.getInt("outputThreshold");
-		instabilityTarget = tagCompound.getDouble("instabilityTarget");
-		stabilizerEnergy = tagCompound.getInt("stabilizerEnergy");
 		
 		containedEnergy = tagCompound.getInt("energy");
 		final CompoundNBT tagCompoundInstability = tagCompound.getCompound("instability");

@@ -57,7 +57,7 @@ public class RenderOverlayAir {
 		final int z = MathHelper.floor(entityPlayer.getPosZ());
 		
 		// get celestial object
-		final CelestialObject celestialObject = CelestialObjectManager.get(entityPlayer.world);
+		final CelestialObject celestialObject = CelestialObjectManager.get(entityPlayer.world, x, z);
 		if (celestialObject == null || celestialObject.hasAtmosphere()) {// skip (no display) if environment is breathable
 			return;
 		}

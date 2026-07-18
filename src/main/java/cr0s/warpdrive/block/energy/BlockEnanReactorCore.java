@@ -1,12 +1,18 @@
 package cr0s.warpdrive.block.energy;
 
+import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.block.BlockAbstractContainer;
 import cr0s.warpdrive.data.EnumTier;
+import cr0s.warpdrive.event.ModelHandler;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.IntegerProperty;
 import net.minecraft.state.StateContainer.Builder;
+import net.minecraft.util.ResourceLocation;
+
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 
@@ -31,16 +37,18 @@ public class BlockEnanReactorCore extends BlockAbstractContainer {
 		builder.add(INSTABILITY);
 	}
 	
-	/* TODO MC1.15 reactor core TESR
+	// TileEntityEnanReactorCoreRenderer requires its 4 OBJ models to be preloaded.
+	// The models are shared across advanced and superior tiers, so we only register them once.
 	@OnlyIn(Dist.CLIENT)
 	@Override
 	public void modelInitialisation() {
 		super.modelInitialisation();
 		
-		if (enumTier != EnumTier.BASIC) {
-			// Bind our TESR to our tile entity
-			ClientRegistry.bindTileEntitySpecialRenderer(TileEntityEnanReactorCore.class, new TileEntityEnanReactorCoreRenderer());
+		if (enumTier == EnumTier.ADVANCED) {
+			ModelHandler.registerSpecialModel(new ResourceLocation(WarpDrive.MODID, "block/energy/reactor_core"));
+			ModelHandler.registerSpecialModel(new ResourceLocation(WarpDrive.MODID, "block/energy/reactor_matter"));
+			ModelHandler.registerSpecialModel(new ResourceLocation(WarpDrive.MODID, "block/energy/reactor_surface"));
+			ModelHandler.registerSpecialModel(new ResourceLocation(WarpDrive.MODID, "block/energy/reactor_shield"));
 		}
 	}
-	*/
 }

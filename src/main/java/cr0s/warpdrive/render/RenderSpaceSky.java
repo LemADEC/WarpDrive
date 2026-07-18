@@ -45,8 +45,10 @@ public class RenderSpaceSky implements SkyRenderHandler {
 	
 	// call lists
 	private static VertexBuffer vboStars;
+	private static int vboStarsWarmupFrames = 0;
 	private static final VertexFormat vertexFormatStars = DefaultVertexFormats.POSITION_COLOR;
 	private static float starBrightness = 0.0F;
+	
 	private static final float ALPHA_TOLERANCE = 1.0F / 256.0F;
 	
 	private static final VertexFormat vertexFormatPlanes = DefaultVertexFormats.POSITION_COLOR;
@@ -104,7 +106,7 @@ public class RenderSpaceSky implements SkyRenderHandler {
 	                   @Nonnull final ClientWorld world, @Nonnull final Minecraft mc) {
 		assert mc.player != null;
 		final Vec3d vec3Player = mc.player.getEyePosition(partialTicks);
-		final CelestialObject celestialObject = CelestialObjectManager.get(world);
+		final CelestialObject celestialObject = CelestialObjectManager.get(world, (int) vec3Player.x, (int) vec3Player.z);
 		
 		final Tessellator tessellator = Tessellator.getInstance();
 		
@@ -147,8 +149,10 @@ public class RenderSpaceSky implements SkyRenderHandler {
 		RenderSystem.enableBlend();
 		RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
 		RenderSystem.disableAlphaTest();
-		float starBrightness = 0.2F;
-		starBrightness = world.getStarBrightness(partialTicks);
+		// world.getStarBrightness() follows the day/night cycle, which we don't want here; the sky star brightness is a
+		// dedicated skybox setting (baseStarBrightness/vanillaStarBrightness), independent of the world ambient light
+		final float starBrightness = celestialObject == null ? 0.0F
+		                           : celestialObject.baseStarBrightness + celestialObject.vanillaStarBrightness * world.getStarBrightness(partialTicks);
 		if (starBrightness > 0.0F && celestialObject != null) {
 			renderStars_cached(matrixStack, alphaBase * starBrightness);
 		}
@@ -184,7 +188,7 @@ public class RenderSpaceSky implements SkyRenderHandler {
 			
 			// world.getMoonPhase();
 			final BufferBuilder vertexBuffer = tessellator.getBuffer();
-			vertexBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
+			vertexBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 			vertexBuffer.pos(-planetScale, planetRange, -planetScale).tex(0, 1).color(1.0F, 0.0F, 1.0F, 1.0F).endVertex();
 			vertexBuffer.pos( planetScale, planetRange, -planetScale).tex(1, 1).color(1.0F, 0.0F, 1.0F, 1.0F).endVertex();
 			vertexBuffer.pos( planetScale, planetRange,  planetScale).tex(1, 0).color(1.0F, 0.0F, 1.0F, 1.0F).endVertex();
@@ -195,11 +199,12 @@ public class RenderSpaceSky implements SkyRenderHandler {
 		}
 		/**/
 		
-		// Planets
+		// Planets / Sun
 		if (celestialObject != null && celestialObject.opacityCelestialObjects > 0.0F) {
 			final Vector3 vectorPlayer = GlobalRegionManager.getUniversalCoordinates(celestialObject, vec3Player.x, vec3Player.y, vec3Player.z);
 			for (final CelestialObject celestialObjectChild : CelestialObjectManager.getRenderChildren(celestialObject.id)) {
 				renderCelestialObject(tessellator,
+				                      matrixStack,
 				                      celestialObjectChild,
 				                      celestialObject.opacityCelestialObjects,
 				                      vectorPlayer);
@@ -414,7 +419,7 @@ public class RenderSpaceSky implements SkyRenderHandler {
 		RenderSystem.popMatrix();
 	}
 	
-	private static void renderCelestialObject(final Tessellator tessellator, final CelestialObject celestialObject,
+	private static void renderCelestialObject(final Tessellator tessellator, @Nonnull final MatrixStack matrixStack, final CelestialObject celestialObject,
 	                                          final float alphaSky, final Vector3 vectorPlayer) {
 		// @TODO compute relative coordinates for rendering on celestialObject
 		
@@ -512,7 +517,8 @@ public class RenderSpaceSky implements SkyRenderHandler {
 		final double sinS = Math.sin(angleS);
 		final double cosS = Math.cos(angleS);
 		
-		RenderSystem.pushMatrix();
+		// Only apply the camera matrix so it follows the view
+		final Matrix4f matrix4f = matrixStack.getLast().getMatrix();
 		
 		// RenderSystem.enableBlend();    // by caller
 		final double time = System.currentTimeMillis() / 1000.0D;
@@ -547,7 +553,7 @@ public class RenderSpaceSky implements SkyRenderHandler {
 				final double valD = renderRange * sinV - valV * cosV;
 				final double x = valD * sinH - valH * cosH + renderSize * offsetX;
 				final double z = valH * sinH + valD * cosH + renderSize * offsetZ;
-				vertexBuffer.pos(x, y, z)
+				vertexBuffer.pos(matrix4f, (float) x, (float) y, (float) z)
 				            .color(renderData.red, renderData.green, renderData.blue, renderData.alpha * alphaSky);
 				if (renderData.texture != null) {
 					vertexBuffer.tex((indexVertex & 2) / 2 + offsetU, (indexVertex + 1 & 2) / 2 + offsetV);
@@ -563,8 +569,6 @@ public class RenderSpaceSky implements SkyRenderHandler {
 		// restore settings
 		RenderSystem.enableTexture();
 		RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-		
-		RenderSystem.popMatrix();
 	}
 	
 	private void renderStars_direct(@Nonnull final BufferBuilder bufferBuilder, final float brightness) {
@@ -636,29 +640,30 @@ public class RenderSpaceSky implements SkyRenderHandler {
 	}
 	
 	private void renderStars_cached(@Nonnull final MatrixStack matrixStack, final float brightness) {
-		if (Math.abs(starBrightness - brightness) > ALPHA_TOLERANCE) {
-			starBrightness = brightness;
-			RenderSystem.pushMatrix();
-			
-			final Tessellator tessellator = Tessellator.getInstance();
-			final BufferBuilder bufferBuilder = tessellator.getBuffer();
+		// Cache the star geometry in a REUSED VertexBuffer, rebuilt only when the brightness changes.
+		// The very first build is in unstable GL context for some reasons and produces a corrupted/invisible buffer.
+		// Hence, we rebuild for a few warm-up frames after the buffer is first created, then it stays cached.
+		// Reusing the VertexBuffer avoids a GL buffer leak.
+		if (vboStars == null) {
 			vboStars = new VertexBuffer(DefaultVertexFormats.POSITION_COLOR);
-			renderStars_direct(bufferBuilder, brightness);
-			vboStars.upload(bufferBuilder);
-			
-			RenderSystem.popMatrix();
+			vboStarsWarmupFrames = 5;
+		}
+		if (vboStarsWarmupFrames > 0 || Math.abs(starBrightness - brightness) > ALPHA_TOLERANCE) {
+			starBrightness = brightness;
+			if (vboStarsWarmupFrames > 0) {
+				vboStarsWarmupFrames--;
+			}
+			renderStars_direct(Tessellator.getInstance().getBuffer(), brightness);
+			vboStars.upload(Tessellator.getInstance().getBuffer());
 		}
 		
 		RenderSystem.enableFog();
 		matrixStack.push();
-		
-		matrixStack.translate(0.0D, 128.0D, 0.0D);
 		vboStars.bindBuffer();
 		vertexFormatStars.setupBufferState(0L);
 		vboStars.draw(matrixStack.getLast().getMatrix(), 7);
 		VertexBuffer.unbindBuffer();
 		vertexFormatStars.clearBufferState();
-		
 		matrixStack.pop();
 	}
 	
